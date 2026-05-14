@@ -176,6 +176,71 @@ const noCraneCompanyPrices = [
   { toLocation: "Kampong Chhnang (K.Chhnang)", distanceKm: 109, companyUnitPrice: 18.43 }
 ];
 
+const craneDriverPrices = new Map([
+  ["Khan Kambol (PP)", 9.28],
+  ["Khan Dangkao (PP)", 7],
+  ["Khan Mean Chey (PP)", 7.38],
+  ["Khan Chamkar Morn (PP)", 8.71],
+  ["Khan Boeng Keng Kong (PP)", 8.71],
+  ["Khan Doun Penh (PP)", 8.9],
+  ["Khan 7 Makara (PP)", 8.9],
+  ["Khan Tuol Kouk (PP)", 8.8],
+  ["Khan Sen Sok (PP)", 9.18],
+  ["Khan Russei Keo (PP)", 9.18],
+  ["Khan Chba Ampeou (PP)", 7.95],
+  ["Khan Posenchey (PP)", 9.46],
+  ["Khan Prek Phnov (PP)", 11.46],
+  ["Khan Chroy Changvar (PP)", 12.48],
+  ["Takhmao (Kandal)", 7],
+  ["Ang Snuol (Kandal)", 11.07],
+  ["Saang (Kandal)", 9.85],
+  ["Kandal Stueng (Kandal)", 7.14],
+  ["Kien Svay (Kandal)", 9.36],
+  ["Ponhea Leu (Kandal)", 12.18],
+  ["Muk Kampoul (Kandal)", 12.11],
+  ["Khsach Kandal (Kandal)", 12.3],
+  ["Koh Thom (Kandal)", 12.78],
+  ["Leukdek (Kandal)", 14.44],
+  ["Lvea Em (Kandal)", 14.82],
+  ["Kanh Chreach (Prey Veng)", 16.81],
+  ["Kamchay Mea (Prey Veng)", 18.78],
+  ["Mesang (Prey Veng)", 17.07],
+  ["Kampong Trabek (Prey Veng)", 16.02],
+  ["Svay Antor (Prey Veng)", 15.74],
+  ["Baphnom (Prey Veng)", 15.25],
+  ["Preah Sdach (Prey Veng)", 14.72],
+  ["Sithor Kandal (Prey Veng)", 15.77],
+  ["Pea Reang (Prey Veng)", 14.53],
+  ["Po Rieng (Prey Veng)", 16.29],
+  ["Peam Ro (Prey Veng)", 14.77],
+  ["Peam Chor (Prey Veng)", 15.53],
+  ["Prey Veng (Prey Veng)", 17.76],
+  ["Rum Duol (S.Rieng)", 17.76],
+  ["Svay Tiep (S.Rieng)", 18.33],
+  ["Svay Rieng (S.Rieng)", 16.72],
+  ["Svay Chrum (S.Rieng)", 16.15],
+  ["Kompong Ro (S.Rieng)", 18.33],
+  ["Bati (Takeo)", 9.08],
+  ["Prey Kabas (Takeo)", 10.77],
+  ["Angkor Borei (Takeo)", 13.77],
+  ["Borei Chulsar (Takeo)", 17],
+  ["Koh Andet (Takeo)", 15.81],
+  ["Samrong (Takeo)", 11.35],
+  ["Daun Keo (Takeo)", 12.78],
+  ["Treang (Takeo)", 13.35],
+  ["Kirivong (Takeo)", 17],
+  ["Tram Kak (Takeo)", 13.89],
+  ["Oudong (K.Speu)", 12.47],
+  ["Thpong (K.Speu)", 15.89],
+  ["Samrong Torng (K.Speu)", 12.97],
+  ["Chbar Morn (K.Speu)", 12.4],
+  ["Kong Pisei (K.Speu)", 12.68],
+  ["Baset (K.Speu)", 14.01],
+  ["Kampong Tralach (K.Chhnang)", 15.58],
+  ["Kampong Siem (K.Cham)", 18.71],
+  ["Batheay (K.Cham)", 15.53]
+]);
+
 const defaultData = {
   settings: {
     companyName: "N&M LOGISTIC",
@@ -202,7 +267,7 @@ const defaultData = {
       truckType: "With Crane",
       distanceKm: price.distanceKm,
       companyUnitPrice: price.companyUnitPrice,
-      truckSalaryUnitPrice: 0,
+      truckSalaryUnitPrice: craneDriverPrices.get(price.toLocation) || 0,
       active: true
     })),
     ...noCraneCompanyPrices.map((price, index) => ({
@@ -329,6 +394,9 @@ function saveStatement(data, input) {
   if (duplicate) throw new Error("Statement number already exists in this month.");
 
   const existing = data.statements.find((statement) => statement.id === input.id);
+  if (existing && existing.truckType !== truckType && statementRowCount(data, existing.id) > 0) {
+    throw new Error("Cannot change truck type after delivery rows are added. Create a separate statement for the other truck type.");
+  }
 
   const statement = {
     id: input.id || crypto.randomUUID(),
@@ -706,6 +774,18 @@ async function api(req, res, url) {
     return sendJson(res, 200, statement);
   }
 
+  if (req.method === "POST" && url.pathname.startsWith("/api/statements/") && url.pathname.endsWith("/reopen")) {
+    const id = decodeURIComponent(url.pathname.split("/")[3]);
+    const statement = await updateData((data) => {
+      const statement = data.statements.find((item) => item.id === id);
+      if (!statement) throw new Error("Statement not found.");
+      statement.status = "Draft";
+      statement.updatedAt = new Date().toISOString();
+      return statement;
+    });
+    return sendJson(res, 200, statement);
+  }
+
   if (req.method === "DELETE" && url.pathname.startsWith("/api/statements/")) {
     const id = decodeURIComponent(url.pathname.split("/").pop());
     await updateData((data) => {
@@ -801,6 +881,11 @@ async function api(req, res, url) {
   if (req.method === "DELETE" && url.pathname.startsWith("/api/deliveries/")) {
     const id = decodeURIComponent(url.pathname.split("/").pop());
     await updateData((data) => {
+      const delivery = data.deliveries.find((item) => item.id === id);
+      if (!delivery) throw new Error("Delivery row not found.");
+      const statement = data.statements.find((item) => item.id === delivery.statementId);
+      if (!statement) throw new Error("Statement not found.");
+      if (statement.status !== "Draft") throw new Error("Reopen this statement before deleting delivery rows.");
       data.deliveries = data.deliveries.filter((item) => item.id !== id);
       return { ok: true };
     });
