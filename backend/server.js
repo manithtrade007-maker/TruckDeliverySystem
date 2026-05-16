@@ -1,8 +1,9 @@
 import { createServer } from "node:http";
-import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { DatabaseSync } from "node:sqlite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +13,8 @@ const frontendDistDir = path.join(frontendDir, "dist");
 const dataDir = path.join(rootDir, "backend");
 const dataFile = path.join(dataDir, "data.json");
 const dataTempFile = path.join(dataDir, "data.json.tmp");
+const databaseFile = path.join(dataDir, "truck_delivery.db");
+const backupDir = path.join(dataDir, "backups");
 const port = Number(process.env.PORT || 5058);
 const host = process.env.HOST || "0.0.0.0";
 let saveQueue = Promise.resolve();
@@ -315,17 +318,15 @@ function baselinePrices() {
   ];
 }
 
-async function ensureDataFile() {
-  await mkdir(dataDir, { recursive: true });
-  if (!existsSync(dataFile)) {
-    await writeFile(dataFile, JSON.stringify(defaultData, null, 2));
-  }
+let db;
+
+function getDb() {
+  if (!db) db = new DatabaseSync(databaseFile);
+  return db;
 }
 
-async function readData() {
-  await ensureDataFile();
-  const raw = await readFile(dataFile, "utf8");
-  const data = JSON.parse(raw);
+function normalizeDataShape(data) {
+  data.settings ||= { ...defaultData.settings };
   data.statements ||= [];
   data.deliveries ||= [];
   data.trucks ||= [];
@@ -348,6 +349,157 @@ async function readData() {
   return data;
 }
 
+function createSchema(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS trucks (
+      truckNo TEXT PRIMARY KEY,
+      truckType TEXT NOT NULL,
+      driverName TEXT,
+      phone TEXT,
+      active INTEGER NOT NULL DEFAULT 1
+    );
+    CREATE TABLE IF NOT EXISTS prices (
+      id TEXT PRIMARY KEY,
+      fromLocation TEXT NOT NULL,
+      toLocation TEXT NOT NULL,
+      truckType TEXT NOT NULL,
+      distanceKm REAL NOT NULL DEFAULT 0,
+      companyUnitPrice REAL NOT NULL DEFAULT 0,
+      truckSalaryUnitPrice REAL NOT NULL DEFAULT 0,
+      effectiveDate TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1
+    );
+    CREATE TABLE IF NOT EXISTS statements (
+      id TEXT PRIMARY KEY,
+      month TEXT NOT NULL,
+      statementNumber INTEGER NOT NULL,
+      statementDate TEXT NOT NULL,
+      truckType TEXT NOT NULL,
+      status TEXT NOT NULL,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS statements_month_number_idx ON statements(month, statementNumber);
+    CREATE TABLE IF NOT EXISTS deliveries (
+      id TEXT PRIMARY KEY,
+      statementId TEXT NOT NULL,
+      deliveryDate TEXT NOT NULL,
+      invoiceNo TEXT NOT NULL,
+      truckNo TEXT NOT NULL,
+      truckType TEXT NOT NULL,
+      driverName TEXT,
+      fromLocation TEXT NOT NULL,
+      toLocation TEXT NOT NULL,
+      distanceKm REAL NOT NULL DEFAULT 0,
+      qtyTon REAL NOT NULL DEFAULT 0,
+      companyUnitPrice REAL NOT NULL DEFAULT 0,
+      companyTotalAmount REAL NOT NULL DEFAULT 0,
+      truckSalaryUnitPrice REAL NOT NULL DEFAULT 0,
+      truckSalaryAmount REAL NOT NULL DEFAULT 0,
+      status TEXT,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS deliveries_invoice_idx ON deliveries(invoiceNo);
+    CREATE TABLE IF NOT EXISTS activity (
+      id TEXT PRIMARY KEY,
+      message TEXT NOT NULL,
+      type TEXT,
+      createdAt TEXT
+    );
+  `);
+}
+
+function writeDataToDb(data) {
+  const database = getDb();
+  const normalized = normalizeDataShape(structuredClone(data));
+  database.exec("BEGIN");
+  try {
+    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity;");
+    const insertSetting = database.prepare("INSERT INTO settings (key, value) VALUES (?, ?)");
+    for (const [key, value] of Object.entries(normalized.settings)) insertSetting.run(key, JSON.stringify(value));
+
+    const insertTruck = database.prepare("INSERT INTO trucks (truckNo, truckType, driverName, phone, active) VALUES (?, ?, ?, ?, ?)");
+    for (const truck of normalized.trucks) insertTruck.run(truck.truckNo, truck.truckType, truck.driverName || "", truck.phone || "", truck.active === false ? 0 : 1);
+
+    const insertPrice = database.prepare(`
+      INSERT INTO prices (id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const price of normalized.prices) {
+      insertPrice.run(price.id, price.fromLocation, price.toLocation, price.truckType, toNumber(price.distanceKm), toNumber(price.companyUnitPrice), toNumber(price.truckSalaryUnitPrice), effectiveDateOf(price), price.active === false ? 0 : 1);
+    }
+
+    const insertStatement = database.prepare(`
+      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const statement of normalized.statements) {
+      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.createdAt || "", statement.updatedAt || "");
+    }
+
+    const insertDelivery = database.prepare(`
+      INSERT INTO deliveries (id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const delivery of normalized.deliveries) {
+      insertDelivery.run(delivery.id, delivery.statementId, delivery.deliveryDate, delivery.invoiceNo, delivery.truckNo, delivery.truckType, delivery.driverName || "", delivery.fromLocation, delivery.toLocation, toNumber(delivery.distanceKm), toNumber(delivery.qtyTon), toNumber(delivery.companyUnitPrice), toNumber(delivery.companyTotalAmount), toNumber(delivery.truckSalaryUnitPrice), toNumber(delivery.truckSalaryAmount), delivery.status || "Draft", delivery.createdAt || "", delivery.updatedAt || "");
+    }
+
+    const insertActivity = database.prepare("INSERT INTO activity (id, message, type, createdAt) VALUES (?, ?, ?, ?)");
+    for (const activity of normalized.activity) insertActivity.run(activity.id, activity.message, activity.type || "info", activity.createdAt || "");
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+async function dataFromJsonFile() {
+  if (!existsSync(dataFile)) return structuredClone(defaultData);
+  const raw = await readFile(dataFile, "utf8");
+  return JSON.parse(raw);
+}
+
+async function ensureDataStore() {
+  await mkdir(dataDir, { recursive: true });
+  await mkdir(backupDir, { recursive: true });
+  const database = getDb();
+  createSchema(database);
+  const hasRows = database.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM trucks) +
+      (SELECT COUNT(*) FROM prices) +
+      (SELECT COUNT(*) FROM statements) +
+      (SELECT COUNT(*) FROM deliveries) AS count
+  `).get().count;
+  if (!hasRows) {
+    const sourceData = await dataFromJsonFile();
+    writeDataToDb(sourceData);
+  }
+}
+
+async function readData() {
+  await ensureDataStore();
+  const database = getDb();
+  const settings = {};
+  for (const row of database.prepare("SELECT key, value FROM settings").all()) {
+    settings[row.key] = JSON.parse(row.value);
+  }
+  return normalizeDataShape({
+    settings,
+    trucks: database.prepare("SELECT truckNo, truckType, driverName, phone, active FROM trucks ORDER BY truckNo").all().map((row) => ({ ...row, active: Boolean(row.active) })),
+    prices: database.prepare("SELECT id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active FROM prices ORDER BY truckType, toLocation, effectiveDate").all().map((row) => ({ ...row, active: Boolean(row.active) })),
+    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all(),
+    deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all(),
+    activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all()
+  });
+}
+
 function addActivity(data, message, type = "info") {
   data.activity ||= [];
   data.activity.unshift({
@@ -359,9 +511,48 @@ function addActivity(data, message, type = "info") {
   data.activity = data.activity.slice(0, 50);
 }
 
+function timestampForFile(date = new Date()) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate())
+  ].join("-") + `T${[pad(date.getHours()), pad(date.getMinutes()), pad(date.getSeconds())].join("-")}`;
+}
+
+function backupName(reason = "manual") {
+  return `backup-${reason}-${timestampForFile()}.json`;
+}
+
+async function createBackup(data, reason = "manual") {
+  await mkdir(backupDir, { recursive: true });
+  const fileName = backupName(reason);
+  const filePath = path.join(backupDir, fileName);
+  await writeFile(filePath, JSON.stringify(data, null, 2));
+  return fileName;
+}
+
+async function ensureDailyBackup(data) {
+  await mkdir(backupDir, { recursive: true });
+  const todayKey = timestampForFile().slice(0, 10);
+  const files = await readdir(backupDir).catch(() => []);
+  const alreadyBackedUp = files.some((file) => file.startsWith(`backup-auto-${todayKey}`));
+  if (!alreadyBackedUp) await createBackup(data, "auto");
+}
+
+function validateRestoreData(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Backup file is not valid.");
+  if (!data.settings || typeof data.settings !== "object") throw new Error("Backup is missing settings.");
+  if (!Array.isArray(data.trucks)) throw new Error("Backup is missing trucks.");
+  if (!Array.isArray(data.prices)) throw new Error("Backup is missing prices.");
+  if (!Array.isArray(data.statements)) throw new Error("Backup is missing statements.");
+  if (!Array.isArray(data.deliveries)) throw new Error("Backup is missing deliveries.");
+}
+
 async function saveData(data) {
   const body = JSON.stringify(data, null, 2);
   saveQueue = saveQueue.then(async () => {
+    writeDataToDb(data);
     await writeFile(dataTempFile, body);
     await rename(dataTempFile, dataFile);
   });
@@ -371,6 +562,7 @@ async function saveData(data) {
 async function updateData(mutator) {
   const operation = mutationQueue.then(async () => {
     const data = await readData();
+    await ensureDailyBackup(data);
     const result = await mutator(data);
     await saveData(data);
     return result;
@@ -931,6 +1123,45 @@ async function api(req, res, url) {
 
   if (req.method === "GET" && url.pathname === "/api/data") {
     return sendJson(res, 200, { ...data, statements: statementsWithCounts(data) });
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/backup/download") {
+    const fileName = `truck-delivery-backup-${timestampForFile()}.json`;
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${fileName}"`
+    });
+    return res.end(JSON.stringify(data, null, 2));
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/backup/create") {
+    const result = await updateData(async (data) => {
+      addActivity(data, "Created manual data backup.", "backup");
+      const fileName = await createBackup(data, "manual");
+      return { fileName };
+    });
+    return sendJson(res, 200, result);
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/backup/list") {
+    const files = (await readdir(backupDir).catch(() => []))
+      .filter((file) => file.endsWith(".json"))
+      .sort((a, b) => b.localeCompare(a));
+    return sendJson(res, 200, { files });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/backup/restore") {
+    const restored = await readBody(req);
+    validateRestoreData(restored);
+    await updateData(async (data) => {
+      await createBackup(data, "before-restore");
+      for (const key of Object.keys(data)) delete data[key];
+      Object.assign(data, restored);
+      data.activity ||= [];
+      addActivity(data, "Restored data from backup file.", "backup");
+      return { ok: true };
+    });
+    return sendJson(res, 200, { ok: true });
   }
 
   if (req.method === "GET" && url.pathname === "/api/next-statement-number") {

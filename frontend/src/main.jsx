@@ -6,12 +6,39 @@ const today = () => new Date().toISOString().slice(0, 10);
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 const money = (value) => Number(value || 0).toFixed(2);
 const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
+const routeKey = (price) => [price.fromLocation, price.toLocation, price.truckType].join("::");
 const monthName = (value) => {
   if (!value) return "";
   const [year, month] = value.split("-");
   const date = new Date(Number(year), Number(month) - 1, 1);
   return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 };
+
+function groupPriceHistory(prices) {
+  const groups = new Map();
+  for (const price of prices) {
+    const key = routeKey(price);
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        fromLocation: price.fromLocation,
+        toLocation: price.toLocation,
+        truckType: price.truckType,
+        versions: []
+      });
+    }
+    groups.get(key).versions.push(price);
+  }
+  return [...groups.values()]
+    .map((group) => {
+      const versions = group.versions
+        .slice()
+        .sort((a, b) => priceEffectiveDate(b).localeCompare(priceEffectiveDate(a)));
+      const activePrice = versions.find((price) => priceEffectiveDate(price) <= today()) || versions[versions.length - 1];
+      return { ...group, versions, activePrice };
+    })
+    .sort((a, b) => a.toLocation.localeCompare(b.toLocation));
+}
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -148,6 +175,7 @@ function App() {
     effectiveDate: today()
   });
   const [settingsForm, setSettingsForm] = useState({ companyName: "", defaultFromLocation: "" });
+  const [backupFiles, setBackupFiles] = useState([]);
 
   const selectedStatement = useMemo(
     () => data.statements.find((statement) => statement.id === selectedStatementId),
@@ -299,6 +327,8 @@ function App() {
   const isEditingTruck = data.trucks.some((truck) => truck.truckNo === truckForm.truckNo);
   const filteredCompanyPrices = data.prices.filter((price) => price.truckType === priceForm.truckType);
   const filteredDriverPrices = data.prices.filter((price) => price.truckType === driverPriceForm.truckType);
+  const companyPriceGroups = useMemo(() => groupPriceHistory(filteredCompanyPrices), [filteredCompanyPrices]);
+  const driverPriceGroups = useMemo(() => groupPriceHistory(filteredDriverPrices), [filteredDriverPrices]);
 
   const isDraft = selectedStatement?.status === "Draft";
   const isEditingDelivery = Boolean(deliveryForm.id);
@@ -318,6 +348,12 @@ function App() {
       defaultFromLocation: next.settings.defaultFromLocation || ""
     });
     setPriceForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
+    loadBackups().catch(() => {});
+  }
+
+  async function loadBackups() {
+    const result = await api("/api/backup/list");
+    setBackupFiles(result.files || []);
   }
 
   useEffect(() => {
@@ -629,6 +665,42 @@ function App() {
     } catch (err) {
       flash(err.message, "error");
     }
+  }
+
+  async function createManualBackup() {
+    try {
+      const result = await api("/api/backup/create", { method: "POST" });
+      await loadBackups();
+      flash(`Backup created: ${result.fileName}`);
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
+  function downloadBackup() {
+    window.location.href = "/api/backup/download";
+  }
+
+  function restoreBackup() {
+    const ok = window.confirm("Restore from a backup file? This will replace the current system data. A safety backup will be created first.");
+    if (!ok) return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json,.json";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const restoredData = JSON.parse(text);
+        await api("/api/backup/restore", { method: "POST", body: JSON.stringify(restoredData) });
+        await loadData();
+        flash("Backup restored.");
+      } catch (err) {
+        flash(err.message, "error");
+      }
+    };
+    input.click();
   }
 
   function exportStatement() {
@@ -1249,15 +1321,38 @@ function App() {
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
                     <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{priceForm.truckType}</h3>
-                    {filteredCompanyPrices.map((price) => (
-                      <div key={price.id} className="grid gap-3 rounded-2xl border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center">
-                        <div>
-                          <strong className="block text-sm">{price.fromLocation} to {price.toLocation}</strong>
-                          <span className="text-xs text-slate-500">Effective {priceEffectiveDate(price)} | {Number(price.distanceKm || 0).toFixed(1)} KM | Company ${money(price.companyUnitPrice)}</span>
+                    {companyPriceGroups.map((group) => (
+                      <div key={group.key} className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
+                          <div>
+                            <strong className="block text-base">{group.fromLocation} to {group.toLocation}</strong>
+                            <span className="text-xs font-bold text-slate-500">
+                              {group.truckType} | {group.versions.length} price version{group.versions.length === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                          <div className="rounded-xl bg-teal-50 px-3 py-2 text-right">
+                            <div className="text-[11px] font-black uppercase tracking-wide text-teal-700">Active Today</div>
+                            <div className="text-lg font-black text-teal-950">$ {money(group.activePrice?.companyUnitPrice)}</div>
+                            <div className="text-xs font-bold text-teal-700">from {priceEffectiveDate(group.activePrice || {})}</div>
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button type="button" variant="secondary" onClick={() => setPriceForm({ ...price, effectiveDate: priceEffectiveDate(price) })}>Edit</Button>
-                          <Button type="button" variant="danger" onClick={() => deletePrice(price)}>Delete</Button>
+                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-100">
+                          {group.versions.map((price) => {
+                            const isActive = price.id === group.activePrice?.id;
+                            return (
+                              <div key={price.id} className={`grid gap-3 border-b border-slate-100 p-3 last:border-b-0 md:grid-cols-[130px_1fr_auto] md:items-center ${isActive ? "bg-teal-50/70" : "bg-white"}`}>
+                                <div className="font-black text-slate-900">{priceEffectiveDate(price)}</div>
+                                <div className="text-sm font-bold text-slate-600">
+                                  {Number(price.distanceKm || 0).toFixed(1)} KM | Company $ {money(price.companyUnitPrice)}
+                                  {isActive && <span className="ml-2 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-black text-teal-800">Active</span>}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Button type="button" variant="secondary" onClick={() => setPriceForm({ ...price, effectiveDate: priceEffectiveDate(price) })}>Edit</Button>
+                                  <Button type="button" variant="danger" onClick={() => deletePrice(price)}>Delete</Button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -1286,23 +1381,46 @@ function App() {
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
                     <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{driverPriceForm.truckType}</h3>
-                    {filteredDriverPrices.map((price) => (
-                      <div key={price.id} className="grid gap-3 rounded-2xl border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center">
-                        <div>
-                          <strong className="block text-sm">{price.fromLocation} to {price.toLocation}</strong>
-                          <span className="text-xs text-slate-500">Effective {priceEffectiveDate(price)} | {Number(price.distanceKm || 0).toFixed(1)} KM | Driver ${money(price.truckSalaryUnitPrice)}</span>
+                    {driverPriceGroups.map((group) => (
+                      <div key={group.key} className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
+                          <div>
+                            <strong className="block text-base">{group.fromLocation} to {group.toLocation}</strong>
+                            <span className="text-xs font-bold text-slate-500">
+                              {group.truckType} | {group.versions.length} driver price version{group.versions.length === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                          <div className="rounded-xl bg-amber-50 px-3 py-2 text-right">
+                            <div className="text-[11px] font-black uppercase tracking-wide text-amber-700">Active Today</div>
+                            <div className="text-lg font-black text-amber-950">$ {money(group.activePrice?.truckSalaryUnitPrice)}</div>
+                            <div className="text-xs font-bold text-amber-700">from {priceEffectiveDate(group.activePrice || {})}</div>
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({
-                            id: price.id,
-                            fromLocation: price.fromLocation,
-                            toLocation: price.toLocation,
-                            truckType: price.truckType,
-                            distanceKm: price.distanceKm,
-                            truckSalaryUnitPrice: price.truckSalaryUnitPrice,
-                            effectiveDate: priceEffectiveDate(price)
-                          })}>Edit</Button>
-                          <Button type="button" variant="danger" onClick={() => deletePrice(price)}>Delete</Button>
+                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-100">
+                          {group.versions.map((price) => {
+                            const isActive = price.id === group.activePrice?.id;
+                            return (
+                              <div key={price.id} className={`grid gap-3 border-b border-slate-100 p-3 last:border-b-0 md:grid-cols-[130px_1fr_auto] md:items-center ${isActive ? "bg-amber-50/70" : "bg-white"}`}>
+                                <div className="font-black text-slate-900">{priceEffectiveDate(price)}</div>
+                                <div className="text-sm font-bold text-slate-600">
+                                  {Number(price.distanceKm || 0).toFixed(1)} KM | Driver $ {money(price.truckSalaryUnitPrice)}
+                                  {isActive && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-black text-amber-800">Active</span>}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({
+                                    id: price.id,
+                                    fromLocation: price.fromLocation,
+                                    toLocation: price.toLocation,
+                                    truckType: price.truckType,
+                                    distanceKm: price.distanceKm,
+                                    truckSalaryUnitPrice: price.truckSalaryUnitPrice,
+                                    effectiveDate: priceEffectiveDate(price)
+                                  })}>Edit</Button>
+                                  <Button type="button" variant="danger" onClick={() => deletePrice(price)}>Delete</Button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -1318,6 +1436,25 @@ function App() {
               <Field label="Default From"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
               <div className="flex items-end"><Button type="submit">Save Settings</Button></div>
             </form>
+          </Panel>
+
+          <Panel>
+            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <h2 className="text-lg font-bold">Data Backup</h2>
+                <p className="mt-1 text-sm font-bold text-slate-500">
+                  Automatic backup runs before the first data change each day. Create or download a backup before major edits.
+                </p>
+                <p className="mt-2 text-xs font-black uppercase tracking-wide text-slate-500">
+                  Latest backup: {backupFiles[0] || "No backup file yet"}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" onClick={createManualBackup}>Create Backup</Button>
+                <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
+                <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
+              </div>
+            </div>
           </Panel>
         </main>
       )}
