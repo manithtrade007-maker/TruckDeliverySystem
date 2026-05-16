@@ -2,11 +2,26 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
-const today = () => new Date().toISOString().slice(0, 10);
-const currentMonth = () => new Date().toISOString().slice(0, 7);
+const localDate = (date = new Date()) => {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+const today = () => localDate();
+const currentMonth = () => localDate().slice(0, 7);
 const money = (value) => Number(value || 0).toFixed(2);
 const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
 const routeKey = (price) => [price.fromLocation, price.toLocation, price.truckType].join("::");
+const formatDate = (value) => {
+  const text = String(value || "");
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return text;
+  return `${match[3]}/${match[2]}/${match[1]}`;
+};
+const formatDateTime = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value || "";
+  return `${formatDate(localDate(date))} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+};
 const monthName = (value) => {
   if (!value) return "";
   const [year, month] = value.split("-");
@@ -34,7 +49,10 @@ function groupPriceHistory(prices) {
       const versions = group.versions
         .slice()
         .sort((a, b) => priceEffectiveDate(b).localeCompare(priceEffectiveDate(a)));
-      const activePrice = versions.find((price) => priceEffectiveDate(price) <= today()) || versions[versions.length - 1];
+      const activePrice =
+        versions.find((price) => price.active !== false && priceEffectiveDate(price) <= today()) ||
+        versions.find((price) => price.active !== false) ||
+        null;
       return { ...group, versions, activePrice };
     })
     .sort((a, b) => a.toLocation.localeCompare(b.toLocation));
@@ -131,6 +149,7 @@ function App() {
   const [page, setPage] = useState("dashboard");
   const [data, setData] = useState({ settings: {}, trucks: [], prices: [], statements: [], deliveries: [] });
   const [selectedStatementId, setSelectedStatementId] = useState("");
+  const [viewStatementId, setViewStatementId] = useState("");
   const [notice, setNotice] = useState({ type: "", text: "" });
   const [reportMonth, setReportMonth] = useState(currentMonth());
   const [reportTruckNo, setReportTruckNo] = useState("");
@@ -182,12 +201,25 @@ function App() {
     [data.statements, selectedStatementId]
   );
 
+  const selectedViewStatement = useMemo(
+    () => data.statements.find((statement) => statement.id === viewStatementId),
+    [data.statements, viewStatementId]
+  );
+
   const statementRows = useMemo(
     () =>
       data.deliveries
         .filter((row) => row.statementId === selectedStatementId)
         .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || ""))),
     [data.deliveries, selectedStatementId]
+  );
+
+  const viewStatementRows = useMemo(
+    () =>
+      data.deliveries
+        .filter((row) => row.statementId === viewStatementId)
+        .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || ""))),
+    [data.deliveries, viewStatementId]
   );
 
   const filteredStatements = useMemo(() => {
@@ -210,7 +242,7 @@ function App() {
   }, [data.statements, filters.month, statementForm.month]);
 
   const truckOptions = useMemo(
-    () => data.trucks.filter((truck) => selectedStatement && truck.truckType === selectedStatement.truckType),
+    () => data.trucks.filter((truck) => selectedStatement && truck.active !== false && truck.truckType === selectedStatement.truckType),
     [data.trucks, selectedStatement]
   );
 
@@ -241,6 +273,14 @@ function App() {
     : null;
 
   const totals = statementRows.reduce(
+    (sum, row) => ({
+      qty: sum.qty + Number(row.qtyTon || 0),
+      amount: sum.amount + Number(row.companyTotalAmount || 0)
+    }),
+    { qty: 0, amount: 0 }
+  );
+
+  const viewTotals = viewStatementRows.reduce(
     (sum, row) => ({
       qty: sum.qty + Number(row.qtyTon || 0),
       amount: sum.amount + Number(row.companyTotalAmount || 0)
@@ -333,7 +373,30 @@ function App() {
   const isDraft = selectedStatement?.status === "Draft";
   const isEditingDelivery = Boolean(deliveryForm.id);
   const canEditRows = Boolean(selectedStatement) && isDraft;
-  const canSaveDelivery = canEditRows && (isEditingDelivery || statementRows.length < 30);
+  const duplicateInvoice = Boolean(deliveryForm.invoiceNo) && data.deliveries.some(
+    (row) => row.invoiceNo === deliveryForm.invoiceNo && row.id !== deliveryForm.id
+  );
+  const typedTruck = Boolean(deliveryForm.truckNo);
+  const truckMissing = typedTruck && !selectedTruck;
+  const truckTypeMismatch = Boolean(selectedTruck && selectedStatement && selectedTruck.truckType !== selectedStatement.truckType);
+  const priceLookupReady = Boolean(deliveryForm.deliveryDate && selectedTruck && deliveryForm.toLocation);
+  const missingPrice = priceLookupReady && !selectedPrice;
+  const deliveryFormReady = Boolean(
+    deliveryForm.deliveryDate &&
+    deliveryForm.invoiceNo &&
+    selectedTruck &&
+    deliveryForm.toLocation &&
+    Number(deliveryForm.qtyTon || 0) > 0
+  );
+  const canFinishStatement = Boolean(selectedStatement && isDraft && statementRows.length > 0);
+  const canSaveDelivery =
+    canEditRows &&
+    deliveryFormReady &&
+    (isEditingDelivery || statementRows.length < 30) &&
+    !duplicateInvoice &&
+    !truckMissing &&
+    !truckTypeMismatch &&
+    !missingPrice;
 
   function flash(text, type = "success") {
     setNotice({ text, type });
@@ -361,6 +424,7 @@ function App() {
   }, []);
 
   function openStatement(statement) {
+    setViewStatementId("");
     setEntryTruckType(statement.truckType);
     setShowStatementWorkspace(true);
     setSelectedStatementId(statement.id);
@@ -372,6 +436,17 @@ function App() {
       statementDate: statement.statementDate
     });
     resetDeliveryForm();
+  }
+
+  function viewStatement(statement) {
+    setSelectedStatementId("");
+    setViewStatementId(statement.id);
+    setEntryTruckType(statement.truckType);
+    setEntryActionTruckType("");
+    setShowStatementWorkspace(false);
+    setFilters((current) => ({ ...current, month: statement.month }));
+    resetDeliveryForm();
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   }
 
   async function saveStatement(event) {
@@ -397,6 +472,7 @@ function App() {
     const month = statementForm.month || currentMonth();
     const truckType = entryTruckType;
     setSelectedStatementId("");
+    setViewStatementId("");
     setShowStatementWorkspace(false);
     resetDeliveryForm();
     setStatementForm({ id: "", month, truckType, statementNumber: "", statementDate: today() });
@@ -406,6 +482,7 @@ function App() {
     const month = statementForm.month || filters.month || currentMonth();
     const truckType = entryTruckType;
     setSelectedStatementId("");
+    setViewStatementId("");
     setShowStatementWorkspace(false);
     resetDeliveryForm();
     setStatementForm({ id: "", month, truckType, statementNumber: "", statementDate: today() });
@@ -426,6 +503,7 @@ function App() {
     const statementNumber = await getNextStatementNumber(month);
     setEntryTruckType(truckType);
     setSelectedStatementId("");
+    setViewStatementId("");
     resetDeliveryForm();
     setStatementForm({ id: "", month, truckType, statementNumber, statementDate: today() });
     setShowStatementWorkspace(true);
@@ -436,6 +514,7 @@ function App() {
   async function switchEntryTruckType(truckType) {
     setEntryTruckType(truckType);
     setSelectedStatementId("");
+    setViewStatementId("");
     setShowStatementWorkspace(false);
     resetDeliveryForm();
     const month = statementForm.month || filters.month || currentMonth();
@@ -444,6 +523,10 @@ function App() {
 
   async function finishStatement() {
     if (!selectedStatement) return;
+    if (statementRows.length < 1) {
+      flash("Add at least one delivery row before finishing this statement.", "error");
+      return;
+    }
     const finishedStatementId = selectedStatement.id;
     const finishedMonth = selectedStatement.month;
     const finishedTruckType = selectedStatement.truckType;
@@ -452,6 +535,7 @@ function App() {
       setEntryTruckType(finishedTruckType);
       setEntryActionTruckType("");
       setSelectedStatementId("");
+      setViewStatementId("");
       setShowStatementWorkspace(false);
       setFilters((current) => ({ ...current, month: finishedMonth }));
       resetDeliveryForm();
@@ -492,7 +576,11 @@ function App() {
   }
 
   async function deleteStatement(statement) {
-    const ok = window.confirm(`Delete Statement ${statement.statementNumber}? This will also delete all delivery rows inside it.`);
+    const ok = window.confirm(
+      statement.status === "Draft"
+        ? `Delete draft Statement ${statement.statementNumber}? This will also delete all delivery rows inside it.`
+        : `Statement ${statement.statementNumber} is ${statement.status}. Finished/exported statements are protected and cannot be deleted.`
+    );
     if (!ok) return;
     try {
       await api(`/api/statements/${statement.id}`, { method: "DELETE" });
@@ -511,6 +599,10 @@ function App() {
   async function saveDelivery(event) {
     event.preventDefault();
     try {
+      if (duplicateInvoice) throw new Error("Invoice number already exists. Check the invoice before saving.");
+      if (truckMissing) throw new Error("Truck number does not exist or is inactive.");
+      if (truckTypeMismatch) throw new Error(`Truck ${deliveryForm.truckNo} is not allowed in this ${selectedStatement.truckType} statement.`);
+      if (missingPrice) throw new Error(`No active price found for ${deliveryForm.toLocation} on ${formatDate(deliveryForm.deliveryDate)}.`);
       await api("/api/deliveries", {
         method: "POST",
         body: JSON.stringify({ ...deliveryForm, statementId: selectedStatementId })
@@ -565,13 +657,13 @@ function App() {
   }
 
   async function deleteTruck(truck) {
-    const ok = window.confirm(`Delete truck ${truck.truckNo}?`);
+    const ok = window.confirm(`Delete truck ${truck.truckNo}? If it has delivery history, it will be deactivated instead of permanently deleted.`);
     if (!ok) return;
     try {
-      await api(`/api/trucks/${encodeURIComponent(truck.truckNo)}`, { method: "DELETE" });
+      const result = await api(`/api/trucks/${encodeURIComponent(truck.truckNo)}`, { method: "DELETE" });
       if (truckForm.truckNo === truck.truckNo) setTruckForm({ truckNo: "", truckType: "With Crane", driverName: "", phone: "" });
       await loadData();
-      flash("Truck deleted.");
+      flash(result.action === "deactivated" ? "Truck deactivated because it has delivery history." : "Truck deleted.");
     } catch (err) {
       flash(err.message, "error");
     }
@@ -639,10 +731,10 @@ function App() {
   }
 
   async function deletePrice(price) {
-    const ok = window.confirm(`Delete price for ${price.toLocation} (${price.truckType})?`);
+    const ok = window.confirm(`Delete price for ${price.toLocation} (${price.truckType})? If it has delivery history, it will be deactivated instead of permanently deleted.`);
     if (!ok) return;
     try {
-      await api(`/api/prices/${encodeURIComponent(price.id)}`, { method: "DELETE" });
+      const result = await api(`/api/prices/${encodeURIComponent(price.id)}`, { method: "DELETE" });
       if (priceForm.id === price.id) {
         setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: "With Crane", distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: today() });
       }
@@ -650,7 +742,7 @@ function App() {
         setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: "With Crane", distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: today() });
       }
       await loadData();
-      flash("Price deleted.");
+      flash(result.action === "deactivated" ? "Price deactivated and kept for history." : "Price deleted.");
     } catch (err) {
       flash(err.message, "error");
     }
@@ -706,6 +798,10 @@ function App() {
   function exportStatement() {
     if (!selectedStatement) return;
     window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedStatement.id)}&truckType=${encodeURIComponent(selectedStatement.truckType)}`;
+  }
+
+  function exportStatementFile(statement, format = "xls") {
+    window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(statement.id)}&truckType=${encodeURIComponent(statement.truckType)}&format=${encodeURIComponent(format)}`;
   }
 
   const navItems = [
@@ -781,24 +877,6 @@ function App() {
           </div>
 
           <Panel>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-black tracking-tight">News & Changes</h3>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-500">Latest activity</span>
-            </div>
-            <div className="grid gap-2">
-              {(data.activity || []).slice(0, 6).map((item) => (
-                <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="text-sm font-black text-slate-900">{item.message}</div>
-                  <div className="mt-1 text-xs font-bold text-slate-500">{new Date(item.createdAt).toLocaleString()}</div>
-                </div>
-              ))}
-              {(data.activity || []).length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm font-bold text-slate-500">No setup changes recorded yet.</div>
-              )}
-            </div>
-          </Panel>
-
-          <Panel>
             <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <h3 className="text-lg font-black tracking-tight">Truck Performance</h3>
               <div className="flex flex-wrap gap-2">
@@ -854,10 +932,28 @@ function App() {
               </table>
             </div>
           </Panel>
+
+          <Panel>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-black tracking-tight">News & Changes</h3>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-500">Latest activity</span>
+            </div>
+            <div className="grid gap-2">
+              {(data.activity || []).slice(0, 6).map((item) => (
+                <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="text-sm font-black text-slate-900">{item.message}</div>
+                  <div className="mt-1 text-xs font-bold text-slate-500">{formatDateTime(item.createdAt)}</div>
+                </div>
+              ))}
+              {(data.activity || []).length === 0 && (
+                <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm font-bold text-slate-500">No setup changes recorded yet.</div>
+              )}
+            </div>
+          </Panel>
         </main>
       ) : page === "data-entry" ? (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-          {!selectedStatement && !showStatementWorkspace && (
+          {!selectedViewStatement && !selectedStatement && !showStatementWorkspace && (
           <Panel className="lg:col-span-2">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -889,7 +985,7 @@ function App() {
           </Panel>
           )}
 
-          {entryActionTruckType && (
+          {!selectedViewStatement && entryActionTruckType && (
             <div className="fixed inset-0 z-30 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
               <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
                 <div className="mb-4">
@@ -910,7 +1006,77 @@ function App() {
             </div>
           )}
 
-          {!showStatementWorkspace && !selectedStatement && (
+          {selectedViewStatement && (
+            <Panel className="lg:col-span-2">
+              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="text-xl font-black tracking-tight">Statement {selectedViewStatement.statementNumber} - {monthName(selectedViewStatement.month)}</h2>
+                  <p className="mt-1 text-sm font-bold text-slate-500">
+                    {selectedViewStatement.truckType} | {selectedViewStatement.status} | {viewStatementRows.length}/30 rows
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="secondary" onClick={backToStatementList}>Back to Statements</Button>
+                  <Button type="button" variant="secondary" onClick={() => openStatement(selectedViewStatement)}>Edit</Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedViewStatement.id)}&truckType=${encodeURIComponent(selectedViewStatement.truckType)}`;
+                    }}
+                    disabled={viewStatementRows.length < 1}
+                  >
+                    Export Statement
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <KpiCard label="Rows" value={`${viewStatementRows.length}/30`} tone="blue" />
+                <KpiCard label="Total QTY" value={`${viewTotals.qty.toFixed(4)}T`} tone="slate" />
+                <KpiCard label="Total Amount" value={`$${money(viewTotals.amount)}`} tone="amber" />
+              </div>
+              <div className="mt-4 overflow-auto rounded-xl border border-slate-200">
+                <table className="w-full min-w-[1100px] border-collapse bg-white text-sm">
+                  <thead className="bg-slate-900 text-white">
+                    <tr>
+                      <th className="px-3 py-3 text-left font-black">No</th>
+                      <th className="px-3 py-3 text-left font-black">Delivery Date</th>
+                      <th className="px-3 py-3 text-left font-black">Invoice Number</th>
+                      <th className="px-3 py-3 text-left font-black">Truck Number</th>
+                      <th className="px-3 py-3 text-left font-black">Type of Truck</th>
+                      <th className="px-3 py-3 text-left font-black">From Location</th>
+                      <th className="px-3 py-3 text-left font-black">To Location</th>
+                      <th className="px-3 py-3 text-right font-black">QTY(T)</th>
+                      <th className="px-3 py-3 text-right font-black">Unit Price</th>
+                      <th className="px-3 py-3 text-right font-black">Total Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewStatementRows.map((row, index) => (
+                      <tr key={row.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                        <td className="px-3 py-3 font-bold">{index + 1}</td>
+                        <td className="px-3 py-3">{formatDate(row.deliveryDate)}</td>
+                        <td className="px-3 py-3">{row.invoiceNo}</td>
+                        <td className="px-3 py-3 font-bold">{row.truckNo}</td>
+                        <td className="px-3 py-3">{row.truckType}</td>
+                        <td className="px-3 py-3">{row.fromLocation}</td>
+                        <td className="px-3 py-3">{row.toLocation}</td>
+                        <td className="px-3 py-3 text-right font-bold">{Number(row.qtyTon || 0).toFixed(5)}T</td>
+                        <td className="px-3 py-3 text-right">$ {money(row.companyUnitPrice)}</td>
+                        <td className="px-3 py-3 text-right font-black">$ {money(row.companyTotalAmount)}</td>
+                      </tr>
+                    ))}
+                    {viewStatementRows.length === 0 && (
+                      <tr>
+                        <td className="px-3 py-6 text-center text-sm font-bold text-slate-500" colSpan="10">No delivery rows in this statement.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          )}
+
+          {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
           <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
             <KpiCard label={`${statementCounts.month} With Crane Statements`} value={statementCounts.withCrane} tone="teal" />
             <KpiCard label={`${statementCounts.month} No Crane Statements`} value={statementCounts.withoutCrane} tone="blue" />
@@ -918,7 +1084,7 @@ function App() {
           </div>
           )}
 
-          {!showStatementWorkspace && !selectedStatement && (
+          {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
             <Panel id="all-statements-panel" className="lg:col-span-2">
               <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <h2 className="text-lg font-black tracking-tight">All Statements</h2>
@@ -949,6 +1115,9 @@ function App() {
                       <span className="text-xs text-slate-500">{statement.month} | {statement.status} | {statement.rowCount}/30 rows | ${money(statement.companyTotalAmount)}</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>
+                      <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "xls")} disabled={statement.rowCount < 1}>Excel</Button>
+                      <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "pdf")} disabled={statement.rowCount < 1}>PDF</Button>
                       <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
                       <Button type="button" variant="danger" onClick={() => deleteStatement(statement)}>Delete</Button>
                     </div>
@@ -1068,11 +1237,27 @@ function App() {
                   </Field>
                   <Field label="QTY(T)"><Input type="number" step="any" min="0" required disabled={!canEditRows} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} /></Field>
                   <Field label="Unit Price"><Input disabled value={selectedPrice ? `$${money(selectedPrice.companyUnitPrice)}` : ""} readOnly /></Field>
+                  {(duplicateInvoice || truckMissing || truckTypeMismatch || missingPrice) && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 md:col-span-4">
+                      {duplicateInvoice && <div>Invoice number already exists. Use a different invoice number or edit the existing row.</div>}
+                      {truckMissing && <div>Truck number does not exist or is inactive.</div>}
+                      {truckTypeMismatch && <div>This truck belongs to {selectedTruck.truckType}, so it cannot be saved inside a {selectedStatement.truckType} statement.</div>}
+                      {missingPrice && <div>No active price found for this location and delivery date. Add the price in Setup before saving.</div>}
+                    </div>
+                  )}
                   <div className="flex items-end gap-2 md:col-span-2">
                     <Button type="submit" disabled={!canSaveDelivery}>{isEditingDelivery ? "Update Row" : "Save Delivery"}</Button>
                     <Button type="button" variant="secondary" onClick={() => resetDeliveryForm()}>Cancel</Button>
-                    {isDraft && statementRows.length > 0 && (
-                      <Button type="button" variant="secondary" onClick={finishStatement}>Finish Statement</Button>
+                    {isDraft && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={finishStatement}
+                        disabled={!canFinishStatement}
+                        title={canFinishStatement ? "Finish this statement" : "Add at least one delivery row before finishing"}
+                      >
+                        Finish Statement
+                      </Button>
                     )}
                   </div>
                 </form>
@@ -1101,7 +1286,7 @@ function App() {
                   {statementRows.map((row, index) => (
                     <tr key={row.id} className={`border-b border-slate-100 transition ${deliveryForm.id === row.id ? "bg-teal-50" : "odd:bg-white even:bg-slate-50 hover:bg-sky-50"}`}>
                       <td className="px-3 py-3">{index + 1}</td>
-                      <td className="px-3 py-3 text-center">{row.deliveryDate}</td>
+                      <td className="px-3 py-3 text-center">{formatDate(row.deliveryDate)}</td>
                       <td className="px-3 py-3">{row.invoiceNo}</td>
                       <td className="px-3 py-3 font-bold">{row.truckNo}</td>
                       <td className="px-3 py-3">{row.truckType}</td>
@@ -1166,32 +1351,37 @@ function App() {
                 </div>
               </div>
               <div className="overflow-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[900px] border-collapse bg-white text-sm">
+                <table className="w-full min-w-[1050px] table-fixed border-collapse bg-white text-sm">
                   <thead className="bg-slate-900 text-white">
                     <tr>
-                      {["No", "Delivery Date", "Invoice No", "From", "To", "QTY(T)", "Driver Price", "Driver Amount"].map((heading) => (
-                        <th key={heading} className="px-3 py-3 text-left font-black">{heading}</th>
-                      ))}
+                      <th className="w-14 px-3 py-3 text-center font-black">No</th>
+                      <th className="w-32 px-3 py-3 text-center font-black">Delivery Date</th>
+                      <th className="w-36 px-3 py-3 text-left font-black">Invoice No</th>
+                      <th className="w-40 px-3 py-3 text-left font-black">From</th>
+                      <th className="px-3 py-3 text-left font-black">To</th>
+                      <th className="w-32 px-3 py-3 text-right font-black">QTY(T)</th>
+                      <th className="w-36 px-3 py-3 text-right font-black">Driver Price</th>
+                      <th className="w-40 px-3 py-3 text-right font-black">Driver Amount</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedDriverPaymentSection.rows.map((row, index) => (
                       <tr key={row.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
-                        <td className="px-3 py-3">{index + 1}</td>
-                        <td className="px-3 py-3">{row.deliveryDate}</td>
-                        <td className="px-3 py-3">{row.invoiceNo}</td>
+                        <td className="px-3 py-3 text-center">{index + 1}</td>
+                        <td className="px-3 py-3 text-center whitespace-nowrap">{formatDate(row.deliveryDate)}</td>
+                        <td className="px-3 py-3 tabular-nums">{row.invoiceNo}</td>
                         <td className="px-3 py-3">{row.fromLocation}</td>
                         <td className="px-3 py-3">{row.toLocation}</td>
-                        <td className="px-3 py-3 text-right font-bold">{Number(row.qtyTon || 0).toFixed(4)}T</td>
-                        <td className="px-3 py-3 text-right font-bold">$ {money(row.truckSalaryUnitPrice)}</td>
-                        <td className="px-3 py-3 text-right font-black">$ {money(row.truckSalaryAmount)}</td>
+                        <td className="px-3 py-3 text-right font-bold tabular-nums">{Number(row.qtyTon || 0).toFixed(4)}T</td>
+                        <td className="px-3 py-3 text-right font-bold tabular-nums">$ {money(row.truckSalaryUnitPrice)}</td>
+                        <td className="px-3 py-3 text-right font-black tabular-nums">$ {money(row.truckSalaryAmount)}</td>
                       </tr>
                     ))}
                     <tr className="bg-amber-50 font-black">
                       <td className="px-3 py-3" colSpan="5">Total</td>
-                      <td className="px-3 py-3 text-right">{selectedDriverPaymentSection.qty.toFixed(4)}T</td>
+                      <td className="px-3 py-3 text-right tabular-nums">{selectedDriverPaymentSection.qty.toFixed(4)}T</td>
                       <td className="px-3 py-3"></td>
-                      <td className="px-3 py-3 text-right">$ {money(selectedDriverPaymentSection.driverAmount)}</td>
+                      <td className="px-3 py-3 text-right tabular-nums">$ {money(selectedDriverPaymentSection.driverAmount)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1286,7 +1476,10 @@ function App() {
                     {data.trucks.filter((truck) => truck.truckType === truckType).map((truck) => (
                       <div key={truck.truckNo} className="grid gap-3 rounded-2xl border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center">
                         <div>
-                          <strong className="block text-sm">{truck.truckNo}</strong>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <strong className="block text-sm">{truck.truckNo}</strong>
+                            {truck.active === false && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-black text-slate-500">Inactive</span>}
+                          </div>
                           <span className="text-xs text-slate-500">{truck.driverName || "No driver"} {truck.phone ? `| ${truck.phone}` : ""}</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -1332,8 +1525,8 @@ function App() {
                           </div>
                           <div className="rounded-xl bg-teal-50 px-3 py-2 text-right">
                             <div className="text-[11px] font-black uppercase tracking-wide text-teal-700">Active Today</div>
-                            <div className="text-lg font-black text-teal-950">$ {money(group.activePrice?.companyUnitPrice)}</div>
-                            <div className="text-xs font-bold text-teal-700">from {priceEffectiveDate(group.activePrice || {})}</div>
+                            <div className="text-lg font-black text-teal-950">{group.activePrice ? `$ ${money(group.activePrice.companyUnitPrice)}` : "No active price"}</div>
+                            {group.activePrice && <div className="text-xs font-bold text-teal-700">from {formatDate(priceEffectiveDate(group.activePrice))}</div>}
                           </div>
                         </div>
                         <div className="mt-3 overflow-hidden rounded-xl border border-slate-100">
@@ -1341,10 +1534,11 @@ function App() {
                             const isActive = price.id === group.activePrice?.id;
                             return (
                               <div key={price.id} className={`grid gap-3 border-b border-slate-100 p-3 last:border-b-0 md:grid-cols-[130px_1fr_auto] md:items-center ${isActive ? "bg-teal-50/70" : "bg-white"}`}>
-                                <div className="font-black text-slate-900">{priceEffectiveDate(price)}</div>
+                                <div className="font-black text-slate-900">{formatDate(priceEffectiveDate(price))}</div>
                                 <div className="text-sm font-bold text-slate-600">
                                   {Number(price.distanceKm || 0).toFixed(1)} KM | Company $ {money(price.companyUnitPrice)}
                                   {isActive && <span className="ml-2 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-black text-teal-800">Active</span>}
+                                  {price.active === false && <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-black text-slate-500">Inactive</span>}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                   <Button type="button" variant="secondary" onClick={() => setPriceForm({ ...price, effectiveDate: priceEffectiveDate(price) })}>Edit</Button>
@@ -1392,8 +1586,8 @@ function App() {
                           </div>
                           <div className="rounded-xl bg-amber-50 px-3 py-2 text-right">
                             <div className="text-[11px] font-black uppercase tracking-wide text-amber-700">Active Today</div>
-                            <div className="text-lg font-black text-amber-950">$ {money(group.activePrice?.truckSalaryUnitPrice)}</div>
-                            <div className="text-xs font-bold text-amber-700">from {priceEffectiveDate(group.activePrice || {})}</div>
+                            <div className="text-lg font-black text-amber-950">{group.activePrice ? `$ ${money(group.activePrice.truckSalaryUnitPrice)}` : "No active price"}</div>
+                            {group.activePrice && <div className="text-xs font-bold text-amber-700">from {formatDate(priceEffectiveDate(group.activePrice))}</div>}
                           </div>
                         </div>
                         <div className="mt-3 overflow-hidden rounded-xl border border-slate-100">
@@ -1401,10 +1595,11 @@ function App() {
                             const isActive = price.id === group.activePrice?.id;
                             return (
                               <div key={price.id} className={`grid gap-3 border-b border-slate-100 p-3 last:border-b-0 md:grid-cols-[130px_1fr_auto] md:items-center ${isActive ? "bg-amber-50/70" : "bg-white"}`}>
-                                <div className="font-black text-slate-900">{priceEffectiveDate(price)}</div>
+                                <div className="font-black text-slate-900">{formatDate(priceEffectiveDate(price))}</div>
                                 <div className="text-sm font-bold text-slate-600">
                                   {Number(price.distanceKm || 0).toFixed(1)} KM | Driver $ {money(price.truckSalaryUnitPrice)}
                                   {isActive && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-black text-amber-800">Active</span>}
+                                  {price.active === false && <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-black text-slate-500">Inactive</span>}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                   <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({

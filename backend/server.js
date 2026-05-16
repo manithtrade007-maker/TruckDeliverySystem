@@ -796,7 +796,7 @@ function formatShortDate(value) {
   const text = normalizeText(value);
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return text;
-  return `${match[3]}/${match[2]}/${match[1].slice(2)}`;
+  return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
 function slug(value) {
@@ -804,6 +804,27 @@ function slug(value) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+function monthLabel(value) {
+  const text = normalizeText(value);
+  const match = text.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return text || "All Months";
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+  return `${monthNames[Number(match[2]) - 1] || match[2]} ${match[1]}`;
 }
 
 function truckTypeFileLabel(truckType) {
@@ -978,25 +999,46 @@ function accountingExport(data, rows) {
   );
 }
 
-function salaryExport(rows) {
-  const truckType = rows[0]?.truckType || "No Data";
+function salaryExport(data, rows, query = {}) {
+  const truck = data.trucks.find((item) => item.truckNo === query.truckNo) || {};
+  const truckNo = query.truckNo || rows[0]?.truckNo || "All Trucks";
+  const truckType = rows[0]?.truckType || truck.truckType || query.truckType || "No Data";
+  const driverName = rows[0]?.driverName || truck.driverName || "-";
+  const reportMonth = monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
+  const totalDriverAmount = rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0);
+  const headerHtml = (pageIndex, pages) => `
+    <tr>
+      <td class="title" colspan="8">${htmlEscape(data.settings.companyName || "N&M LOGISTIC")}</td>
+    </tr>
+    <tr>
+      <td class="meta" colspan="4">Driver Verification: ${htmlEscape(truckNo)}</td>
+      <td class="meta" colspan="2">Month:</td>
+      <td class="meta" colspan="2">${htmlEscape(reportMonth)}</td>
+    </tr>
+    <tr>
+      <td class="meta" colspan="4">Driver: ${htmlEscape(driverName)}</td>
+      <td class="meta" colspan="2">Truck Type:</td>
+      <td class="meta" colspan="2">${htmlEscape(truckType)}</td>
+    </tr>
+    <tr>
+      <td class="meta" colspan="4">Driver Payment: $ ${htmlEscape(money(totalDriverAmount))}</td>
+      <td class="subtitle" colspan="4">Page ${pageIndex + 1} of ${pages.length}</td>
+    </tr>`;
   return excelTable(
-    `${truckType} Monthly Truck Salary Report`,
+    `${truckNo} Driver Verification`,
     rows,
     [
       { key: "rowNo", label: "No", align: "center" },
-      { key: "deliveryDate", label: "Delivery Date" },
+      { key: "deliveryDate", label: "Delivery Date", type: "date" },
       { key: "invoiceNo", label: "Invoice No" },
-      { key: "truckNo", label: "Truck No" },
-      { key: "driverName", label: "Driver Name" },
-      { key: "truckType", label: "Type of Truck" },
       { key: "fromLocation", label: "From" },
       { key: "toLocation", label: "To" },
-      { key: "qtyTon", label: "QTY(T)", align: "right" },
-      { key: "truckSalaryUnitPrice", label: "Truck Unit Price", type: "money", align: "right" },
-      { key: "truckSalaryAmount", label: "Truck Salary", type: "money", align: "right" }
+      { key: "qtyTon", label: "QTY(T)", type: "qty", align: "right" },
+      { key: "truckSalaryUnitPrice", label: "Driver Price", type: "money", align: "right" },
+      { key: "truckSalaryAmount", label: "Driver Amount", type: "money", align: "right" }
     ],
-    ["qtyTon", "truckSalaryAmount"]
+    ["qtyTon", "truckSalaryAmount"],
+    { headerHtml }
   );
 }
 
@@ -1037,8 +1079,9 @@ function monthlyTruckPerformance(data, month) {
 }
 
 function dashboardExport(rows, month) {
+  const label = monthLabel(month);
   return excelTable(
-    `Truck Performance - ${month || "All Months"}`,
+    `Truck Performance - ${label}`,
     rows,
     [
       { key: "rowNo", label: "No", align: "center" },
@@ -1060,43 +1103,58 @@ function pdfEscape(value) {
   return String(value ?? "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
-function dashboardPdf(rows, month) {
-  const lines = [
-    `Truck Performance - ${month || "All Months"}`,
-    "",
-    "Truck     Type            Driver          Days Trips Qty(T)     Company    Driver     Profit",
-    "------------------------------------------------------------------------------------------",
-    ...rows.map((row) =>
-      [
-        String(row.truckNo || "").padEnd(9).slice(0, 9),
-        String(row.truckType || "").padEnd(15).slice(0, 15),
-        String(row.driverName || "-").padEnd(15).slice(0, 15),
-        String(row.workingDays || 0).padStart(4),
-        String(row.trips || 0).padStart(5),
-        `${Number(row.qtyTon || 0).toFixed(4)}T`.padStart(10),
-        `$${money(row.companyAmount)}`.padStart(10),
-        `$${money(row.driverAmount)}`.padStart(10),
-        `$${money(row.profit)}`.padStart(10)
-      ].join(" ")
-    )
-  ];
-  const content = [
-    "BT",
-    "/F1 10 Tf",
-    "40 780 Td",
-    ...lines.flatMap((line, index) => [
-      index === 0 ? "/F1 14 Tf" : index === 1 ? "/F1 10 Tf" : "",
-      `(${pdfEscape(line)}) Tj`,
-      "0 -16 Td"
-    ]).filter(Boolean),
-    "ET"
-  ].join("\n");
+function pdfTextWidth(value, fontSize) {
+  return String(value ?? "").length * fontSize * 0.52;
+}
+
+function pdfFitText(value, width, fontSize) {
+  const text = normalizeText(value).replace(/\s+/g, " ");
+  const maxChars = Math.max(1, Math.floor(width / (fontSize * 0.52)));
+  return text.length > maxChars ? `${text.slice(0, Math.max(1, maxChars - 1))}.` : text;
+}
+
+function pdfRgb([r, g, b]) {
+  return `${r} ${g} ${b}`;
+}
+
+function drawRect(x, y, width, height, fill, stroke = null) {
+  const commands = [];
+  if (fill) commands.push(`q ${pdfRgb(fill)} rg ${x} ${y} ${width} ${height} re f Q`);
+  if (stroke) commands.push(`q ${pdfRgb(stroke)} RG ${x} ${y} ${width} ${height} re S Q`);
+  return commands.join("\n");
+}
+
+function drawText(value, x, y, options = {}) {
+  const fontSize = options.size || 10;
+  const font = options.bold ? "F2" : "F1";
+  const color = options.color || [0.06, 0.09, 0.16];
+  const width = options.width || 0;
+  const text = pdfFitText(value, width || 600, fontSize);
+  let textX = x;
+  if (options.align === "right" && width) textX = x + width - pdfTextWidth(text, fontSize);
+  if (options.align === "center" && width) textX = x + (width - pdfTextWidth(text, fontSize)) / 2;
+  return `BT ${pdfRgb(color)} rg /${font} ${fontSize} Tf ${textX.toFixed(2)} ${y.toFixed(2)} Td (${pdfEscape(text)}) Tj ET`;
+}
+
+function buildPdf(pages) {
+  const pageObjects = [];
+  const kids = [];
+  let objectNumber = 5;
+  for (const page of pages) {
+    const content = page.commands.join("\n");
+    const pageObject = objectNumber;
+    const contentObject = objectNumber + 1;
+    kids.push(`${pageObject} 0 R`);
+    pageObjects.push(`${pageObject} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObject} 0 R >> endobj`);
+    pageObjects.push(`${contentObject} 0 obj << /Length ${Buffer.byteLength(content)} >> stream\n${content}\nendstream endobj`);
+    objectNumber += 2;
+  }
   const objects = [
     "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
-    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
-    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
-    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Courier >> endobj",
-    `5 0 obj << /Length ${Buffer.byteLength(content)} >> stream\n${content}\nendstream endobj`
+    `2 0 obj << /Type /Pages /Kids [${kids.join(" ")}] /Count ${pages.length} >> endobj`,
+    "3 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
+    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj",
+    ...pageObjects
   ];
   let pdf = "%PDF-1.4\n";
   const offsets = [0];
@@ -1111,6 +1169,178 @@ function dashboardPdf(rows, month) {
   }
   pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
   return Buffer.from(pdf);
+}
+
+function tablePdf({ title, subtitle, columns, rows, totals, footer }) {
+  const pageWidth = 842;
+  const pageHeight = 595;
+  const margin = 24;
+  const tableX = margin;
+  const tableWidth = pageWidth - margin * 2;
+  const requestedWidth = columns.reduce((sum, column) => sum + column.width, 0);
+  const widthScale = requestedWidth > tableWidth ? tableWidth / requestedWidth : 1;
+  const tableColumns = columns.map((column) => ({ ...column, width: Math.floor(column.width * widthScale) }));
+  const widthDifference = tableWidth - tableColumns.reduce((sum, column) => sum + column.width, 0);
+  tableColumns[tableColumns.length - 1].width += widthDifference;
+  const headerHeight = 30;
+  const rowHeight = 28;
+  const titleY = 558;
+  const subtitleY = 537;
+  const tableTop = 508;
+  const bottomY = 54;
+  const rowsPerPage = Math.max(1, Math.floor((tableTop - bottomY - headerHeight - rowHeight) / rowHeight));
+  const pages = [];
+  const chunks = [];
+  for (let index = 0; index < rows.length; index += rowsPerPage) {
+    chunks.push(rows.slice(index, index + rowsPerPage));
+  }
+  if (!chunks.length) chunks.push([]);
+  chunks.forEach((chunk, pageIndex) => {
+    const commands = [];
+    commands.push(drawText(title, margin, titleY, { size: 16, bold: true, width: tableWidth }));
+    if (subtitle) commands.push(drawText(subtitle, margin, subtitleY, { size: 10, bold: true, color: [0.39, 0.46, 0.56], width: tableWidth }));
+    commands.push(drawRect(tableX, tableTop - headerHeight, tableWidth, headerHeight, [0.06, 0.09, 0.16], [0.06, 0.09, 0.16]));
+    let x = tableX;
+    for (const column of tableColumns) {
+      commands.push(drawText(column.label, x + 8, tableTop - 19, {
+        size: 9,
+        bold: true,
+        color: [1, 1, 1],
+        width: column.width - 16,
+        align: column.align || "left"
+      }));
+      x += column.width;
+    }
+    let y = tableTop - headerHeight;
+    chunk.forEach((row, index) => {
+      y -= rowHeight;
+      const fill = index % 2 === 0 ? [1, 1, 1] : [0.97, 0.98, 0.99];
+      commands.push(drawRect(tableX, y, tableWidth, rowHeight, fill, [0.89, 0.92, 0.96]));
+      let cellX = tableX;
+      tableColumns.forEach((column) => {
+        const value = row[column.key];
+        commands.push(drawText(value, cellX + 8, y + 10, {
+          size: 9,
+          bold: column.bold || column.key === "truckNo" || column.key === "qty" || column.key === "amount" || column.key === "driverAmount",
+          width: column.width - 16,
+          align: column.align || "left"
+        }));
+        cellX += column.width;
+      });
+    });
+    const isLastPage = pageIndex === chunks.length - 1;
+    if (isLastPage && totals) {
+      y -= rowHeight;
+      commands.push(drawRect(tableX, y, tableWidth, rowHeight, [1, 0.98, 0.89], [0.89, 0.92, 0.96]));
+      let cellX = tableX;
+      tableColumns.forEach((column) => {
+        commands.push(drawText(totals[column.key] || "", cellX + 8, y + 10, {
+          size: 9,
+          bold: true,
+          width: column.width - 16,
+          align: column.align || "left"
+        }));
+        cellX += column.width;
+      });
+    }
+    if (isLastPage && footer) {
+      const footerTop = Math.max(28, y - 54);
+      commands.push(drawText("Prepared By", tableX, footerTop, { size: 9, bold: true, width: 220, align: "center" }));
+      commands.push(drawText("Checked By", tableX + 285, footerTop, { size: 9, bold: true, width: 220, align: "center" }));
+      commands.push(drawText("Approved By", tableX + 570, footerTop, { size: 9, bold: true, width: 220, align: "center" }));
+      commands.push(drawText("Name:", tableX, footerTop - 32, { size: 8, width: 220 }));
+      commands.push(drawText("Name:", tableX + 285, footerTop - 32, { size: 8, width: 220 }));
+      commands.push(drawText("Name:", tableX + 570, footerTop - 32, { size: 8, width: 220 }));
+      commands.push(drawText("Date:", tableX, footerTop - 48, { size: 8, width: 220 }));
+      commands.push(drawText("Date:", tableX + 285, footerTop - 48, { size: 8, width: 220 }));
+      commands.push(drawText("Date:", tableX + 570, footerTop - 48, { size: 8, width: 220 }));
+    }
+    commands.push(drawText(`Page ${pageIndex + 1} of ${chunks.length}`, pageWidth - 124, 24, { size: 8, color: [0.39, 0.46, 0.56], width: 100, align: "right" }));
+    pages.push({ commands });
+  });
+  return buildPdf(pages);
+}
+
+function statementPdf(data, rows) {
+  const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
+  const totalQty = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
+  const totalAmount = rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0);
+  const columns = [
+    { key: "no", label: "No", width: 32, align: "center" },
+    { key: "date", label: "Delivery Date", width: 78 },
+    { key: "invoice", label: "Invoice Number", width: 98 },
+    { key: "truckNo", label: "Truck Number", width: 84 },
+    { key: "truckType", label: "Type of Truck", width: 96 },
+    { key: "from", label: "From Location", width: 96 },
+    { key: "to", label: "To Location", width: 150 },
+    { key: "qty", label: "QTY(T)", width: 72, align: "right", bold: true },
+    { key: "unit", label: "Unit Price", width: 64, align: "right" },
+    { key: "amount", label: "Total Amount", width: 90, align: "right", bold: true }
+  ];
+  return tablePdf({
+    title: `Statement ${statement?.statementNumber || ""} - ${monthLabel(statement?.month)}`,
+    subtitle: `${statement?.truckType || ""} | ${statement?.status || ""} | ${rows.length}/30 rows | From: ${data.settings.fromName || "Nhep Manith"} | To: ${data.settings.toName || "SLP"} | Date: ${formatShortDate(statement?.statementDate || "")}`,
+    columns,
+    rows: rows.map((row, index) => ({
+      no: index + 1,
+      date: formatShortDate(row.deliveryDate),
+      invoice: row.invoiceNo,
+      truckNo: row.truckNo,
+      truckType: row.truckType,
+      from: row.fromLocation,
+      to: row.toLocation,
+      qty: `${Number(row.qtyTon || 0).toFixed(5)}T`,
+      unit: `$ ${money(row.companyUnitPrice)}`,
+      amount: `$ ${money(row.companyTotalAmount)}`
+    })),
+    totals: {
+      no: "Total",
+      qty: `${totalQty.toFixed(5)}T`,
+      amount: `$ ${money(totalAmount)}`
+    },
+    footer: true
+  });
+}
+
+function dashboardPdf(rows, month) {
+  const totalQty = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
+  const totalCompany = rows.reduce((sum, row) => sum + toNumber(row.companyAmount), 0);
+  const totalDriver = rows.reduce((sum, row) => sum + toNumber(row.driverAmount), 0);
+  const totalProfit = rows.reduce((sum, row) => sum + toNumber(row.profit), 0);
+  const columns = [
+    { key: "truckNo", label: "Truck No", width: 80, bold: true },
+    { key: "truckType", label: "Type", width: 96 },
+    { key: "driverName", label: "Driver", width: 120 },
+    { key: "workingDays", label: "Working Days", width: 92, align: "center" },
+    { key: "trips", label: "Trips", width: 60, align: "center" },
+    { key: "qty", label: "QTY(T)", width: 96, align: "right", bold: true },
+    { key: "company", label: "Company Price", width: 110, align: "right" },
+    { key: "driver", label: "Driver Payment", width: 110, align: "right", bold: true },
+    { key: "profit", label: "Profit", width: 78, align: "right" }
+  ];
+  return tablePdf({
+    title: "Truck Performance",
+    subtitle: `Report Month: ${monthLabel(month)} | ${rows.length} trucks`,
+    columns,
+    rows: rows.map((row) => ({
+      truckNo: row.truckNo,
+      truckType: row.truckType,
+      driverName: row.driverName || "-",
+      workingDays: row.workingDays || 0,
+      trips: row.trips || 0,
+      qty: `${Number(row.qtyTon || 0).toFixed(4)}T`,
+      company: `$ ${money(row.companyAmount)}`,
+      driver: `$ ${money(row.driverAmount)}`,
+      profit: `$ ${money(row.profit)}`
+    })),
+    totals: {
+      truckNo: "Total",
+      qty: `${totalQty.toFixed(4)}T`,
+      company: `$ ${money(totalCompany)}`,
+      driver: `$ ${money(totalDriver)}`,
+      profit: `$ ${money(totalProfit)}`
+    }
+  });
 }
 
 function parseQuery(url) {
@@ -1207,8 +1437,10 @@ async function api(req, res, url) {
     await updateData((data) => {
       const statement = data.statements.find((item) => item.id === id);
       if (!statement) throw new Error("Statement not found.");
+      if (statement.status !== "Draft") throw new Error("Only draft statements can be deleted. Reopen the statement first if you really need to change it.");
       data.statements = data.statements.filter((item) => item.id !== id);
       data.deliveries = data.deliveries.filter((item) => item.statementId !== id);
+      addActivity(data, `Deleted draft statement ${statement.statementNumber}.`, "statement");
       return { ok: true };
     });
     return sendJson(res, 200, { ok: true });
@@ -1245,12 +1477,20 @@ async function api(req, res, url) {
 
   if (req.method === "DELETE" && url.pathname.startsWith("/api/trucks/")) {
     const truckNo = decodeURIComponent(url.pathname.split("/").pop());
-    await updateData((data) => {
+    const result = await updateData((data) => {
+      const truck = data.trucks.find((item) => item.truckNo === truckNo);
+      if (!truck) throw new Error("Truck not found.");
+      const hasHistory = data.deliveries.some((delivery) => delivery.truckNo === truckNo);
+      if (hasHistory) {
+        truck.active = false;
+        addActivity(data, `Deactivated truck ${truckNo} because it has delivery history.`, "truck");
+        return { ok: true, action: "deactivated" };
+      }
       data.trucks = data.trucks.filter((item) => item.truckNo !== truckNo);
-      addActivity(data, `Deleted truck ${truckNo}.`, "truck");
-      return { ok: true };
+      addActivity(data, `Deleted unused truck ${truckNo}.`, "truck");
+      return { ok: true, action: "deleted" };
     });
-    return sendJson(res, 200, { ok: true });
+    return sendJson(res, 200, result);
   }
 
   if (req.method === "POST" && url.pathname === "/api/prices") {
@@ -1292,13 +1532,26 @@ async function api(req, res, url) {
 
   if (req.method === "DELETE" && url.pathname.startsWith("/api/prices/")) {
     const id = decodeURIComponent(url.pathname.split("/").pop());
-    await updateData((data) => {
+    const result = await updateData((data) => {
       const price = data.prices.find((item) => item.id === id);
+      if (!price) throw new Error("Price not found.");
+      const hasDeliveryHistory = data.deliveries.some(
+        (delivery) =>
+          delivery.fromLocation === price.fromLocation &&
+          delivery.toLocation === price.toLocation &&
+          delivery.truckType === price.truckType &&
+          delivery.deliveryDate >= effectiveDateOf(price)
+      );
+      if (hasDeliveryHistory) {
+        price.active = false;
+        addActivity(data, `Deactivated ${price.truckType} price for ${price.toLocation}, effective ${effectiveDateOf(price)}, because it may be used by delivery history.`, "price");
+        return { ok: true, action: "deactivated" };
+      }
       data.prices = data.prices.filter((item) => item.id !== id);
-      if (price) addActivity(data, `Deleted ${price.truckType} price for ${price.toLocation}, effective ${effectiveDateOf(price)}.`, "price");
-      return { ok: true };
+      addActivity(data, `Deleted unused ${price.truckType} price for ${price.toLocation}, effective ${effectiveDateOf(price)}.`, "price");
+      return { ok: true, action: "deleted" };
     });
-    return sendJson(res, 200, { ok: true });
+    return sendJson(res, 200, result);
   }
 
   if (req.method === "POST" && url.pathname === "/api/deliveries") {
@@ -1329,6 +1582,7 @@ async function api(req, res, url) {
 
   if (req.method === "GET" && url.pathname === "/api/export/accounting") {
     const rows = filteredDeliveries(data, query);
+    const format = normalizeText(query.format || "xls");
     if (query.statementId && rows.length > 30) {
       throw new Error("A statement export cannot contain more than 30 rows.");
     }
@@ -1349,8 +1603,15 @@ async function api(req, res, url) {
       ? data.statements.find((item) => item.id === query.statementId)
       : null;
     const fileName = statement
-      ? `statement-${statement.statementNumber}-${truckTypeFileLabel(statement.truckType)}`
+      ? `statement-${statement.statementNumber}-${monthLabel(statement.month)}-${truckTypeFileLabel(statement.truckType)}`
       : `accounting-${slug(query.truckType || rows[0]?.truckType || "all")}`;
+    if (format === "pdf") {
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${slug(fileName)}.pdf"`
+      });
+      return res.end(statementPdf(data, rows));
+    }
     res.writeHead(200, {
       "Content-Type": "application/vnd.ms-excel; charset=utf-8",
       "Content-Disposition": `attachment; filename="${slug(fileName)}.xls"`
@@ -1363,12 +1624,13 @@ async function api(req, res, url) {
     if (!query.truckType && !query.truckNo && new Set(rows.map((row) => row.truckType)).size > 1) {
       throw new Error("Please export With Crane and Without Crane salary reports separately, or select one truck.");
     }
-    const truckTypeName = query.truckType || rows[0]?.truckType || query.truckNo || "all";
+    const truckTypeName = query.truckNo || query.truckType || rows[0]?.truckType || "all";
+    const fileName = `driver-payment-${slug(truckTypeName)}-${slug(monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7)))}`;
     res.writeHead(200, {
       "Content-Type": "application/vnd.ms-excel; charset=utf-8",
-      "Content-Disposition": `attachment; filename="truck-salary-${slug(truckTypeName)}.xls"`
+      "Content-Disposition": `attachment; filename="${fileName}.xls"`
     });
-    return res.end(salaryExport(rows));
+    return res.end(salaryExport(data, rows, query));
   }
 
   if (req.method === "GET" && url.pathname === "/api/export/dashboard") {

@@ -72,7 +72,7 @@
   ],
   "prices": [
     {
-      "id": "crane-company-16",
+      "id": "crane-company-16-base",
       "fromLocation": "Warehouse-09",
       "toLocation": "Ang Snuol (Kandal)",
       "truckType": "With Crane",
@@ -1795,9 +1795,9 @@
       "statementNumber": 1540,
       "statementDate": "2026-05-14",
       "truckType": "Without Crane",
-      "status": "Finished",
+      "status": "Exported",
       "createdAt": "2026-05-14T15:09:11.626Z",
-      "updatedAt": "2026-05-14T15:09:57.698Z"
+      "updatedAt": "2026-05-16T21:46:17.258Z"
     },
     {
       "id": "673c2f53-b757-4e87-a5c3-717e2f4304b1",
@@ -1805,9 +1805,9 @@
       "statementNumber": 1543,
       "statementDate": "2026-05-14",
       "truckType": "With Crane",
-      "status": "Finished",
+      "status": "Exported",
       "createdAt": "2026-05-14T14:56:04.714Z",
-      "updatedAt": "2026-05-14T15:04:32.691Z"
+      "updatedAt": "2026-05-16T21:11:18.328Z"
     },
     {
       "id": "c8064553-48ed-4b56-a9f7-03312e9756d1",
@@ -1940,14 +1940,24 @@
       "updatedAt": "2026-05-16T17:04:11.843Z"
     },
     {
-      "id": "c6c0c253-c62d-4dc7-abfa-4eff3dadc52f",
+      "id": "9c7f53bd-a340-4fa6-b596-ae10e1980e66",
       "month": "2026-05",
       "statementNumber": 1557,
-      "statementDate": "2026-05-16",
+      "statementDate": "2026-05-17",
       "truckType": "With Crane",
       "status": "Draft",
-      "createdAt": "2026-05-16T18:11:17.372Z",
-      "updatedAt": "2026-05-16T18:11:17.372Z"
+      "createdAt": "2026-05-16T22:19:06.879Z",
+      "updatedAt": "2026-05-16T22:19:06.879Z"
+    },
+    {
+      "id": "35b04860-ca50-4a0a-b3b3-9542aa7593ca",
+      "month": "2026-05",
+      "statementNumber": 1558,
+      "statementDate": "2026-05-17",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T22:19:28.729Z",
+      "updatedAt": "2026-05-16T22:19:28.729Z"
     }
   ],
   "deliveries": [
@@ -2273,6 +2283,18 @@
     }
   ],
   "activity": [
+    {
+      "id": "693a5aea-f061-4896-944c-2425efa653cf",
+      "message": "Deleted unused With Crane price for Ang Snuol (Kandal), effective 2026-01-01.",
+      "type": "price",
+      "createdAt": "2026-05-16T21:27:19.852Z"
+    },
+    {
+      "id": "eb058e7a-ecda-4b0b-bd30-9140ca8c0884",
+      "message": "Deleted draft statement 1557.",
+      "type": "statement",
+      "createdAt": "2026-05-16T21:18:27.247Z"
+    },
     {
       "id": "aa54ebbe-afda-45de-ba90-e3f1e29c1ff3",
       "message": "Added With Crane price for Ang Snuol (Kandal), effective 2026-05-17.",
