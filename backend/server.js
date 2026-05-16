@@ -1432,6 +1432,20 @@ async function api(req, res, url) {
     return sendJson(res, 200, statement);
   }
 
+  if (req.method === "DELETE" && url.pathname === "/api/statements/empty-drafts") {
+    const result = await updateData((data) => {
+      const emptyDrafts = data.statements.filter(
+        (statement) => statement.status === "Draft" && statementRowCount(data, statement.id) === 0
+      );
+      if (emptyDrafts.length < 1) return { deleted: 0 };
+      const emptyDraftIds = new Set(emptyDrafts.map((statement) => statement.id));
+      data.statements = data.statements.filter((statement) => !emptyDraftIds.has(statement.id));
+      addActivity(data, `Cleaned ${emptyDrafts.length} empty draft statement${emptyDrafts.length > 1 ? "s" : ""}.`, "statement");
+      return { deleted: emptyDrafts.length };
+    });
+    return sendJson(res, 200, result);
+  }
+
   if (req.method === "DELETE" && url.pathname.startsWith("/api/statements/")) {
     const id = decodeURIComponent(url.pathname.split("/").pop());
     await updateData((data) => {

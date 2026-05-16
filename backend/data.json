@@ -1820,46 +1820,6 @@
       "updatedAt": "2026-05-14T15:07:18.686Z"
     },
     {
-      "id": "419406de-be1b-49fb-adad-e7d6afb2ff45",
-      "month": "2026-05",
-      "statementNumber": 1545,
-      "statementDate": "2026-05-16",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T08:45:46.211Z",
-      "updatedAt": "2026-05-16T08:45:46.211Z"
-    },
-    {
-      "id": "bb1e2db8-1c2a-484b-92d1-5299a91e2648",
-      "month": "2026-05",
-      "statementNumber": 1546,
-      "statementDate": "2026-05-16",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T08:46:34.198Z",
-      "updatedAt": "2026-05-16T08:46:34.198Z"
-    },
-    {
-      "id": "2bc11e0e-7cf0-4fe0-9dc1-d933de1a3b0e",
-      "month": "2026-05",
-      "statementNumber": 1547,
-      "statementDate": "2026-05-16",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T08:47:07.678Z",
-      "updatedAt": "2026-05-16T08:47:07.678Z"
-    },
-    {
-      "id": "9b3b854a-635a-4af0-a557-c3c229eb51a9",
-      "month": "2026-05",
-      "statementNumber": 1548,
-      "statementDate": "2026-05-16",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T08:47:29.535Z",
-      "updatedAt": "2026-05-16T08:47:29.535Z"
-    },
-    {
       "id": "ef397498-8208-478e-bcbb-9a2b9f04f1ed",
       "month": "2026-05",
       "statementNumber": 1549,
@@ -1908,56 +1868,6 @@
       "status": "Draft",
       "createdAt": "2026-05-16T09:10:47.635Z",
       "updatedAt": "2026-05-16T16:45:18.554Z"
-    },
-    {
-      "id": "0d2eb0ca-dfc1-4dbe-8709-b670ab577c61",
-      "month": "2026-05",
-      "statementNumber": 1554,
-      "statementDate": "2026-05-16",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T16:46:42.518Z",
-      "updatedAt": "2026-05-16T16:46:42.518Z"
-    },
-    {
-      "id": "c63d3b88-3255-426e-8a56-e52df92b9198",
-      "month": "2026-05",
-      "statementNumber": 1555,
-      "statementDate": "2026-05-16",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T17:02:27.750Z",
-      "updatedAt": "2026-05-16T17:02:27.750Z"
-    },
-    {
-      "id": "975e15ca-a783-4722-a198-88bb22698d03",
-      "month": "2026-05",
-      "statementNumber": 1556,
-      "statementDate": "2026-05-16",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T17:04:11.843Z",
-      "updatedAt": "2026-05-16T17:04:11.843Z"
-    },
-    {
-      "id": "9c7f53bd-a340-4fa6-b596-ae10e1980e66",
-      "month": "2026-05",
-      "statementNumber": 1557,
-      "statementDate": "2026-05-17",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T22:19:06.879Z",
-      "updatedAt": "2026-05-16T22:19:06.879Z"
-    },
-    {
-      "id": "35b04860-ca50-4a0a-b3b3-9542aa7593ca",
-      "month": "2026-05",
-      "statementNumber": 1558,
-      "statementDate": "2026-05-17",
-      "truckType": "With Crane",
-      "status": "Draft",
-      "createdAt": "2026-05-16T22:19:28.729Z",
-      "updatedAt": "2026-05-16T22:19:28.729Z"
     }
   ],
   "deliveries": [
@@ -2283,6 +2193,24 @@
     }
   ],
   "activity": [
+    {
+      "id": "dec3c5ef-cd8e-47f0-8efe-871193ac5e32",
+      "message": "Cleaned 1 empty draft statement.",
+      "type": "statement",
+      "createdAt": "2026-05-16T22:29:06.919Z"
+    },
+    {
+      "id": "2f5a82be-2852-4dd9-b752-9ba834aedcb1",
+      "message": "Cleaned 1 empty draft statement.",
+      "type": "statement",
+      "createdAt": "2026-05-16T22:28:40.550Z"
+    },
+    {
+      "id": "e195f930-8fba-4a28-b7b6-d7193a107f25",
+      "message": "Cleaned 9 empty draft statements.",
+      "type": "statement",
+      "createdAt": "2026-05-16T22:26:34.779Z"
+    },
     {
       "id": "693a5aea-f061-4896-944c-2425efa653cf",
       "message": "Deleted unused With Crane price for Ang Snuol (Kandal), effective 2026-01-01.",

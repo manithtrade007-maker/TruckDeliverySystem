@@ -222,24 +222,29 @@ function App() {
     [data.deliveries, viewStatementId]
   );
 
+  const visibleStatements = useMemo(
+    () => data.statements.filter((statement) => !(statement.status === "Draft" && Number(statement.rowCount || 0) === 0)),
+    [data.statements]
+  );
+
   const filteredStatements = useMemo(() => {
     const statementNumber = String(filters.statementNumber || "").trim();
-    return data.statements
+    return visibleStatements
       .filter((statement) => !filters.month || statement.month === filters.month)
       .filter((statement) => !statementNumber || String(statement.statementNumber).includes(statementNumber))
       .sort((a, b) => b.month.localeCompare(a.month) || Number(b.statementNumber) - Number(a.statementNumber));
-  }, [data.statements, filters]);
+  }, [visibleStatements, filters]);
 
   const statementCounts = useMemo(() => {
     const month = filters.month || statementForm.month || currentMonth();
-    const rows = data.statements.filter((statement) => statement.month === month);
+    const rows = visibleStatements.filter((statement) => statement.month === month);
     return {
       month,
       withCrane: rows.filter((statement) => statement.truckType === "With Crane").length,
       withoutCrane: rows.filter((statement) => statement.truckType === "Without Crane").length,
       total: rows.length
     };
-  }, [data.statements, filters.month, statementForm.month]);
+  }, [visibleStatements, filters.month, statementForm.month]);
 
   const truckOptions = useMemo(
     () => data.trucks.filter((truck) => selectedStatement && truck.active !== false && truck.truckType === selectedStatement.truckType),
@@ -468,7 +473,19 @@ function App() {
     }
   }
 
+  async function cleanupEmptyDraftStatements() {
+    try {
+      const result = await api("/api/statements/empty-drafts", { method: "DELETE" });
+      if (result.deleted > 0) await loadData();
+      return result.deleted || 0;
+    } catch (err) {
+      flash(err.message, "error");
+      return 0;
+    }
+  }
+
   async function newStatement() {
+    await cleanupEmptyDraftStatements();
     const month = statementForm.month || currentMonth();
     const truckType = entryTruckType;
     setSelectedStatementId("");
@@ -478,7 +495,8 @@ function App() {
     setStatementForm({ id: "", month, truckType, statementNumber: "", statementDate: today() });
   }
 
-  function backToStatementList() {
+  async function backToStatementList() {
+    const deleted = await cleanupEmptyDraftStatements();
     const month = statementForm.month || filters.month || currentMonth();
     const truckType = entryTruckType;
     setSelectedStatementId("");
@@ -486,6 +504,7 @@ function App() {
     setShowStatementWorkspace(false);
     resetDeliveryForm();
     setStatementForm({ id: "", month, truckType, statementNumber: "", statementDate: today() });
+    if (deleted > 0) flash("Empty draft statement removed.");
   }
 
   async function getNextStatementNumber(month) {
@@ -499,6 +518,7 @@ function App() {
   }
 
   async function createEntryStatement(truckType) {
+    await cleanupEmptyDraftStatements();
     const month = statementForm.month || filters.month || currentMonth();
     const statementNumber = await getNextStatementNumber(month);
     setEntryTruckType(truckType);
@@ -512,6 +532,7 @@ function App() {
   }
 
   async function switchEntryTruckType(truckType) {
+    await cleanupEmptyDraftStatements();
     setEntryTruckType(truckType);
     setSelectedStatementId("");
     setViewStatementId("");
