@@ -9,69 +9,70 @@
     {
       "truckNo": "3G-0397",
       "truckType": "With Crane",
-      "driverName": "",
+      "driverName": "Sath Rath",
       "phone": "",
       "active": true
     },
     {
       "truckNo": "3B-4693",
       "truckType": "With Crane",
-      "driverName": "",
+      "driverName": "San Thoen",
       "phone": "",
       "active": true
     },
     {
       "truckNo": "3E-0096",
       "truckType": "With Crane",
-      "driverName": "",
+      "driverName": "San Thea",
       "phone": "",
       "active": true
     },
     {
       "truckNo": "3E-5987",
       "truckType": "With Crane",
-      "driverName": "",
+      "driverName": "San thany",
       "phone": "",
       "active": true
     },
     {
       "truckNo": "3F-6390",
       "truckType": "With Crane",
-      "driverName": "",
+      "driverName": "Preak",
       "phone": "",
       "active": true
     },
     {
       "truckNo": "3F-5239",
       "truckType": "With Crane",
-      "driverName": "",
+      "driverName": "Chantha",
       "phone": "",
       "active": true
     },
     {
       "truckNo": "3E-8896",
       "truckType": "Without Crane",
-      "driverName": "",
-      "phone": "",
-      "active": true
-    },
-    {
-      "truckNo": "3B-9368",
-      "truckType": "Without Crane",
-      "driverName": "",
+      "driverName": "Kut Channak",
       "phone": "",
       "active": true
     },
     {
       "truckNo": "3A-2230",
       "truckType": "Without Crane",
-      "driverName": "",
+      "driverName": "Poy Polleark",
+      "phone": "",
+      "active": true
+    },
+    {
+      "truckNo": "3B-9369",
+      "truckType": "Without Crane",
+      "driverName": "Phern Pheark",
       "phone": "",
       "active": true
     }
   ],
   "prices": [
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-1",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Kambol (PP)",
@@ -82,6 +83,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-2",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Dangkao (PP)",
@@ -92,6 +94,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-3",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Mean Chey (PP)",
@@ -102,6 +105,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-4",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Chamkar Morn (PP)",
@@ -112,6 +116,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-5",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Boeng Keng Kong (PP)",
@@ -122,6 +127,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-6",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Doun Penh (PP)",
@@ -132,6 +138,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-7",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan 7 Makara (PP)",
@@ -142,6 +149,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-8",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Tuol Kouk (PP)",
@@ -152,6 +160,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-9",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Sen Sok (PP)",
@@ -162,6 +171,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-10",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Russei Keo (PP)",
@@ -172,16 +182,18 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-06",
       "id": "crane-company-11",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Chba Ampeou (PP)",
       "truckType": "With Crane",
       "distanceKm": 20,
-      "companyUnitPrice": 8.65,
+      "companyUnitPrice": 10.13,
       "truckSalaryUnitPrice": 7.95,
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-12",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Posenchey (PP)",
@@ -192,6 +204,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-13",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Prek Phnov (PP)",
@@ -202,6 +215,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-14",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Chroy Changvar (PP)",
@@ -212,6 +226,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-15",
       "fromLocation": "Warehouse-09",
       "toLocation": "Takhmao (Kandal)",
@@ -222,6 +237,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-16",
       "fromLocation": "Warehouse-09",
       "toLocation": "Ang Snuol (Kandal)",
@@ -232,6 +248,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-17",
       "fromLocation": "Warehouse-09",
       "toLocation": "Saang (Kandal)",
@@ -242,6 +259,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-18",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kandal Stueng (Kandal)",
@@ -252,6 +270,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-19",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kien Svay (Kandal)",
@@ -262,6 +281,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-20",
       "fromLocation": "Warehouse-09",
       "toLocation": "Ponhea Leu (Kandal)",
@@ -272,6 +292,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-21",
       "fromLocation": "Warehouse-09",
       "toLocation": "Muk Kampoul (Kandal)",
@@ -282,6 +303,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-22",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khsach Kandal (Kandal)",
@@ -292,6 +314,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-23",
       "fromLocation": "Warehouse-09",
       "toLocation": "Koh Thom (Kandal)",
@@ -302,6 +325,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-24",
       "fromLocation": "Warehouse-09",
       "toLocation": "Leukdek (Kandal)",
@@ -312,6 +336,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-25",
       "fromLocation": "Warehouse-09",
       "toLocation": "Lvea Em (Kandal)",
@@ -322,6 +347,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-26",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kanh Chreach (Prey Veng)",
@@ -332,6 +358,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-27",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kamchay Mea (Prey Veng)",
@@ -342,6 +369,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-28",
       "fromLocation": "Warehouse-09",
       "toLocation": "Mesang (Prey Veng)",
@@ -352,6 +380,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-29",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Trabek (Prey Veng)",
@@ -362,6 +391,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-30",
       "fromLocation": "Warehouse-09",
       "toLocation": "Svay Antor (Prey Veng)",
@@ -372,6 +402,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-31",
       "fromLocation": "Warehouse-09",
       "toLocation": "Baphnom (Prey Veng)",
@@ -382,6 +413,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-32",
       "fromLocation": "Warehouse-09",
       "toLocation": "Preah Sdach (Prey Veng)",
@@ -392,6 +424,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-33",
       "fromLocation": "Warehouse-09",
       "toLocation": "Sithor Kandal (Prey Veng)",
@@ -402,6 +435,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-34",
       "fromLocation": "Warehouse-09",
       "toLocation": "Pea Reang (Prey Veng)",
@@ -412,6 +446,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-35",
       "fromLocation": "Warehouse-09",
       "toLocation": "Po Rieng (Prey Veng)",
@@ -422,6 +457,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-36",
       "fromLocation": "Warehouse-09",
       "toLocation": "Peam Ro (Prey Veng)",
@@ -432,6 +468,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-37",
       "fromLocation": "Warehouse-09",
       "toLocation": "Peam Chor (Prey Veng)",
@@ -442,6 +479,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-38",
       "fromLocation": "Warehouse-09",
       "toLocation": "Prey Veng (Prey Veng)",
@@ -452,6 +490,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-39",
       "fromLocation": "Warehouse-09",
       "toLocation": "Rum Duol (S.Rieng)",
@@ -462,6 +501,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-40",
       "fromLocation": "Warehouse-09",
       "toLocation": "Svay Tiep (S.Rieng)",
@@ -472,6 +512,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-41",
       "fromLocation": "Warehouse-09",
       "toLocation": "Svay Rieng (S.Rieng)",
@@ -482,6 +523,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-42",
       "fromLocation": "Warehouse-09",
       "toLocation": "Svay Chrum (S.Rieng)",
@@ -492,6 +534,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-43",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kompong Ro (S.Rieng)",
@@ -502,6 +545,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-44",
       "fromLocation": "Warehouse-09",
       "toLocation": "Bati (Takeo)",
@@ -512,6 +556,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-45",
       "fromLocation": "Warehouse-09",
       "toLocation": "Prey Kabas (Takeo)",
@@ -522,6 +567,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-46",
       "fromLocation": "Warehouse-09",
       "toLocation": "Angkor Borei (Takeo)",
@@ -532,6 +578,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-47",
       "fromLocation": "Warehouse-09",
       "toLocation": "Borei Chulsar (Takeo)",
@@ -542,6 +589,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-48",
       "fromLocation": "Warehouse-09",
       "toLocation": "Koh Andet (Takeo)",
@@ -552,6 +600,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-49",
       "fromLocation": "Warehouse-09",
       "toLocation": "Samrong (Takeo)",
@@ -562,6 +611,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-50",
       "fromLocation": "Warehouse-09",
       "toLocation": "Daun Keo (Takeo)",
@@ -572,6 +622,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-51",
       "fromLocation": "Warehouse-09",
       "toLocation": "Treang (Takeo)",
@@ -582,6 +633,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-52",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kirivong (Takeo)",
@@ -592,6 +644,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-53",
       "fromLocation": "Warehouse-09",
       "toLocation": "Tram Kak (Takeo)",
@@ -602,6 +655,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-54",
       "fromLocation": "Warehouse-09",
       "toLocation": "Oudong (K.Speu)",
@@ -612,6 +666,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-55",
       "fromLocation": "Warehouse-09",
       "toLocation": "Thpong (K.Speu)",
@@ -622,6 +677,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-56",
       "fromLocation": "Warehouse-09",
       "toLocation": "Samrong Torng (K.Speu)",
@@ -632,6 +688,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-57",
       "fromLocation": "Warehouse-09",
       "toLocation": "Chbar Morn (K.Speu)",
@@ -642,6 +699,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-58",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kong Pisei (K.Speu)",
@@ -652,6 +710,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-59",
       "fromLocation": "Warehouse-09",
       "toLocation": "Baset (K.Speu)",
@@ -662,6 +721,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-60",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Tralach (K.Chhnang)",
@@ -672,6 +732,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-61",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Siem (K.Cham)",
@@ -682,6 +743,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "crane-company-62",
       "fromLocation": "Warehouse-09",
       "toLocation": "Batheay (K.Cham)",
@@ -692,6 +754,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-1",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Kambol (PP)",
@@ -702,6 +765,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-2",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Dangkao (PP)",
@@ -712,6 +776,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-3",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Mean Chey (PP)",
@@ -722,6 +787,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-4",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Chamkar Morn (PP)",
@@ -732,6 +798,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-5",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Boeng Keng Kong (PP)",
@@ -742,6 +809,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-6",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Doun Penh (PP)",
@@ -752,6 +820,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-7",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan 7 Makara (PP)",
@@ -762,6 +831,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-8",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Tuol Kouk (PP)",
@@ -772,6 +842,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-9",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Sen Sok (PP)",
@@ -782,6 +853,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-10",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Russei Keo (PP)",
@@ -792,6 +864,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-11",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Chba Ampeou (PP)",
@@ -802,6 +875,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-12",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Posenchey (PP)",
@@ -812,6 +886,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-13",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Prek Phnov (PP)",
@@ -822,6 +897,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-14",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khan Chroy Changvar (PP)",
@@ -832,6 +908,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-15",
       "fromLocation": "Warehouse-09",
       "toLocation": "Takhmao (Kandal)",
@@ -842,6 +919,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-16",
       "fromLocation": "Warehouse-09",
       "toLocation": "Ang Snuol (Kandal)",
@@ -852,6 +930,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-17",
       "fromLocation": "Warehouse-09",
       "toLocation": "Saang (Kandal)",
@@ -862,6 +941,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-18",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kandal Stueng (Kandal)",
@@ -872,6 +952,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-19",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kien Svay (Kandal)",
@@ -882,6 +963,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-20",
       "fromLocation": "Warehouse-09",
       "toLocation": "Ponhea Leu (Kandal)",
@@ -892,6 +974,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-21",
       "fromLocation": "Warehouse-09",
       "toLocation": "Muk Kampoul (Kandal)",
@@ -902,6 +985,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-22",
       "fromLocation": "Warehouse-09",
       "toLocation": "Khsach Kandal (Kandal)",
@@ -912,6 +996,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-23",
       "fromLocation": "Warehouse-09",
       "toLocation": "Koh Thom (Kandal)",
@@ -922,6 +1007,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-24",
       "fromLocation": "Warehouse-09",
       "toLocation": "Leukdek (Kandal)",
@@ -932,6 +1018,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-25",
       "fromLocation": "Warehouse-09",
       "toLocation": "Lvea Em (Kandal)",
@@ -942,6 +1029,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-26",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kanh Chreach (Prey Veng)",
@@ -952,6 +1040,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-27",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kamchay Mea (Prey Veng)",
@@ -962,6 +1051,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-28",
       "fromLocation": "Warehouse-09",
       "toLocation": "Mesang (Prey Veng)",
@@ -972,6 +1062,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-29",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Trabek (Prey Veng)",
@@ -982,6 +1073,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-30",
       "fromLocation": "Warehouse-09",
       "toLocation": "Svay Antor (Prey Veng)",
@@ -992,6 +1084,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-31",
       "fromLocation": "Warehouse-09",
       "toLocation": "Baphnom (Prey Veng)",
@@ -1002,6 +1095,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-32",
       "fromLocation": "Warehouse-09",
       "toLocation": "Preah Sdach (Prey Veng)",
@@ -1012,6 +1106,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-33",
       "fromLocation": "Warehouse-09",
       "toLocation": "Sithor Kandal (Prey Veng)",
@@ -1022,6 +1117,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-34",
       "fromLocation": "Warehouse-09",
       "toLocation": "Pea Reang (Prey Veng)",
@@ -1032,6 +1128,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-35",
       "fromLocation": "Warehouse-09",
       "toLocation": "Po Rieng (Prey Veng)",
@@ -1042,6 +1139,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-36",
       "fromLocation": "Warehouse-09",
       "toLocation": "Peam Ro (Prey Veng)",
@@ -1052,6 +1150,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-37",
       "fromLocation": "Warehouse-09",
       "toLocation": "Peam Chor (Prey Veng)",
@@ -1062,6 +1161,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-38",
       "fromLocation": "Warehouse-09",
       "toLocation": "Prey Veng (Prey Veng)",
@@ -1072,6 +1172,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-39",
       "fromLocation": "Warehouse-09",
       "toLocation": "Rum Duol (S.Rieng)",
@@ -1082,6 +1183,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-40",
       "fromLocation": "Warehouse-09",
       "toLocation": "Svay Tiep (S.Rieng)",
@@ -1092,6 +1194,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-41",
       "fromLocation": "Warehouse-09",
       "toLocation": "Chantrea (S.Rieng)",
@@ -1102,6 +1205,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-42",
       "fromLocation": "Warehouse-09",
       "toLocation": "Svay Rieng (S.Rieng)",
@@ -1112,6 +1216,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-43",
       "fromLocation": "Warehouse-09",
       "toLocation": "Svay Chrum (S.Rieng)",
@@ -1122,6 +1227,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-44",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kompong Ro (S.Rieng)",
@@ -1132,6 +1238,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-45",
       "fromLocation": "Warehouse-09",
       "toLocation": "Bavet (S.Rieng)",
@@ -1142,6 +1249,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-46",
       "fromLocation": "Warehouse-09",
       "toLocation": "Bati (Takeo)",
@@ -1152,6 +1260,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-47",
       "fromLocation": "Warehouse-09",
       "toLocation": "Prey Kabas (Takeo)",
@@ -1162,6 +1271,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-48",
       "fromLocation": "Warehouse-09",
       "toLocation": "Angkor Borei (Takeo)",
@@ -1172,6 +1282,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-49",
       "fromLocation": "Warehouse-09",
       "toLocation": "Borei Chulsar (Takeo)",
@@ -1182,6 +1293,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-50",
       "fromLocation": "Warehouse-09",
       "toLocation": "Koh Andet (Takeo)",
@@ -1192,6 +1304,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-51",
       "fromLocation": "Warehouse-09",
       "toLocation": "Samrong (Takeo)",
@@ -1202,6 +1315,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-52",
       "fromLocation": "Warehouse-09",
       "toLocation": "Daun Keo (Takeo)",
@@ -1212,6 +1326,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-53",
       "fromLocation": "Warehouse-09",
       "toLocation": "Treang (Takeo)",
@@ -1222,6 +1337,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-54",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kirivong (Takeo)",
@@ -1232,6 +1348,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-55",
       "fromLocation": "Warehouse-09",
       "toLocation": "Tram Kak (Takeo)",
@@ -1242,6 +1359,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-56",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kep (Kep)",
@@ -1252,6 +1370,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-57",
       "fromLocation": "Warehouse-09",
       "toLocation": "Damnak Changoer (Kep)",
@@ -1262,6 +1381,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-58",
       "fromLocation": "Warehouse-09",
       "toLocation": "Angkor Chey (Kampot)",
@@ -1272,6 +1392,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-59",
       "fromLocation": "Warehouse-09",
       "toLocation": "Banteay Meas (Kampot)",
@@ -1282,6 +1403,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-60",
       "fromLocation": "Warehouse-09",
       "toLocation": "Chumkiri (Kampot)",
@@ -1292,6 +1414,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-61",
       "fromLocation": "Warehouse-09",
       "toLocation": "Chhouk (Kampot)",
@@ -1302,6 +1425,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-62",
       "fromLocation": "Warehouse-09",
       "toLocation": "Dong Tung (Kampot)",
@@ -1312,6 +1436,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-63",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Trach (Kampot)",
@@ -1322,6 +1447,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-64",
       "fromLocation": "Warehouse-09",
       "toLocation": "Tuek Chhu (Kampot)",
@@ -1332,6 +1458,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-65",
       "fromLocation": "Warehouse-09",
       "toLocation": "Oudong (K.Speu)",
@@ -1342,6 +1469,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-66",
       "fromLocation": "Warehouse-09",
       "toLocation": "Thpong (K.Speu)",
@@ -1352,6 +1480,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-67",
       "fromLocation": "Warehouse-09",
       "toLocation": "Samrong Torng (K.Speu)",
@@ -1362,6 +1491,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-68",
       "fromLocation": "Warehouse-09",
       "toLocation": "Chbar Morn (K.Speu)",
@@ -1372,6 +1502,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-69",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kong Pisei (K.Speu)",
@@ -1382,6 +1513,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-70",
       "fromLocation": "Warehouse-09",
       "toLocation": "Baset (K.Speu)",
@@ -1392,6 +1524,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-71",
       "fromLocation": "Warehouse-09",
       "toLocation": "Oral (K.Speu)",
@@ -1402,6 +1535,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-72",
       "fromLocation": "Warehouse-09",
       "toLocation": "Phnom Srouch (K.Speu)",
@@ -1412,6 +1546,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-73",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kirirom (K.Speu)",
@@ -1422,6 +1557,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-74",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Leng (K.Chhnang)",
@@ -1432,6 +1568,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-75",
       "fromLocation": "Warehouse-09",
       "toLocation": "Chulkiri (K.Chhnang)",
@@ -1442,6 +1579,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-76",
       "fromLocation": "Warehouse-09",
       "toLocation": "Rolear Phiear (K.Chhnang)",
@@ -1452,6 +1590,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-77",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Tralach (K.Chhnang)",
@@ -1462,6 +1601,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-78",
       "fromLocation": "Warehouse-09",
       "toLocation": "Boribo (K.Chhnang)",
@@ -1472,6 +1612,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-79",
       "fromLocation": "Warehouse-09",
       "toLocation": "Tuek Phos (K.Chhnang)",
@@ -1482,6 +1623,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-80",
       "fromLocation": "Warehouse-09",
       "toLocation": "Samaki Meanchey (K.Chhnang)",
@@ -1492,6 +1634,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-81",
       "fromLocation": "Warehouse-09",
       "toLocation": "Santuk (K.Thom)",
@@ -1502,6 +1645,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-82",
       "fromLocation": "Warehouse-09",
       "toLocation": "Stueng Sen (K.Thom)",
@@ -1512,6 +1656,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-83",
       "fromLocation": "Warehouse-09",
       "toLocation": "Staung (K.Thom)",
@@ -1522,6 +1667,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-84",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Siem (K.Cham)",
@@ -1532,6 +1678,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-85",
       "fromLocation": "Warehouse-09",
       "toLocation": "Chamkar Leu (K.Cham)",
@@ -1542,6 +1689,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-86",
       "fromLocation": "Warehouse-09",
       "toLocation": "Prey Chhor (K.Cham)",
@@ -1552,6 +1700,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-87",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kang Meas (K.Cham)",
@@ -1562,6 +1711,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-88",
       "fromLocation": "Warehouse-09",
       "toLocation": "Srey Santhor (K.Cham)",
@@ -1572,6 +1722,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-89",
       "fromLocation": "Warehouse-09",
       "toLocation": "Cheung Prey (K.Cham)",
@@ -1582,6 +1733,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-90",
       "fromLocation": "Warehouse-09",
       "toLocation": "Batheay (K.Cham)",
@@ -1592,6 +1744,7 @@
       "active": true
     },
     {
+      "effectiveMonth": "2026-01",
       "id": "no-crane-company-91",
       "fromLocation": "Warehouse-09",
       "toLocation": "Kampong Chhnang (K.Chhnang)",
@@ -1599,6 +1752,28 @@
       "distanceKm": 109,
       "companyUnitPrice": 18.43,
       "truckSalaryUnitPrice": 0,
+      "active": true
+    },
+    {
+      "effectiveMonth": "2026-01",
+      "id": "crane-company-11-base",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Khan Chba Ampeou (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 20,
+      "companyUnitPrice": 8.65,
+      "truckSalaryUnitPrice": 7.95,
+      "active": true
+    },
+    {
+      "id": "3eed4ad9-6f70-49ed-8ae1-b2457c683a76",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Khan Kambol (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 19,
+      "companyUnitPrice": 20,
+      "truckSalaryUnitPrice": 9.28,
+      "effectiveMonth": "2026-06",
       "active": true
     }
   ],
@@ -1782,6 +1957,146 @@
       "status": "Draft",
       "createdAt": "2026-05-14T15:09:50.995Z",
       "updatedAt": "2026-05-14T15:09:50.995Z"
+    },
+    {
+      "id": "565e8b92-b855-4dd1-a38c-347bc31abb33",
+      "statementId": "ef397498-8208-478e-bcbb-9a2b9f04f1ed",
+      "deliveryDate": "2026-05-16",
+      "invoiceNo": "8009012789",
+      "truckNo": "3E-0096",
+      "truckType": "With Crane",
+      "driverName": "",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Khan Posenchey (PP)",
+      "distanceKm": 29,
+      "qtyTon": 10.2345,
+      "companyUnitPrice": 10.26,
+      "companyTotalAmount": 105.01,
+      "truckSalaryUnitPrice": 9.46,
+      "truckSalaryAmount": 96.82,
+      "status": "Draft",
+      "createdAt": "2026-05-16T08:57:27.443Z",
+      "updatedAt": "2026-05-16T08:57:27.443Z"
+    },
+    {
+      "id": "d34e24b4-9733-4e72-838d-3a92b398aef7",
+      "statementId": "ef397498-8208-478e-bcbb-9a2b9f04f1ed",
+      "deliveryDate": "2026-05-16",
+      "invoiceNo": "8001923871",
+      "truckNo": "3G-0397",
+      "truckType": "With Crane",
+      "driverName": "",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Khan Mean Chey (PP)",
+      "distanceKm": 14,
+      "qtyTon": 19.823,
+      "companyUnitPrice": 8.08,
+      "companyTotalAmount": 160.17,
+      "truckSalaryUnitPrice": 7.38,
+      "truckSalaryAmount": 146.29,
+      "status": "Draft",
+      "createdAt": "2026-05-16T08:57:51.889Z",
+      "updatedAt": "2026-05-16T08:57:51.889Z"
+    },
+    {
+      "id": "467725d1-1dda-4980-acb0-dbc41d8a5cac",
+      "statementId": "d667eb88-c6bf-4fe3-a2a6-80b6a2c348ab",
+      "deliveryDate": "2026-05-16",
+      "invoiceNo": "8001023762",
+      "truckNo": "3A-2230",
+      "truckType": "Without Crane",
+      "driverName": "",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Kong Pisei (K.Speu)",
+      "distanceKm": 43,
+      "qtyTon": 10.9,
+      "companyUnitPrice": 14.82,
+      "companyTotalAmount": 161.54,
+      "truckSalaryUnitPrice": 0,
+      "truckSalaryAmount": 0,
+      "status": "Draft",
+      "createdAt": "2026-05-16T09:01:52.621Z",
+      "updatedAt": "2026-05-16T09:01:52.621Z"
+    },
+    {
+      "id": "5a5c0b8d-ef19-4164-a742-1f426b9b026e",
+      "statementId": "5b46c275-c8a8-4a06-8ac3-38d526cdaf29",
+      "deliveryDate": "2026-05-16",
+      "invoiceNo": "8000282312",
+      "truckNo": "3B-9368",
+      "truckType": "Without Crane",
+      "driverName": "",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Baset (K.Speu)",
+      "distanceKm": 62,
+      "qtyTon": 18.9,
+      "companyUnitPrice": 16.34,
+      "companyTotalAmount": 308.83,
+      "truckSalaryUnitPrice": 0,
+      "truckSalaryAmount": 0,
+      "status": "Draft",
+      "createdAt": "2026-05-16T09:04:16.877Z",
+      "updatedAt": "2026-05-16T09:04:16.877Z"
+    },
+    {
+      "id": "cf1fb066-a7d1-490a-a62f-6cd9c095187f",
+      "statementId": "5b46c275-c8a8-4a06-8ac3-38d526cdaf29",
+      "deliveryDate": "2026-05-16",
+      "invoiceNo": "80001213",
+      "truckNo": "3A-2230",
+      "truckType": "Without Crane",
+      "driverName": "",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Chbar Morn (K.Speu)",
+      "distanceKm": 52,
+      "qtyTon": 16.232,
+      "companyUnitPrice": 14.63,
+      "companyTotalAmount": 237.47,
+      "truckSalaryUnitPrice": 0,
+      "truckSalaryAmount": 0,
+      "status": "Draft",
+      "createdAt": "2026-05-16T09:04:57.215Z",
+      "updatedAt": "2026-05-16T09:04:57.215Z"
+    },
+    {
+      "id": "5fb9f6cb-2db7-476b-9d2c-05d87211eefc",
+      "statementId": "d9f17f70-4f31-4409-b36e-83333a9f2e86",
+      "deliveryDate": "2026-05-16",
+      "invoiceNo": "8001211987",
+      "truckNo": "3G-0397",
+      "truckType": "With Crane",
+      "driverName": "",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Khan 7 Makara (PP)",
+      "distanceKm": 21,
+      "qtyTon": 10.8,
+      "companyUnitPrice": 9.6,
+      "companyTotalAmount": 103.68,
+      "truckSalaryUnitPrice": 8.9,
+      "truckSalaryAmount": 96.12,
+      "status": "Draft",
+      "createdAt": "2026-05-16T09:07:59.106Z",
+      "updatedAt": "2026-05-16T09:07:59.106Z"
+    },
+    {
+      "id": "85781c23-3321-402c-8d20-226dc51583e2",
+      "statementId": "6bcf49db-b971-4635-a467-f5ef44d70eb2",
+      "deliveryDate": "2026-05-16",
+      "invoiceNo": "8009009099",
+      "truckNo": "3F-6390",
+      "truckType": "With Crane",
+      "driverName": "",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "Khan Chba Ampeou (PP)",
+      "distanceKm": 20,
+      "qtyTon": 10.8,
+      "companyUnitPrice": 8.65,
+      "companyTotalAmount": 93.42,
+      "truckSalaryUnitPrice": 7.95,
+      "truckSalaryAmount": 85.86,
+      "status": "Draft",
+      "createdAt": "2026-05-16T09:11:10.599Z",
+      "updatedAt": "2026-05-16T09:11:10.600Z"
     }
   ],
   "statements": [
@@ -1814,6 +2129,146 @@
       "status": "Finished",
       "createdAt": "2026-05-14T15:09:11.626Z",
       "updatedAt": "2026-05-14T15:09:57.698Z"
+    },
+    {
+      "id": "419406de-be1b-49fb-adad-e7d6afb2ff45",
+      "month": "2026-05",
+      "statementNumber": 1545,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T08:45:46.211Z",
+      "updatedAt": "2026-05-16T08:45:46.211Z"
+    },
+    {
+      "id": "bb1e2db8-1c2a-484b-92d1-5299a91e2648",
+      "month": "2026-05",
+      "statementNumber": 1546,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T08:46:34.198Z",
+      "updatedAt": "2026-05-16T08:46:34.198Z"
+    },
+    {
+      "id": "2bc11e0e-7cf0-4fe0-9dc1-d933de1a3b0e",
+      "month": "2026-05",
+      "statementNumber": 1547,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T08:47:07.678Z",
+      "updatedAt": "2026-05-16T08:47:07.678Z"
+    },
+    {
+      "id": "9b3b854a-635a-4af0-a557-c3c229eb51a9",
+      "month": "2026-05",
+      "statementNumber": 1548,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T08:47:29.535Z",
+      "updatedAt": "2026-05-16T08:47:29.535Z"
+    },
+    {
+      "id": "ef397498-8208-478e-bcbb-9a2b9f04f1ed",
+      "month": "2026-05",
+      "statementNumber": 1549,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T08:56:47.452Z",
+      "updatedAt": "2026-05-16T08:58:15.362Z"
+    },
+    {
+      "id": "d667eb88-c6bf-4fe3-a2a6-80b6a2c348ab",
+      "month": "2026-05",
+      "statementNumber": 1550,
+      "statementDate": "2026-05-16",
+      "truckType": "Without Crane",
+      "status": "Finished",
+      "createdAt": "2026-05-16T09:01:18.229Z",
+      "updatedAt": "2026-05-16T09:02:00.771Z"
+    },
+    {
+      "id": "5b46c275-c8a8-4a06-8ac3-38d526cdaf29",
+      "month": "2026-05",
+      "statementNumber": 1551,
+      "statementDate": "2026-05-16",
+      "truckType": "Without Crane",
+      "status": "Finished",
+      "createdAt": "2026-05-16T09:03:54.510Z",
+      "updatedAt": "2026-05-16T09:04:59.494Z"
+    },
+    {
+      "id": "d9f17f70-4f31-4409-b36e-83333a9f2e86",
+      "month": "2026-05",
+      "statementNumber": 1552,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Finished",
+      "createdAt": "2026-05-16T09:07:19.241Z",
+      "updatedAt": "2026-05-16T09:08:00.513Z"
+    },
+    {
+      "id": "6bcf49db-b971-4635-a467-f5ef44d70eb2",
+      "month": "2026-05",
+      "statementNumber": 1553,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T09:10:47.635Z",
+      "updatedAt": "2026-05-16T16:45:18.554Z"
+    },
+    {
+      "id": "0d2eb0ca-dfc1-4dbe-8709-b670ab577c61",
+      "month": "2026-05",
+      "statementNumber": 1554,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T16:46:42.518Z",
+      "updatedAt": "2026-05-16T16:46:42.518Z"
+    },
+    {
+      "id": "c63d3b88-3255-426e-8a56-e52df92b9198",
+      "month": "2026-05",
+      "statementNumber": 1555,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T17:02:27.750Z",
+      "updatedAt": "2026-05-16T17:02:27.750Z"
+    },
+    {
+      "id": "975e15ca-a783-4722-a198-88bb22698d03",
+      "month": "2026-05",
+      "statementNumber": 1556,
+      "statementDate": "2026-05-16",
+      "truckType": "With Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-16T17:04:11.843Z",
+      "updatedAt": "2026-05-16T17:04:11.843Z"
+    }
+  ],
+  "activity": [
+    {
+      "id": "5547c078-61d8-427d-b642-d9c4b0ac630e",
+      "message": "Added With Crane price for Khan Kambol (PP), effective 2026-06.",
+      "type": "price",
+      "createdAt": "2026-05-16T17:06:19.914Z"
+    },
+    {
+      "id": "c302e7ee-ccdc-43a9-942e-d2eca73088c8",
+      "message": "Updated With Crane price for Khan Chba Ampeou (PP), effective 2026-06.",
+      "type": "price",
+      "createdAt": "2026-05-16T17:04:02.079Z"
+    },
+    {
+      "id": "a21f9d26-abbb-448c-97d2-7554e8321299",
+      "message": "Updated With Crane price for Khan Chba Ampeou (PP), effective 2026-06.",
+      "type": "price",
+      "createdAt": "2026-05-16T17:03:24.419Z"
     }
   ]
 }

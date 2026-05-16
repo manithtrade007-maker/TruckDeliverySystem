@@ -268,6 +268,7 @@ const defaultData = {
       distanceKm: price.distanceKm,
       companyUnitPrice: price.companyUnitPrice,
       truckSalaryUnitPrice: craneDriverPrices.get(price.toLocation) || 0,
+      effectiveDate: "2026-01-01",
       active: true
     })),
     ...noCraneCompanyPrices.map((price, index) => ({
@@ -278,12 +279,41 @@ const defaultData = {
       distanceKm: price.distanceKm,
       companyUnitPrice: price.companyUnitPrice,
       truckSalaryUnitPrice: 0,
+      effectiveDate: "2026-01-01",
       active: true
     }))
   ],
   statements: [],
-  deliveries: []
+  deliveries: [],
+  activity: []
 };
+
+function baselinePrices() {
+  return [
+    ...craneCompanyPrices.map((price, index) => ({
+      id: `crane-company-${index + 1}`,
+      fromLocation: "Warehouse-09",
+      toLocation: price.toLocation,
+      truckType: "With Crane",
+      distanceKm: price.distanceKm,
+      companyUnitPrice: price.companyUnitPrice,
+      truckSalaryUnitPrice: craneDriverPrices.get(price.toLocation) || 0,
+      effectiveDate: "2026-01-01",
+      active: true
+    })),
+    ...noCraneCompanyPrices.map((price, index) => ({
+      id: `no-crane-company-${index + 1}`,
+      fromLocation: "Warehouse-09",
+      toLocation: price.toLocation,
+      truckType: "Without Crane",
+      distanceKm: price.distanceKm,
+      companyUnitPrice: price.companyUnitPrice,
+      truckSalaryUnitPrice: 0,
+      effectiveDate: "2026-01-01",
+      active: true
+    }))
+  ];
+}
 
 async function ensureDataFile() {
   await mkdir(dataDir, { recursive: true });
@@ -300,7 +330,33 @@ async function readData() {
   data.deliveries ||= [];
   data.trucks ||= [];
   data.prices ||= [];
+  data.activity ||= [];
+  data.prices = data.prices.map((price) => ({
+    ...price,
+    effectiveDate: price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`
+  }));
+  for (const baseline of baselinePrices()) {
+    const exists = data.prices.some(
+      (price) =>
+        price.fromLocation === baseline.fromLocation &&
+        price.toLocation === baseline.toLocation &&
+        price.truckType === baseline.truckType &&
+        (price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`) === baseline.effectiveDate
+    );
+    if (!exists) data.prices.push({ ...baseline, id: `${baseline.id}-base` });
+  }
   return data;
+}
+
+function addActivity(data, message, type = "info") {
+  data.activity ||= [];
+  data.activity.unshift({
+    id: crypto.randomUUID(),
+    message,
+    type,
+    createdAt: new Date().toISOString()
+  });
+  data.activity = data.activity.slice(0, 50);
 }
 
 async function saveData(data) {
@@ -359,6 +415,21 @@ function roundMoney(value) {
 
 function monthFromDate(value) {
   return normalizeText(value).slice(0, 7);
+}
+
+function effectiveDateOf(price) {
+  return price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
+}
+
+function findEffectivePrice(data, { fromLocation, toLocation, truckType, deliveryDate }) {
+  return data.prices
+    .filter((item) => item.active !== false)
+    .filter((item) => item.fromLocation === fromLocation)
+    .filter((item) => item.toLocation === toLocation)
+    .filter((item) => item.truckType === truckType)
+    .filter((item) => effectiveDateOf(item) <= deliveryDate)
+    .sort((a, b) => effectiveDateOf(b).localeCompare(effectiveDateOf(a)))
+    [0];
 }
 
 function nextStatementNumber(data, month) {
@@ -433,6 +504,7 @@ function enrichDelivery(data, input) {
   }
   if (!deliveryDate) throw new Error("Delivery date is required.");
   if (!invoiceNo) throw new Error("Invoice number is required.");
+  if (!/^\d{1,10}$/.test(invoiceNo)) throw new Error("Invoice number must be 10 digits or fewer.");
   if (!truckNo) throw new Error("Truck number is required.");
   if (!truck) throw new Error("Truck number does not exist.");
   if (truck.truckType !== statement.truckType) {
@@ -449,15 +521,14 @@ function enrichDelivery(data, input) {
   );
   if (duplicate) throw new Error("Invoice number already exists.");
 
-  const price = data.prices.find(
-    (item) =>
-      item.active !== false &&
-      item.fromLocation === fromLocation &&
-      item.toLocation === toLocation &&
-      item.truckType === truck.truckType
-  );
+  const price = findEffectivePrice(data, {
+    fromLocation,
+    toLocation,
+    truckType: truck.truckType,
+    deliveryDate
+  });
   if (!price) {
-    throw new Error(`No price found for ${fromLocation} to ${toLocation} (${truck.truckType}).`);
+    throw new Error(`No effective price found for ${fromLocation} to ${toLocation} (${truck.truckType}) on ${deliveryDate}.`);
   }
 
   const companyUnitPrice = toNumber(price.companyUnitPrice);
@@ -559,6 +630,7 @@ function formatExcelValue(value, column) {
   if (column.key === "rowNo") return value;
   if (column.type === "date") return formatShortDate(value);
   if (column.type === "currency") return `$ ${money(value)}`;
+  if (column.type === "money") return `$ ${money(value)}`;
   if (column.type === "qty") return `${Number(value || 0).toFixed(5)}T`;
   return value;
 }
@@ -736,6 +808,119 @@ function salaryExport(rows) {
   );
 }
 
+function monthlyTruckPerformance(data, month) {
+  const activeTruckNos = new Set(data.trucks.filter((truck) => truck.active !== false).map((truck) => truck.truckNo));
+  const rows = data.deliveries
+    .filter((row) => !month || row.deliveryDate?.slice(0, 7) === month)
+    .filter((row) => activeTruckNos.has(row.truckNo));
+  const byTruck = new Map();
+  for (const truck of data.trucks.filter((truck) => truck.active !== false)) {
+    byTruck.set(truck.truckNo, {
+      truckNo: truck.truckNo,
+      truckType: truck.truckType,
+      driverName: truck.driverName || "",
+      trips: 0,
+      days: new Set(),
+      qtyTon: 0,
+      companyAmount: 0,
+      driverAmount: 0,
+      profit: 0
+    });
+  }
+  for (const row of rows) {
+    if (!byTruck.has(row.truckNo)) continue;
+    const item = byTruck.get(row.truckNo);
+    const companyAmount = toNumber(row.companyTotalAmount);
+    const driverAmount = toNumber(row.truckSalaryAmount);
+    item.trips += 1;
+    if (row.deliveryDate) item.days.add(row.deliveryDate);
+    item.qtyTon += toNumber(row.qtyTon);
+    item.companyAmount += companyAmount;
+    item.driverAmount += driverAmount;
+    item.profit += companyAmount - driverAmount;
+  }
+  return [...byTruck.values()]
+    .map((item) => ({ ...item, workingDays: item.days.size }))
+    .sort((a, b) => b.companyAmount - a.companyAmount || a.truckNo.localeCompare(b.truckNo));
+}
+
+function dashboardExport(rows, month) {
+  return excelTable(
+    `Truck Performance - ${month || "All Months"}`,
+    rows,
+    [
+      { key: "rowNo", label: "No", align: "center" },
+      { key: "truckNo", label: "Truck No", type: "text" },
+      { key: "truckType", label: "Type" },
+      { key: "driverName", label: "Driver" },
+      { key: "workingDays", label: "Working Days", align: "center" },
+      { key: "trips", label: "Trips", align: "center" },
+      { key: "qtyTon", label: "QTY(T)", type: "qty", align: "right" },
+      { key: "companyAmount", label: "Company Price", type: "currency", align: "right" },
+      { key: "driverAmount", label: "Driver Payment", type: "currency", align: "right" },
+      { key: "profit", label: "Profit", type: "currency", align: "right" }
+    ],
+    ["qtyTon", "companyAmount", "driverAmount", "profit"]
+  );
+}
+
+function pdfEscape(value) {
+  return String(value ?? "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+
+function dashboardPdf(rows, month) {
+  const lines = [
+    `Truck Performance - ${month || "All Months"}`,
+    "",
+    "Truck     Type            Driver          Days Trips Qty(T)     Company    Driver     Profit",
+    "------------------------------------------------------------------------------------------",
+    ...rows.map((row) =>
+      [
+        String(row.truckNo || "").padEnd(9).slice(0, 9),
+        String(row.truckType || "").padEnd(15).slice(0, 15),
+        String(row.driverName || "-").padEnd(15).slice(0, 15),
+        String(row.workingDays || 0).padStart(4),
+        String(row.trips || 0).padStart(5),
+        `${Number(row.qtyTon || 0).toFixed(4)}T`.padStart(10),
+        `$${money(row.companyAmount)}`.padStart(10),
+        `$${money(row.driverAmount)}`.padStart(10),
+        `$${money(row.profit)}`.padStart(10)
+      ].join(" ")
+    )
+  ];
+  const content = [
+    "BT",
+    "/F1 10 Tf",
+    "40 780 Td",
+    ...lines.flatMap((line, index) => [
+      index === 0 ? "/F1 14 Tf" : index === 1 ? "/F1 10 Tf" : "",
+      `(${pdfEscape(line)}) Tj`,
+      "0 -16 Td"
+    ]).filter(Boolean),
+    "ET"
+  ].join("\n");
+  const objects = [
+    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
+    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
+    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Courier >> endobj",
+    `5 0 obj << /Length ${Buffer.byteLength(content)} >> stream\n${content}\nendstream endobj`
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  for (const object of objects) {
+    offsets.push(Buffer.byteLength(pdf));
+    pdf += `${object}\n`;
+  }
+  const xrefOffset = Buffer.byteLength(pdf);
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let index = 1; index < offsets.length; index += 1) {
+    pdf += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return Buffer.from(pdf);
+}
+
 function parseQuery(url) {
   return Object.fromEntries(url.searchParams.entries());
 }
@@ -821,6 +1006,7 @@ async function api(req, res, url) {
       const index = data.trucks.findIndex((item) => item.truckNo === truck.truckNo);
       if (index >= 0) data.trucks[index] = truck;
       else data.trucks.push(truck);
+      addActivity(data, `${index >= 0 ? "Updated" : "Added"} truck ${truck.truckNo} (${truck.truckType}).`, "truck");
       return truck;
     });
     return sendJson(res, 200, truck);
@@ -830,6 +1016,7 @@ async function api(req, res, url) {
     const truckNo = decodeURIComponent(url.pathname.split("/").pop());
     await updateData((data) => {
       data.trucks = data.trucks.filter((item) => item.truckNo !== truckNo);
+      addActivity(data, `Deleted truck ${truckNo}.`, "truck");
       return { ok: true };
     });
     return sendJson(res, 200, { ok: true });
@@ -838,6 +1025,7 @@ async function api(req, res, url) {
   if (req.method === "POST" && url.pathname === "/api/prices") {
     const body = await readBody(req);
     const price = await updateData((data) => {
+      const existingById = body.id ? data.prices.find((item) => item.id === body.id) : null;
       const price = {
         id: body.id || crypto.randomUUID(),
         fromLocation: normalizeText(body.fromLocation || data.settings.defaultFromLocation),
@@ -846,12 +1034,26 @@ async function api(req, res, url) {
         distanceKm: toNumber(body.distanceKm),
         companyUnitPrice: toNumber(body.companyUnitPrice),
         truckSalaryUnitPrice: toNumber(body.truckSalaryUnitPrice),
+        effectiveDate: normalizeText(body.effectiveDate || (body.effectiveMonth ? `${body.effectiveMonth}-01` : "2026-01-01")),
         active: body.active !== false
       };
       if (!price.toLocation || !price.truckType) throw new Error("To Location and Truck Type are required.");
-      const index = data.prices.findIndex((item) => item.id === price.id);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(price.effectiveDate)) throw new Error("Effective Date is required.");
+      if (existingById && effectiveDateOf(existingById) !== price.effectiveDate) {
+        price.id = crypto.randomUUID();
+      }
+      const index = data.prices.findIndex((item) =>
+        item.id === price.id ||
+        (
+          item.fromLocation === price.fromLocation &&
+          item.toLocation === price.toLocation &&
+          item.truckType === price.truckType &&
+          effectiveDateOf(item) === price.effectiveDate
+        )
+      );
       if (index >= 0) data.prices[index] = price;
       else data.prices.push(price);
+      addActivity(data, `${index >= 0 ? "Updated" : "Added"} ${price.truckType} price for ${price.toLocation}, effective ${price.effectiveDate}.`, "price");
       return price;
     });
     return sendJson(res, 200, price);
@@ -860,7 +1062,9 @@ async function api(req, res, url) {
   if (req.method === "DELETE" && url.pathname.startsWith("/api/prices/")) {
     const id = decodeURIComponent(url.pathname.split("/").pop());
     await updateData((data) => {
+      const price = data.prices.find((item) => item.id === id);
       data.prices = data.prices.filter((item) => item.id !== id);
+      if (price) addActivity(data, `Deleted ${price.truckType} price for ${price.toLocation}, effective ${effectiveDateOf(price)}.`, "price");
       return { ok: true };
     });
     return sendJson(res, 200, { ok: true });
@@ -934,6 +1138,25 @@ async function api(req, res, url) {
       "Content-Disposition": `attachment; filename="truck-salary-${slug(truckTypeName)}.xls"`
     });
     return res.end(salaryExport(rows));
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/export/dashboard") {
+    const month = normalizeText(query.month);
+    const format = normalizeText(query.format || "xls");
+    const rows = monthlyTruckPerformance(data, month);
+    const fileName = `truck-performance-${slug(month || "all")}`;
+    if (format === "pdf") {
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${fileName}.pdf"`
+      });
+      return res.end(dashboardPdf(rows, month));
+    }
+    res.writeHead(200, {
+      "Content-Type": "application/vnd.ms-excel; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${fileName}.xls"`
+    });
+    return res.end(dashboardExport(rows, month));
   }
 
   return sendJson(res, 404, { error: "API route not found." });

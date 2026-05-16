@@ -5,6 +5,13 @@ import "./styles.css";
 const today = () => new Date().toISOString().slice(0, 10);
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 const money = (value) => Number(value || 0).toFixed(2);
+const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
+const monthName = (value) => {
+  if (!value) return "";
+  const [year, month] = value.split("-");
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+};
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -18,12 +25,12 @@ async function api(path, options = {}) {
 
 function Button({ variant = "primary", className = "", ...props }) {
   const base =
-    "inline-flex min-h-10 items-center justify-center rounded-lg border px-4 py-2 text-sm font-bold shadow-sm transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none";
+    "inline-flex min-h-10 items-center justify-center rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none";
   const variants = {
-    primary: "border-teal-700 bg-teal-700 text-white hover:bg-teal-800",
-    secondary: "border-slate-300 bg-white text-slate-800 hover:border-teal-700 hover:text-teal-800",
+    primary: "border-teal-700 bg-teal-700 text-white shadow-sm shadow-teal-900/10 hover:bg-teal-800",
+    secondary: "border-slate-200 bg-white text-slate-800 shadow-sm hover:border-teal-700 hover:text-teal-800",
     quiet: "border-transparent bg-transparent text-slate-600 shadow-none hover:bg-slate-100",
-    danger: "border-rose-200 bg-white text-rose-700 hover:border-rose-500 hover:bg-rose-50"
+    danger: "border-rose-100 bg-rose-50 text-rose-700 hover:border-rose-500 hover:bg-rose-100"
   };
   const styles = variants[variant] || variants.primary;
   return <button className={`${base} ${styles} ${className}`} {...props} />;
@@ -32,7 +39,7 @@ function Button({ variant = "primary", className = "", ...props }) {
 function Input(props) {
   return (
     <input
-      className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none"
+      className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none"
       {...props}
     />
   );
@@ -41,7 +48,7 @@ function Input(props) {
 function Select({ children, ...props }) {
   return (
     <select
-      className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none"
+      className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none"
       {...props}
     >
       {children}
@@ -51,16 +58,16 @@ function Select({ children, ...props }) {
 
 function Field({ label, children }) {
   return (
-    <label className="grid gap-1.5 text-sm font-semibold text-slate-600">
+    <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-slate-500">
       <span>{label}</span>
       {children}
     </label>
   );
 }
 
-function Panel({ children, className = "" }) {
+function Panel({ children, className = "", ...props }) {
   return (
-    <section className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
+    <section className={`rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-sm shadow-slate-900/5 ${className}`} {...props}>
       {children}
     </section>
   );
@@ -69,14 +76,26 @@ function Panel({ children, className = "" }) {
 function KpiCard({ label, value, tone = "slate" }) {
   const tones = {
     slate: "border-slate-200 bg-white text-slate-900",
-    teal: "border-teal-200 bg-teal-50 text-teal-900",
-    amber: "border-amber-200 bg-amber-50 text-amber-900",
-    blue: "border-sky-200 bg-sky-50 text-sky-900"
+    teal: "border-teal-200 bg-teal-50 text-teal-950",
+    amber: "border-amber-200 bg-amber-50 text-amber-950",
+    blue: "border-sky-200 bg-sky-50 text-sky-950"
   };
   return (
-    <div className={`rounded-2xl border p-4 shadow-sm ${tones[tone] || tones.slate}`}>
-      <div className="text-xs font-bold uppercase tracking-wide opacity-70">{label}</div>
-      <div className="mt-1 text-xl font-black">{value}</div>
+    <div className={`rounded-2xl border p-4 shadow-sm shadow-slate-900/5 ${tones[tone] || tones.slate}`}>
+      <div className="text-[11px] font-black uppercase tracking-wide opacity-60">{label}</div>
+      <div className="mt-1 text-2xl font-black tracking-tight">{value}</div>
+    </div>
+  );
+}
+
+function PageHead({ title, meta, action }) {
+  return (
+    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h2 className="text-2xl font-black tracking-tight">{title}</h2>
+        {meta && <div className="mt-1 text-sm font-bold text-slate-500">{meta}</div>}
+      </div>
+      {action}
     </div>
   );
 }
@@ -87,7 +106,10 @@ function App() {
   const [selectedStatementId, setSelectedStatementId] = useState("");
   const [notice, setNotice] = useState({ type: "", text: "" });
   const [reportMonth, setReportMonth] = useState(currentMonth());
+  const [reportTruckNo, setReportTruckNo] = useState("");
   const [entryTruckType, setEntryTruckType] = useState("With Crane");
+  const [entryActionTruckType, setEntryActionTruckType] = useState("");
+  const [showStatementWorkspace, setShowStatementWorkspace] = useState(false);
   const [statementForm, setStatementForm] = useState({
     id: "",
     month: currentMonth(),
@@ -103,7 +125,8 @@ function App() {
     toLocation: "",
     qtyTon: ""
   });
-  const [filters, setFilters] = useState({ month: currentMonth(), truckNo: "" });
+  const [filters, setFilters] = useState({ month: currentMonth(), statementNumber: "" });
+  const [setupSection, setSetupSection] = useState("trucks");
   const [truckForm, setTruckForm] = useState({ truckNo: "", truckType: "With Crane", driverName: "", phone: "" });
   const [priceForm, setPriceForm] = useState({
     id: "",
@@ -112,7 +135,17 @@ function App() {
     truckType: "With Crane",
     distanceKm: "",
     companyUnitPrice: "",
-    truckSalaryUnitPrice: ""
+    truckSalaryUnitPrice: "",
+    effectiveDate: today()
+  });
+  const [driverPriceForm, setDriverPriceForm] = useState({
+    id: "",
+    fromLocation: "",
+    toLocation: "",
+    truckType: "With Crane",
+    distanceKm: "",
+    truckSalaryUnitPrice: "",
+    effectiveDate: today()
   });
   const [settingsForm, setSettingsForm] = useState({ companyName: "", defaultFromLocation: "" });
 
@@ -130,14 +163,12 @@ function App() {
   );
 
   const filteredStatements = useMemo(() => {
-    const truckType = filters.truckNo
-      ? data.trucks.find((truck) => truck.truckNo === filters.truckNo)?.truckType
-      : "";
+    const statementNumber = String(filters.statementNumber || "").trim();
     return data.statements
       .filter((statement) => !filters.month || statement.month === filters.month)
-      .filter((statement) => !truckType || statement.truckType === truckType)
-      .sort((a, b) => b.month.localeCompare(a.month) || Number(a.statementNumber) - Number(b.statementNumber));
-  }, [data.statements, data.trucks, filters]);
+      .filter((statement) => !statementNumber || String(statement.statementNumber).includes(statementNumber))
+      .sort((a, b) => b.month.localeCompare(a.month) || Number(b.statementNumber) - Number(a.statementNumber));
+  }, [data.statements, filters]);
 
   const statementCounts = useMemo(() => {
     const month = filters.month || statementForm.month || currentMonth();
@@ -172,13 +203,13 @@ function App() {
   );
 
   const selectedPrice = selectedTruck
-    ? data.prices.find(
-        (price) =>
-          price.active !== false &&
-          price.fromLocation === data.settings.defaultFromLocation &&
-          price.toLocation === deliveryForm.toLocation &&
-          price.truckType === selectedTruck.truckType
-      )
+    ? data.prices
+        .filter((price) => price.active !== false)
+        .filter((price) => price.fromLocation === data.settings.defaultFromLocation)
+        .filter((price) => price.toLocation === deliveryForm.toLocation)
+        .filter((price) => price.truckType === selectedTruck.truckType)
+        .filter((price) => priceEffectiveDate(price) <= (deliveryForm.deliveryDate || today()))
+        .sort((a, b) => priceEffectiveDate(b).localeCompare(priceEffectiveDate(a)))[0]
     : null;
 
   const totals = statementRows.reduce(
@@ -190,8 +221,13 @@ function App() {
   );
 
   const monthlyRows = useMemo(
-    () => data.deliveries.filter((row) => !reportMonth || row.deliveryDate?.slice(0, 7) === reportMonth),
-    [data.deliveries, reportMonth]
+    () => {
+      const activeTruckNos = new Set(data.trucks.map((truck) => truck.truckNo));
+      return data.deliveries
+        .filter((row) => !reportMonth || row.deliveryDate?.slice(0, 7) === reportMonth)
+        .filter((row) => activeTruckNos.has(row.truckNo));
+    },
+    [data.deliveries, data.trucks, reportMonth]
   );
 
   const monthlyTotals = useMemo(
@@ -229,19 +265,7 @@ function App() {
       });
     }
     for (const row of monthlyRows) {
-      if (!byTruck.has(row.truckNo)) {
-        byTruck.set(row.truckNo, {
-          truckNo: row.truckNo,
-          truckType: row.truckType,
-          driverName: row.driverName,
-          trips: 0,
-          days: new Set(),
-          qty: 0,
-          companyAmount: 0,
-          driverAmount: 0,
-          margin: 0
-        });
-      }
+      if (!byTruck.has(row.truckNo)) continue;
       const item = byTruck.get(row.truckNo);
       const companyAmount = Number(row.companyTotalAmount || 0);
       const driverAmount = Number(row.truckSalaryAmount || 0);
@@ -271,6 +295,10 @@ function App() {
   );
 
   const activeTruckCount = truckPerformance.filter((truck) => truck.trips > 0).length;
+  const selectedDriverPaymentSection = driverPaymentSections.find((truck) => truck.truckNo === reportTruckNo);
+  const isEditingTruck = data.trucks.some((truck) => truck.truckNo === truckForm.truckNo);
+  const filteredCompanyPrices = data.prices.filter((price) => price.truckType === priceForm.truckType);
+  const filteredDriverPrices = data.prices.filter((price) => price.truckType === driverPriceForm.truckType);
 
   const isDraft = selectedStatement?.status === "Draft";
   const isEditingDelivery = Boolean(deliveryForm.id);
@@ -298,6 +326,7 @@ function App() {
 
   function openStatement(statement) {
     setEntryTruckType(statement.truckType);
+    setShowStatementWorkspace(true);
     setSelectedStatementId(statement.id);
     setStatementForm({
       id: statement.id,
@@ -332,13 +361,46 @@ function App() {
     const month = statementForm.month || currentMonth();
     const truckType = entryTruckType;
     setSelectedStatementId("");
+    setShowStatementWorkspace(false);
     resetDeliveryForm();
     setStatementForm({ id: "", month, truckType, statementNumber: "", statementDate: today() });
+  }
+
+  function backToStatementList() {
+    const month = statementForm.month || filters.month || currentMonth();
+    const truckType = entryTruckType;
+    setSelectedStatementId("");
+    setShowStatementWorkspace(false);
+    resetDeliveryForm();
+    setStatementForm({ id: "", month, truckType, statementNumber: "", statementDate: today() });
+  }
+
+  async function getNextStatementNumber(month) {
+    const result = await api(`/api/next-statement-number?month=${encodeURIComponent(month)}`);
+    return result.nextStatementNumber;
+  }
+
+  async function startEntryAction(truckType) {
+    await switchEntryTruckType(truckType);
+    setEntryActionTruckType(truckType);
+  }
+
+  async function createEntryStatement(truckType) {
+    const month = statementForm.month || filters.month || currentMonth();
+    const statementNumber = await getNextStatementNumber(month);
+    setEntryTruckType(truckType);
+    setSelectedStatementId("");
+    resetDeliveryForm();
+    setStatementForm({ id: "", month, truckType, statementNumber, statementDate: today() });
+    setShowStatementWorkspace(true);
+    setEntryActionTruckType("");
+    requestAnimationFrame(() => document.getElementById("statement-form-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
   async function switchEntryTruckType(truckType) {
     setEntryTruckType(truckType);
     setSelectedStatementId("");
+    setShowStatementWorkspace(false);
     resetDeliveryForm();
     const month = statementForm.month || filters.month || currentMonth();
     setStatementForm({ id: "", month, truckType, statementNumber: "", statementDate: today() });
@@ -346,9 +408,36 @@ function App() {
 
   async function finishStatement() {
     if (!selectedStatement) return;
+    const finishedStatementId = selectedStatement.id;
+    const finishedMonth = selectedStatement.month;
+    const finishedTruckType = selectedStatement.truckType;
     try {
-      await api(`/api/statements/${selectedStatement.id}/finish`, { method: "POST" });
+      setPage("data-entry");
+      setEntryTruckType(finishedTruckType);
+      setEntryActionTruckType("");
+      setSelectedStatementId("");
+      setShowStatementWorkspace(false);
+      setFilters((current) => ({ ...current, month: finishedMonth }));
+      resetDeliveryForm();
+      setStatementForm({
+        id: "",
+        month: finishedMonth,
+        truckType: finishedTruckType,
+        statementNumber: "",
+        statementDate: today()
+      });
+      await api(`/api/statements/${finishedStatementId}/finish`, { method: "POST" });
       await loadData();
+      setSelectedStatementId("");
+      setShowStatementWorkspace(false);
+      setStatementForm({
+        id: "",
+        month: finishedMonth,
+        truckType: finishedTruckType,
+        statementNumber: "",
+        statementDate: today()
+      });
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
       flash("Statement finished and saved.");
     } catch (err) {
       flash(err.message, "error");
@@ -439,10 +528,30 @@ function App() {
     }
   }
 
+  async function deleteTruck(truck) {
+    const ok = window.confirm(`Delete truck ${truck.truckNo}?`);
+    if (!ok) return;
+    try {
+      await api(`/api/trucks/${encodeURIComponent(truck.truckNo)}`, { method: "DELETE" });
+      if (truckForm.truckNo === truck.truckNo) setTruckForm({ truckNo: "", truckType: "With Crane", driverName: "", phone: "" });
+      await loadData();
+      flash("Truck deleted.");
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function savePrice(event) {
     event.preventDefault();
     try {
-      await api("/api/prices", { method: "POST", body: JSON.stringify(priceForm) });
+      const existingPrice = data.prices.find((price) => price.id === priceForm.id);
+      await api("/api/prices", {
+        method: "POST",
+        body: JSON.stringify({
+          ...priceForm,
+          truckSalaryUnitPrice: priceForm.truckSalaryUnitPrice || existingPrice?.truckSalaryUnitPrice || 0
+        })
+      });
       setPriceForm({
         id: "",
         fromLocation: data.settings.defaultFromLocation || "",
@@ -450,10 +559,62 @@ function App() {
         truckType: "With Crane",
         distanceKm: "",
         companyUnitPrice: "",
-        truckSalaryUnitPrice: ""
+        truckSalaryUnitPrice: "",
+        effectiveDate: today()
       });
       await loadData();
       flash("Price saved.");
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
+  async function saveDriverPrice(event) {
+    event.preventDefault();
+    try {
+      const existingPrice = data.prices.find((price) => price.id === driverPriceForm.id);
+      await api("/api/prices", {
+        method: "POST",
+        body: JSON.stringify({
+          id: driverPriceForm.id,
+          fromLocation: driverPriceForm.fromLocation,
+          toLocation: driverPriceForm.toLocation,
+          truckType: driverPriceForm.truckType,
+          distanceKm: driverPriceForm.distanceKm,
+          effectiveDate: driverPriceForm.effectiveDate,
+          companyUnitPrice: existingPrice?.companyUnitPrice || 0,
+          truckSalaryUnitPrice: driverPriceForm.truckSalaryUnitPrice
+        })
+      });
+      setDriverPriceForm({
+        id: "",
+        fromLocation: data.settings.defaultFromLocation || "",
+        toLocation: "",
+        truckType: "With Crane",
+        distanceKm: "",
+        truckSalaryUnitPrice: "",
+        effectiveDate: today()
+      });
+      await loadData();
+      flash("Driver price saved.");
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
+  async function deletePrice(price) {
+    const ok = window.confirm(`Delete price for ${price.toLocation} (${price.truckType})?`);
+    if (!ok) return;
+    try {
+      await api(`/api/prices/${encodeURIComponent(price.id)}`, { method: "DELETE" });
+      if (priceForm.id === price.id) {
+        setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: "With Crane", distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: today() });
+      }
+      if (driverPriceForm.id === price.id) {
+        setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: "With Crane", distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: today() });
+      }
+      await loadData();
+      flash("Price deleted.");
     } catch (err) {
       flash(err.message, "error");
     }
@@ -475,99 +636,255 @@ function App() {
     window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedStatement.id)}&truckType=${encodeURIComponent(selectedStatement.truckType)}`;
   }
 
+  const navItems = [
+    ["dashboard", "Dashboard"],
+    ["data-entry", "Data Entry"],
+    ["reports", "Reports"],
+    ["setup", "Setup"]
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/95 px-6 py-4 shadow-sm backdrop-blur lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">Truck Delivery System</h1>
-          <p className="mt-1 text-sm font-medium text-slate-500">Monthly statements, steel delivery records, and accounting exports.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant={page === "dashboard" ? "primary" : "secondary"} onClick={() => setPage("dashboard")}>Dashboard</Button>
-          <Button variant={page === "data-entry" ? "primary" : "secondary"} onClick={() => setPage("data-entry")}>Data Entry</Button>
-          <Button variant={page === "reports" ? "primary" : "secondary"} onClick={() => setPage("reports")}>Reports</Button>
-          <Button variant={page === "setup" ? "primary" : "secondary"} onClick={() => setPage("setup")}>Setup</Button>
-          <Button onClick={exportStatement} disabled={!selectedStatement || statementRows.length < 1}>Export Current Statement</Button>
+    <div className="min-h-screen text-slate-900">
+      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 shadow-sm shadow-slate-900/5 backdrop-blur">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-950 text-sm font-black text-white">NM</div>
+            <div>
+              <h1 className="text-lg font-black tracking-tight">Truck Delivery</h1>
+              <p className="text-xs font-black uppercase tracking-wide text-slate-500">{data.settings.companyName || "N&M LOGISTIC"}</p>
+            </div>
+          </div>
+          <nav className="flex w-full gap-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-1 lg:w-auto">
+            {navItems.map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setPage(key)}
+                className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-black transition ${
+                  page === key
+                    ? "bg-teal-700 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-white hover:text-slate-950"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+          <Button className="lg:min-w-[190px]" onClick={exportStatement} disabled={!selectedStatement || statementRows.length < 1}>
+            Export Statement
+          </Button>
         </div>
       </header>
 
       {notice.text && (
-        <div className={`mx-4 mt-4 rounded-xl border px-4 py-3 text-sm font-bold shadow-sm ${notice.type === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-teal-200 bg-teal-50 text-teal-800"}`}>
+        <div className={`mx-auto mt-4 max-w-[1500px] rounded-xl border px-4 py-3 text-sm font-bold shadow-sm ${notice.type === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-teal-200 bg-teal-50 text-teal-800"}`}>
           {notice.text}
         </div>
       )}
 
       {page === "dashboard" ? (
-        <main className="grid gap-4 p-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h2 className="text-2xl font-black tracking-tight">Monthly Dashboard</h2>
-              <p className="mt-1 text-sm font-medium text-slate-500">A simple monthly summary. Use Reports for detailed truck and driver lists.</p>
-            </div>
-            <Field label="Report Month">
-              <Input type="month" value={reportMonth} onChange={(event) => setReportMonth(event.target.value)} />
-            </Field>
-          </div>
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+          <PageHead
+            title="Dashboard"
+            meta="Monthly revenue, driver payment, margin, and activity."
+            action={(
+              <Field label="Report Month">
+                <Input
+                  type="month"
+                  value={reportMonth}
+                  onChange={(event) => {
+                    setReportMonth(event.target.value);
+                    setReportTruckNo("");
+                  }}
+                />
+              </Field>
+            )}
+          />
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <KpiCard label="Company Revenue" value={`$${money(monthlyTotals.companyAmount)}`} tone="teal" />
+            <KpiCard label="Company Price" value={`$${money(monthlyTotals.companyAmount)}`} tone="teal" />
             <KpiCard label="Driver Payment" value={`$${money(monthlyTotals.driverAmount)}`} tone="amber" />
-            <KpiCard label="Gross Margin" value={`$${money(monthlyTotals.margin)}`} tone="blue" />
+            <KpiCard label="Profit" value={`$${money(monthlyTotals.margin)}`} tone="blue" />
             <KpiCard label="Trips / Active Trucks" value={`${monthlyTotals.trips} / ${activeTruckCount}`} tone="slate" />
           </div>
 
           <Panel>
-            <div className="grid gap-4 md:grid-cols-3">
-              <button type="button" onClick={() => setPage("data-entry")} className="rounded-2xl border border-teal-200 bg-teal-50 p-5 text-left transition hover:border-teal-700">
-                <div className="text-sm font-black uppercase tracking-wide text-teal-700">Daily work</div>
-                <div className="mt-1 text-xl font-black">Go to Data Entry</div>
-                <div className="mt-2 text-sm font-semibold text-slate-600">Input invoice rows for crane or no-crane trucks.</div>
-              </button>
-              <button type="button" onClick={() => setPage("reports")} className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-left transition hover:border-amber-500">
-                <div className="text-sm font-black uppercase tracking-wide text-amber-700">Month end</div>
-                <div className="mt-1 text-xl font-black">Open Driver Payment</div>
-                <div className="mt-2 text-sm font-semibold text-slate-600">Review each truck list before paying drivers.</div>
-              </button>
-              <button type="button" onClick={() => setPage("setup")} className="rounded-2xl border border-slate-200 bg-white p-5 text-left transition hover:border-slate-400">
-                <div className="text-sm font-black uppercase tracking-wide text-slate-500">Master data</div>
-                <div className="mt-1 text-xl font-black">Setup Trucks & Prices</div>
-                <div className="mt-2 text-sm font-semibold text-slate-600">Manage truck master and location price lists.</div>
-              </button>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-black tracking-tight">News & Changes</h3>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-500">Latest activity</span>
+            </div>
+            <div className="grid gap-2">
+              {(data.activity || []).slice(0, 6).map((item) => (
+                <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="text-sm font-black text-slate-900">{item.message}</div>
+                  <div className="mt-1 text-xs font-bold text-slate-500">{new Date(item.createdAt).toLocaleString()}</div>
+                </div>
+              ))}
+              {(data.activity || []).length === 0 && (
+                <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm font-bold text-slate-500">No setup changes recorded yet.</div>
+              )}
+            </div>
+          </Panel>
+
+          <Panel>
+            <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <h3 className="text-lg font-black tracking-tight">Truck Performance</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=xls`;
+                  }}
+                >
+                  Export Excel
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=pdf`;
+                  }}
+                >
+                  Export PDF
+                </Button>
+              </div>
+            </div>
+            <div className="overflow-auto rounded-xl border border-slate-200">
+              <table className="w-full min-w-[1100px] border-collapse bg-white text-sm">
+                <thead className="bg-slate-900 text-white">
+                  <tr>
+                    <th className="px-3 py-3 text-left font-black">Truck No</th>
+                    <th className="px-3 py-3 text-left font-black">Type</th>
+                    <th className="px-3 py-3 text-left font-black">Driver</th>
+                    <th className="px-3 py-3 text-center font-black">Working Days</th>
+                    <th className="px-3 py-3 text-center font-black">Trips</th>
+                    <th className="px-3 py-3 text-right font-black">QTY(T)</th>
+                    <th className="px-3 py-3 text-right font-black">Company Price</th>
+                    <th className="px-3 py-3 text-right font-black">Driver Payment</th>
+                    <th className="px-3 py-3 text-right font-black">Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {truckPerformance.map((truck) => (
+                    <tr key={truck.truckNo} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                      <td className="px-3 py-3 font-black">{truck.truckNo}</td>
+                      <td className="px-3 py-3">{truck.truckType}</td>
+                      <td className="px-3 py-3">{truck.driverName || "-"}</td>
+                      <td className="px-3 py-3 text-center">{truck.workingDays}</td>
+                      <td className="px-3 py-3 text-center">{truck.trips}</td>
+                      <td className="px-3 py-3 text-right font-bold">{truck.qty.toFixed(4)}T</td>
+                      <td className="px-3 py-3 text-right">$ {money(truck.companyAmount)}</td>
+                      <td className="px-3 py-3 text-right font-black">$ {money(truck.driverAmount)}</td>
+                      <td className="px-3 py-3 text-right">$ {money(truck.margin)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </Panel>
         </main>
       ) : page === "data-entry" ? (
-        <main className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-          <div className="lg:col-span-2">
-            <div className="grid gap-3 md:grid-cols-2">
-              {["With Crane", "Without Crane"].map((truckType) => (
-                <button
-                  key={truckType}
-                  type="button"
-                  onClick={() => switchEntryTruckType(truckType).catch((err) => flash(err.message, "error"))}
-                  className={`rounded-2xl border p-5 text-left shadow-sm transition ${
-                    entryTruckType === truckType
-                      ? "border-teal-700 bg-teal-700 text-white"
-                      : "border-slate-200 bg-white text-slate-900 hover:border-teal-300 hover:bg-teal-50"
-                  }`}
-                >
-                  <div className="text-sm font-black uppercase tracking-wide opacity-75">Data Entry</div>
-                  <div className="mt-1 text-2xl font-black">{truckType === "With Crane" ? "Truck With Crane" : "Truck No Crane"}</div>
-                  <div className="mt-2 text-sm font-semibold opacity-80">
-                    {truckType === "With Crane"
-                      ? `6 crane trucks | ${statementCounts.withCrane} statements this month`
-                      : `3 no-crane trucks | ${statementCounts.withoutCrane} statements this month`}
-                  </div>
-                </button>
-              ))}
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+          {!selectedStatement && !showStatementWorkspace && (
+          <Panel className="lg:col-span-2">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-2xl font-black tracking-tight">Data Entry</h2>
+                <p className="mt-1 text-sm font-bold text-slate-500">Choose one entry option, then create or edit a statement.</p>
+              </div>
+              <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-2">
+                {["With Crane", "Without Crane"].map((truckType) => (
+                  <button
+                    key={truckType}
+                    type="button"
+                    onClick={() => startEntryAction(truckType).catch((err) => flash(err.message, "error"))}
+                    className={`min-w-[220px] rounded-xl px-4 py-3 text-left transition ${
+                      entryTruckType === truckType
+                        ? "bg-teal-700 text-white shadow-sm"
+                        : "bg-white text-slate-700 hover:text-slate-950"
+                    }`}
+                  >
+                    <div className="text-base font-black">{truckType === "With Crane" ? "Car With Crane Entry" : "Car No Crane Entry"}</div>
+                    <div className="mt-0.5 text-xs font-bold opacity-75">
+                      {truckType === "With Crane"
+                        ? `6 trucks | ${statementCounts.withCrane} statements`
+                        : `3 trucks | ${statementCounts.withoutCrane} statements`}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          </Panel>
+          )}
 
+          {entryActionTruckType && (
+            <div className="fixed inset-0 z-30 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
+                <div className="mb-4">
+                  <h3 className="text-xl font-black tracking-tight">
+                    {entryActionTruckType === "With Crane" ? "Car With Crane Entry" : "Car No Crane Entry"}
+                  </h3>
+                  <p className="mt-1 text-sm font-bold text-slate-500">Choose what you want to do next.</p>
+                </div>
+                <div className="grid gap-3">
+                  <Button type="button" onClick={() => createEntryStatement(entryActionTruckType).catch((err) => flash(err.message, "error"))}>
+                    Create Statement
+                  </Button>
+                  <Button type="button" variant="quiet" onClick={() => setEntryActionTruckType("")}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!showStatementWorkspace && !selectedStatement && (
           <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
             <KpiCard label={`${statementCounts.month} With Crane Statements`} value={statementCounts.withCrane} tone="teal" />
             <KpiCard label={`${statementCounts.month} No Crane Statements`} value={statementCounts.withoutCrane} tone="blue" />
             <KpiCard label={`${statementCounts.month} Total Statements`} value={statementCounts.total} tone="slate" />
           </div>
+          )}
+
+          {!showStatementWorkspace && !selectedStatement && (
+            <Panel id="all-statements-panel" className="lg:col-span-2">
+              <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <h2 className="text-lg font-black tracking-tight">All Statements</h2>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-600">
+                  With Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}
+                </span>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Month"><Input type="month" value={filters.month} onChange={(e) => setFilters({ ...filters, month: e.target.value })} /></Field>
+                <Field label="Statement No">
+                  <Input
+                    placeholder="Search statement number"
+                    value={filters.statementNumber}
+                    onChange={(e) => setFilters({ ...filters, statementNumber: e.target.value })}
+                  />
+                </Field>
+              </div>
+              <div className="mt-4 grid max-h-[520px] gap-2 overflow-auto pr-1">
+                {filteredStatements.map((statement) => (
+                  <div key={statement.id} className={`grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border p-3 transition ${statement.id === selectedStatementId ? "border-teal-700 bg-teal-50 shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <strong className="block text-sm font-black">Statement {statement.statementNumber} - {monthName(statement.month)}</strong>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
+                          {statement.truckType}
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-500">{statement.month} | {statement.status} | {statement.rowCount}/30 rows | ${money(statement.companyTotalAmount)}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
+                      <Button type="button" variant="danger" onClick={() => deleteStatement(statement)}>Delete</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
 
           {selectedStatement && (
             <div className="grid gap-3 lg:col-span-2 lg:grid-cols-4">
@@ -578,7 +895,8 @@ function App() {
             </div>
           )}
 
-          <Panel className="lg:col-span-2">
+          {(showStatementWorkspace || selectedStatement) && (
+          <Panel id="statement-form-panel" className="lg:col-span-2">
             <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <h2 className="text-lg font-black tracking-tight">
                 {selectedStatement ? `${entryTruckType} Statement Details` : `Create ${entryTruckType} Statement`}
@@ -593,9 +911,17 @@ function App() {
                   type="month"
                   required
                   value={statementForm.month}
-                  onChange={(event) => {
+                  onChange={async (event) => {
                     const month = event.target.value;
                     setStatementForm((current) => ({ ...current, month }));
+                    if (!statementForm.id && month) {
+                      try {
+                        const statementNumber = await getNextStatementNumber(month);
+                        setStatementForm((current) => ({ ...current, month, statementNumber }));
+                      } catch (err) {
+                        flash(err.message, "error");
+                      }
+                    }
                   }}
                 />
               </Field>
@@ -608,8 +934,8 @@ function App() {
               </Field>
               <div className="flex flex-wrap items-end gap-2 md:col-span-4">
                 <Button type="submit">{statementForm.id ? "Save Changes" : "Create Statement"}</Button>
-                <Button type="button" variant="secondary" onClick={() => newStatement().catch((err) => flash(err.message, "error"))}>
-                  {selectedStatement ? "Back to Statements" : "Clear Form"}
+                <Button type="button" variant="secondary" onClick={backToStatementList}>
+                  Back to Statements
                 </Button>
                 {selectedStatement && !isDraft && (
                   <Button type="button" variant="secondary" onClick={reopenStatement}>Reopen to Edit Rows</Button>
@@ -617,44 +943,6 @@ function App() {
               </div>
             </form>
           </Panel>
-
-          {!selectedStatement && (
-          <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
-            <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <h2 className="text-lg font-black tracking-tight">All Statements</h2>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-600">
-                With Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}
-              </span>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Month"><Input type="month" value={filters.month} onChange={(e) => setFilters({ ...filters, month: e.target.value })} /></Field>
-              <Field label="Truck No">
-                <Select value={filters.truckNo} onChange={(e) => setFilters({ ...filters, truckNo: e.target.value })}>
-                  <option value="">All trucks</option>
-                  {data.trucks.map((truck) => <option key={truck.truckNo}>{truck.truckNo}</option>)}
-                </Select>
-              </Field>
-            </div>
-            <div className="mt-4 grid max-h-[520px] gap-2 overflow-auto pr-1 lg:grid-cols-2">
-              {filteredStatements.map((statement) => (
-                <div key={statement.id} className={`grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border p-3 transition ${statement.id === selectedStatementId ? "border-teal-700 bg-teal-50 shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <strong className="block text-sm font-black">Statement {statement.statementNumber}</strong>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
-                        {statement.truckType}
-                      </span>
-                    </div>
-                    <span className="text-xs text-slate-500">{statement.month} | {statement.status} | {statement.rowCount}/30 rows | ${money(statement.companyTotalAmount)}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
-                    <Button type="button" variant="danger" onClick={() => deleteStatement(statement)}>Delete</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </aside>
           )}
 
           {selectedStatement && (
@@ -668,12 +956,30 @@ function App() {
                 </div>
                 <form className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
                   <Field label="Delivery Date"><Input type="date" required disabled={!canEditRows} value={deliveryForm.deliveryDate} onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })} /></Field>
-                  <Field label="Invoice No"><Input required disabled={!canEditRows} value={deliveryForm.invoiceNo} onChange={(e) => setDeliveryForm({ ...deliveryForm, invoiceNo: e.target.value })} /></Field>
+                  <Field label="Invoice No">
+                    <Input
+                      required
+                      disabled={!canEditRows}
+                      inputMode="numeric"
+                      maxLength="10"
+                      pattern="[0-9]{1,10}"
+                      placeholder="Max 10 numbers"
+                      value={deliveryForm.invoiceNo}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, invoiceNo: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                    />
+                  </Field>
                   <Field label="Truck No">
-                    <Select required disabled={!canEditRows} value={deliveryForm.truckNo} onChange={(e) => setDeliveryForm({ ...deliveryForm, truckNo: e.target.value, toLocation: "" })}>
-                      <option value="">Select truck</option>
-                      {truckOptions.map((truck) => <option key={truck.truckNo}>{truck.truckNo}</option>)}
-                    </Select>
+                    <Input
+                      list="delivery-truck-options"
+                      required
+                      disabled={!canEditRows}
+                      placeholder="Type truck"
+                      value={deliveryForm.truckNo}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, truckNo: e.target.value.toUpperCase(), toLocation: "" })}
+                    />
+                    <datalist id="delivery-truck-options">
+                      {truckOptions.map((truck) => <option key={truck.truckNo} value={truck.truckNo} />)}
+                    </datalist>
                   </Field>
                   <Field label="To Location">
                     <Input
@@ -748,201 +1054,271 @@ function App() {
           )}
         </main>
       ) : page === "reports" ? (
-        <main className="grid gap-4 p-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h2 className="text-2xl font-black tracking-tight">Month-End Driver Payment</h2>
-              <p className="mt-1 text-sm font-medium text-slate-500">Use the same delivery entries to calculate driver payment, revenue, and margin by truck.</p>
-            </div>
-            <Field label="Report Month">
-              <Input type="month" value={reportMonth} onChange={(event) => setReportMonth(event.target.value)} />
-            </Field>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <KpiCard label="Total Driver Payment" value={`$${money(monthlyTotals.driverAmount)}`} tone="amber" />
-            <KpiCard label="Company Revenue" value={`$${money(monthlyTotals.companyAmount)}`} tone="teal" />
-            <KpiCard label="Gross Margin" value={`$${money(monthlyTotals.margin)}`} tone="blue" />
-            <KpiCard label="Total Tons" value={`${monthlyTotals.qty.toFixed(4)}T`} tone="slate" />
-          </div>
-
-          <Panel>
-            <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h3 className="text-lg font-black tracking-tight">Salary Summary</h3>
-                <p className="mt-1 text-sm font-medium text-slate-500">Each truck can be exported separately for driver verification.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  onClick={() => {
-                    window.location.href = `/api/export/salary?month=${encodeURIComponent(reportMonth)}&truckType=${encodeURIComponent("With Crane")}`;
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+          <PageHead
+            title="Driver Payment"
+            meta="Month-end salary, company revenue, and margin by truck."
+            action={(
+              <Field label="Report Month">
+                <Input
+                  type="month"
+                  value={reportMonth}
+                  onChange={(event) => {
+                    setReportMonth(event.target.value);
+                    setReportTruckNo("");
                   }}
-                >
-                  Export With Crane Salary
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    window.location.href = `/api/export/salary?month=${encodeURIComponent(reportMonth)}&truckType=${encodeURIComponent("Without Crane")}`;
-                  }}
-                >
-                  Export No Crane Salary
-                </Button>
-              </div>
-            </div>
-            <div className="overflow-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[1100px] border-collapse bg-white text-sm">
-                <thead className="bg-slate-900 text-white">
-                  <tr>
-                    {["Truck No", "Type", "Driver", "Working Days", "Trips", "QTY(T)", "Company Revenue", "Driver Payment", "Margin", "Export"].map((heading) => (
-                      <th key={heading} className="px-3 py-3 text-left font-black">{heading}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {truckPerformance.map((truck) => (
-                    <tr key={truck.truckNo} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
-                      <td className="px-3 py-3 font-black">{truck.truckNo}</td>
-                      <td className="px-3 py-3">{truck.truckType}</td>
-                      <td className="px-3 py-3">{truck.driverName || "-"}</td>
-                      <td className="px-3 py-3">{truck.workingDays}</td>
-                      <td className="px-3 py-3">{truck.trips}</td>
-                      <td className="px-3 py-3 text-right font-bold">{truck.qty.toFixed(4)}T</td>
-                      <td className="px-3 py-3 text-right">$ {money(truck.companyAmount)}</td>
-                      <td className="px-3 py-3 text-right font-black">$ {money(truck.driverAmount)}</td>
-                      <td className="px-3 py-3 text-right">$ {money(truck.margin)}</td>
-                      <td className="px-3 py-3">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          disabled={truck.trips < 1}
-                          onClick={() => {
-                            window.location.href = `/api/export/salary?month=${encodeURIComponent(reportMonth)}&truckNo=${encodeURIComponent(truck.truckNo)}`;
-                          }}
-                        >
-                          Export
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
+                />
+              </Field>
+            )}
+          />
 
-          <div className="grid gap-4">
-            {driverPaymentSections.map((truck) => (
-              <Panel key={truck.truckNo}>
-                <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <h3 className="text-lg font-black tracking-tight">{truck.truckNo} Driver Verification List</h3>
-                    <p className="mt-1 text-sm font-medium text-slate-500">
-                      {truck.truckType} | {truck.workingDays} working days | {truck.trips} trips | Driver payment $ {money(truck.driverAmount)}
-                    </p>
-                  </div>
+          {selectedDriverPaymentSection ? (
+            <Panel>
+              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h3 className="text-lg font-black tracking-tight">{selectedDriverPaymentSection.truckNo} Driver Verification</h3>
+                  <p className="mt-1 text-sm font-bold text-slate-500">
+                    {selectedDriverPaymentSection.truckType} | {selectedDriverPaymentSection.workingDays} working days | {selectedDriverPaymentSection.trips} trips | Driver payment $ {money(selectedDriverPaymentSection.driverAmount)}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="secondary" onClick={() => setReportTruckNo("")}>Back to List</Button>
                   <Button
                     type="button"
                     onClick={() => {
-                      window.location.href = `/api/export/salary?month=${encodeURIComponent(reportMonth)}&truckNo=${encodeURIComponent(truck.truckNo)}`;
+                      window.location.href = `/api/export/salary?month=${encodeURIComponent(reportMonth)}&truckNo=${encodeURIComponent(selectedDriverPaymentSection.truckNo)}`;
                     }}
                   >
-                    Export {truck.truckNo}
+                    Export
                   </Button>
                 </div>
-                <div className="overflow-auto rounded-xl border border-slate-200">
-                  <table className="w-full min-w-[1150px] border-collapse bg-white text-sm">
-                    <thead className="bg-slate-900 text-white">
-                      <tr>
-                        {["No", "Delivery Date", "Invoice No", "From", "To", "QTY(T)", "Company Price", "Company Amount", "Driver Price", "Driver Amount"].map((heading) => (
-                          <th key={heading} className="px-3 py-3 text-left font-black">{heading}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {truck.rows.map((row, index) => (
-                        <tr key={row.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
-                          <td className="px-3 py-3">{index + 1}</td>
-                          <td className="px-3 py-3">{row.deliveryDate}</td>
-                          <td className="px-3 py-3">{row.invoiceNo}</td>
-                          <td className="px-3 py-3">{row.fromLocation}</td>
-                          <td className="px-3 py-3">{row.toLocation}</td>
-                          <td className="px-3 py-3 text-right font-bold">{Number(row.qtyTon || 0).toFixed(4)}T</td>
-                          <td className="px-3 py-3 text-right">$ {money(row.companyUnitPrice)}</td>
-                          <td className="px-3 py-3 text-right">$ {money(row.companyTotalAmount)}</td>
-                          <td className="px-3 py-3 text-right font-bold">$ {money(row.truckSalaryUnitPrice)}</td>
-                          <td className="px-3 py-3 text-right font-black">$ {money(row.truckSalaryAmount)}</td>
-                        </tr>
+              </div>
+              <div className="overflow-auto rounded-xl border border-slate-200">
+                <table className="w-full min-w-[900px] border-collapse bg-white text-sm">
+                  <thead className="bg-slate-900 text-white">
+                    <tr>
+                      {["No", "Delivery Date", "Invoice No", "From", "To", "QTY(T)", "Driver Price", "Driver Amount"].map((heading) => (
+                        <th key={heading} className="px-3 py-3 text-left font-black">{heading}</th>
                       ))}
-                      <tr className="bg-amber-50 font-black">
-                        <td className="px-3 py-3" colSpan="5">Total</td>
-                        <td className="px-3 py-3 text-right">{truck.qty.toFixed(4)}T</td>
-                        <td className="px-3 py-3"></td>
-                        <td className="px-3 py-3 text-right">$ {money(truck.companyAmount)}</td>
-                        <td className="px-3 py-3"></td>
-                        <td className="px-3 py-3 text-right">$ {money(truck.driverAmount)}</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedDriverPaymentSection.rows.map((row, index) => (
+                      <tr key={row.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                        <td className="px-3 py-3">{index + 1}</td>
+                        <td className="px-3 py-3">{row.deliveryDate}</td>
+                        <td className="px-3 py-3">{row.invoiceNo}</td>
+                        <td className="px-3 py-3">{row.fromLocation}</td>
+                        <td className="px-3 py-3">{row.toLocation}</td>
+                        <td className="px-3 py-3 text-right font-bold">{Number(row.qtyTon || 0).toFixed(4)}T</td>
+                        <td className="px-3 py-3 text-right font-bold">$ {money(row.truckSalaryUnitPrice)}</td>
+                        <td className="px-3 py-3 text-right font-black">$ {money(row.truckSalaryAmount)}</td>
                       </tr>
-                    </tbody>
-                  </table>
+                    ))}
+                    <tr className="bg-amber-50 font-black">
+                      <td className="px-3 py-3" colSpan="5">Total</td>
+                      <td className="px-3 py-3 text-right">{selectedDriverPaymentSection.qty.toFixed(4)}T</td>
+                      <td className="px-3 py-3"></td>
+                      <td className="px-3 py-3 text-right">$ {money(selectedDriverPaymentSection.driverAmount)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          ) : (
+            <Panel>
+              <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h3 className="text-lg font-black tracking-tight">Driver Verification List</h3>
+                  <p className="mt-1 text-sm font-bold text-slate-500">Select a truck to review driver-only price and payment details.</p>
                 </div>
-              </Panel>
-            ))}
-          </div>
+              </div>
+              <div className="grid gap-3">
+                {driverPaymentSections.map((truck) => (
+                  <div key={truck.truckNo} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_auto] md:items-center">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-lg font-black">{truck.truckNo}</h4>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-black ${truck.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
+                          {truck.truckType}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-sm font-bold text-slate-500">
+                        {truck.workingDays} working days | {truck.trips} trips | {truck.qty.toFixed(4)}T | Driver payment $ {money(truck.driverAmount)}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="secondary" onClick={() => setReportTruckNo(truck.truckNo)}>View</Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          window.location.href = `/api/export/salary?month=${encodeURIComponent(reportMonth)}&truckNo=${encodeURIComponent(truck.truckNo)}`;
+                        }}
+                      >
+                        Export
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {driverPaymentSections.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm font-bold text-slate-500">
+                    No driver payment data for this month.
+                  </div>
+                )}
+              </div>
+            </Panel>
+          )}
         </main>
       ) : (
-        <main className="grid gap-4 p-4 lg:grid-cols-2">
-          <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="mb-3 text-lg font-bold">Truck Master</h2>
-            <form className="grid gap-3 md:grid-cols-2" onSubmit={saveTruck}>
-              <Input placeholder="Truck No" required value={truckForm.truckNo} onChange={(e) => setTruckForm({ ...truckForm, truckNo: e.target.value })} />
-              <Select value={truckForm.truckType} onChange={(e) => setTruckForm({ ...truckForm, truckType: e.target.value })}><option>With Crane</option><option>Without Crane</option></Select>
-              <Input placeholder="Driver Name" value={truckForm.driverName} onChange={(e) => setTruckForm({ ...truckForm, driverName: e.target.value })} />
-              <Input placeholder="Phone" value={truckForm.phone} onChange={(e) => setTruckForm({ ...truckForm, phone: e.target.value })} />
-              <Button type="submit">Save Truck</Button>
-            </form>
-            <div className="mt-4 grid gap-2">
-              {data.trucks.map((truck) => (
-                <div key={truck.truckNo} className="rounded-md border border-slate-200 p-3">
-                  <strong className="block text-sm">{truck.truckNo} - {truck.truckType}</strong>
-                  <span className="text-xs text-slate-500">{truck.driverName || "No driver"} {truck.phone ? `| ${truck.phone}` : ""}</span>
-                </div>
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+          <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
+
+          <Panel>
+            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-3">
+              {[
+                ["trucks", "Truck Master"],
+                ["company", "Company Price"],
+                ["driver", "Driver Price"]
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSetupSection(key)}
+                  className={`rounded-xl px-4 py-3 text-left text-sm font-black transition ${setupSection === key ? "bg-teal-700 text-white shadow-sm" : "bg-white text-slate-700 hover:text-slate-950"}`}
+                >
+                  {label}
+                </button>
               ))}
             </div>
-          </section>
+          </Panel>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="mb-3 text-lg font-bold">Steel Location Price List</h2>
-            <form className="grid gap-3 md:grid-cols-2" onSubmit={savePrice}>
-              <Input placeholder="From Location" required value={priceForm.fromLocation} onChange={(e) => setPriceForm({ ...priceForm, fromLocation: e.target.value })} />
-              <Input placeholder="To Location" required value={priceForm.toLocation} onChange={(e) => setPriceForm({ ...priceForm, toLocation: e.target.value })} />
-              <Select value={priceForm.truckType} onChange={(e) => setPriceForm({ ...priceForm, truckType: e.target.value })}><option>With Crane</option><option>Without Crane</option></Select>
-              <Input type="number" step="0.1" placeholder="KM" value={priceForm.distanceKm} onChange={(e) => setPriceForm({ ...priceForm, distanceKm: e.target.value })} />
-              <Input type="number" step="0.01" placeholder="Company Price" required value={priceForm.companyUnitPrice} onChange={(e) => setPriceForm({ ...priceForm, companyUnitPrice: e.target.value })} />
-              <Input type="number" step="0.01" placeholder="Salary Price" required value={priceForm.truckSalaryUnitPrice} onChange={(e) => setPriceForm({ ...priceForm, truckSalaryUnitPrice: e.target.value })} />
-              <Button type="submit">Save Price</Button>
-            </form>
-            <div className="mt-4 grid max-h-[520px] gap-2 overflow-auto pr-1">
-              {data.prices.map((price) => (
-                <div key={price.id} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md border border-slate-200 p-3">
-                  <div>
-                    <strong className="block text-sm">{price.fromLocation} to {price.toLocation}</strong>
-                    <span className="text-xs text-slate-500">{price.truckType} | {Number(price.distanceKm || 0).toFixed(1)} KM | Company ${money(price.companyUnitPrice)} | Salary ${money(price.truckSalaryUnitPrice)}</span>
+          {setupSection === "trucks" && (
+            <Panel>
+              <h2 className="mb-3 text-lg font-bold">Truck Master</h2>
+              <form className="grid gap-3 md:grid-cols-5" onSubmit={saveTruck}>
+                <Input placeholder="Truck No" required value={truckForm.truckNo} onChange={(e) => setTruckForm({ ...truckForm, truckNo: e.target.value.toUpperCase() })} />
+                <Select value={truckForm.truckType} onChange={(e) => setTruckForm({ ...truckForm, truckType: e.target.value })}><option>With Crane</option><option>Without Crane</option></Select>
+                <Input placeholder="Driver Name" value={truckForm.driverName} onChange={(e) => setTruckForm({ ...truckForm, driverName: e.target.value })} />
+                <Input placeholder="Phone" value={truckForm.phone} onChange={(e) => setTruckForm({ ...truckForm, phone: e.target.value })} />
+                <div className="flex gap-2">
+                  <Button type="submit">{isEditingTruck ? "Save Truck" : "Add Truck"}</Button>
+                  {isEditingTruck && (
+                    <Button type="button" variant="secondary" onClick={() => setTruckForm({ truckNo: "", truckType: "With Crane", driverName: "", phone: "" })}>Cancel</Button>
+                  )}
+                </div>
+              </form>
+              <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
+                {["With Crane", "Without Crane"].map((truckType) => (
+                  <div key={truckType} className="grid gap-2">
+                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{truckType}</h3>
+                    {data.trucks.filter((truck) => truck.truckType === truckType).map((truck) => (
+                      <div key={truck.truckNo} className="grid gap-3 rounded-2xl border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center">
+                        <div>
+                          <strong className="block text-sm">{truck.truckNo}</strong>
+                          <span className="text-xs text-slate-500">{truck.driverName || "No driver"} {truck.phone ? `| ${truck.phone}` : ""}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" variant="secondary" onClick={() => setTruckForm(truck)}>Edit</Button>
+                          <Button type="button" variant="danger" onClick={() => deleteTruck(truck)}>Delete</Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <Button type="button" onClick={() => setPriceForm(price)}>Edit</Button>
-                </div>
-              ))}
-            </div>
-          </section>
+                ))}
+              </div>
+            </Panel>
+          )}
 
-          <section className="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-2">
+          {setupSection === "company" && (
+            <Panel>
+              <h2 className="mb-3 text-lg font-bold">Company Price</h2>
+              <form className="grid gap-3 md:grid-cols-7" onSubmit={savePrice}>
+                <Input placeholder="From Location" required value={priceForm.fromLocation} onChange={(e) => setPriceForm({ ...priceForm, fromLocation: e.target.value })} />
+                <Input placeholder="To Location" required value={priceForm.toLocation} onChange={(e) => setPriceForm({ ...priceForm, toLocation: e.target.value })} />
+                <Select value={priceForm.truckType} onChange={(e) => setPriceForm({ ...priceForm, truckType: e.target.value })}><option>With Crane</option><option>Without Crane</option></Select>
+                <Input type="date" required value={priceForm.effectiveDate || today()} onChange={(e) => setPriceForm({ ...priceForm, effectiveDate: e.target.value })} />
+                <Input type="number" step="0.1" placeholder="KM" value={priceForm.distanceKm} onChange={(e) => setPriceForm({ ...priceForm, distanceKm: e.target.value })} />
+                <Input type="number" step="0.01" placeholder="Company Price" required value={priceForm.companyUnitPrice} onChange={(e) => setPriceForm({ ...priceForm, companyUnitPrice: e.target.value })} />
+                <div className="flex gap-2">
+                  <Button type="submit">{priceForm.id ? "Save Company Price" : "Add Company Price"}</Button>
+                  {priceForm.id && (
+                    <Button type="button" variant="secondary" onClick={() => setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: priceForm.truckType, distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: today() })}>Cancel</Button>
+                  )}
+                </div>
+              </form>
+              <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
+                  <div className="grid gap-2">
+                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{priceForm.truckType}</h3>
+                    {filteredCompanyPrices.map((price) => (
+                      <div key={price.id} className="grid gap-3 rounded-2xl border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center">
+                        <div>
+                          <strong className="block text-sm">{price.fromLocation} to {price.toLocation}</strong>
+                          <span className="text-xs text-slate-500">Effective {priceEffectiveDate(price)} | {Number(price.distanceKm || 0).toFixed(1)} KM | Company ${money(price.companyUnitPrice)}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" variant="secondary" onClick={() => setPriceForm({ ...price, effectiveDate: priceEffectiveDate(price) })}>Edit</Button>
+                          <Button type="button" variant="danger" onClick={() => deletePrice(price)}>Delete</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+              </div>
+            </Panel>
+          )}
+
+          {setupSection === "driver" && (
+            <Panel>
+              <h2 className="mb-3 text-lg font-bold">Driver Price</h2>
+              <form className="grid gap-3 md:grid-cols-7" onSubmit={saveDriverPrice}>
+                <Input placeholder="From Location" required value={driverPriceForm.fromLocation} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, fromLocation: e.target.value })} />
+                <Input placeholder="To Location" required value={driverPriceForm.toLocation} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, toLocation: e.target.value })} />
+                <Select value={driverPriceForm.truckType} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckType: e.target.value })}><option>With Crane</option><option>Without Crane</option></Select>
+                <Input type="date" required value={driverPriceForm.effectiveDate || today()} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, effectiveDate: e.target.value })} />
+                <Input type="number" step="0.1" placeholder="KM" value={driverPriceForm.distanceKm} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, distanceKm: e.target.value })} />
+                <Input type="number" step="0.01" placeholder="Driver Price" required value={driverPriceForm.truckSalaryUnitPrice} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckSalaryUnitPrice: e.target.value })} />
+                <div className="flex gap-2">
+                  <Button type="submit">{driverPriceForm.id ? "Save Driver Price" : "Add Driver Price"}</Button>
+                  {driverPriceForm.id && (
+                    <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: driverPriceForm.truckType, distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: today() })}>Cancel</Button>
+                  )}
+                </div>
+              </form>
+              <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
+                  <div className="grid gap-2">
+                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{driverPriceForm.truckType}</h3>
+                    {filteredDriverPrices.map((price) => (
+                      <div key={price.id} className="grid gap-3 rounded-2xl border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center">
+                        <div>
+                          <strong className="block text-sm">{price.fromLocation} to {price.toLocation}</strong>
+                          <span className="text-xs text-slate-500">Effective {priceEffectiveDate(price)} | {Number(price.distanceKm || 0).toFixed(1)} KM | Driver ${money(price.truckSalaryUnitPrice)}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({
+                            id: price.id,
+                            fromLocation: price.fromLocation,
+                            toLocation: price.toLocation,
+                            truckType: price.truckType,
+                            distanceKm: price.distanceKm,
+                            truckSalaryUnitPrice: price.truckSalaryUnitPrice,
+                            effectiveDate: priceEffectiveDate(price)
+                          })}>Edit</Button>
+                          <Button type="button" variant="danger" onClick={() => deletePrice(price)}>Delete</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+              </div>
+            </Panel>
+          )}
+
+          <Panel>
             <h2 className="mb-3 text-lg font-bold">Settings</h2>
             <form className="grid gap-3 md:grid-cols-3" onSubmit={saveSettings}>
               <Field label="Company"><Input value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} /></Field>
               <Field label="Default From"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
               <div className="flex items-end"><Button type="submit">Save Settings</Button></div>
             </form>
-          </section>
+          </Panel>
         </main>
       )}
     </div>
