@@ -10,13 +10,15 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const frontendDir = path.join(rootDir, "frontend");
 const frontendDistDir = path.join(frontendDir, "dist");
-const dataDir = path.join(rootDir, "backend");
+const dataDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(rootDir, "backend");
 const dataFile = path.join(dataDir, "data.json");
 const dataTempFile = path.join(dataDir, "data.json.tmp");
 const databaseFile = path.join(dataDir, "truck_delivery.db");
 const backupDir = path.join(dataDir, "backups");
 const port = Number(process.env.PORT || 5058);
 const host = process.env.HOST || "0.0.0.0";
+const appUsername = process.env.APP_USERNAME || "";
+const appPassword = process.env.APP_PASSWORD || "";
 let saveQueue = Promise.resolve();
 let mutationQueue = Promise.resolve();
 
@@ -580,6 +582,30 @@ function sendJson(res, status, body) {
 function sendText(res, status, body, contentType = "text/plain; charset=utf-8") {
   res.writeHead(status, { "Content-Type": contentType });
   res.end(body);
+}
+
+function isAuthEnabled() {
+  return Boolean(appUsername && appPassword);
+}
+
+function isAuthorized(req) {
+  if (!isAuthEnabled()) return true;
+  const header = req.headers.authorization || "";
+  if (!header.startsWith("Basic ")) return false;
+  const decoded = Buffer.from(header.slice(6), "base64").toString("utf8");
+  const separatorIndex = decoded.indexOf(":");
+  if (separatorIndex < 0) return false;
+  const username = decoded.slice(0, separatorIndex);
+  const password = decoded.slice(separatorIndex + 1);
+  return username === appUsername && password === appPassword;
+}
+
+function requestAuth(res) {
+  res.writeHead(401, {
+    "Content-Type": "text/plain; charset=utf-8",
+    "WWW-Authenticate": 'Basic realm="Truck Delivery System"'
+  });
+  res.end("Login required.");
 }
 
 async function readBody(req) {
@@ -1813,6 +1839,8 @@ async function staticFile(req, res, url) {
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   try {
+    if (url.pathname === "/api/health") return sendJson(res, 200, { ok: true });
+    if (!isAuthorized(req)) return requestAuth(res);
     if (url.pathname.startsWith("/api/")) return await api(req, res, url);
     return await staticFile(req, res, url);
   } catch (error) {
@@ -1822,4 +1850,6 @@ const server = createServer(async (req, res) => {
 
 server.listen(port, host, () => {
   console.log(`Truck Delivery System running at http://${host}:${port}`);
+  console.log(`Data directory: ${dataDir}`);
+  if (!isAuthEnabled()) console.log("Warning: APP_USERNAME and APP_PASSWORD are not set. Login is disabled.");
 });
