@@ -336,16 +336,17 @@ function normalizeDataShape(data) {
     ...price,
     effectiveDate: price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`
   }));
-  for (const baseline of baselinePrices()) {
-    const exists = data.prices.some(
-      (price) =>
-        price.fromLocation === baseline.fromLocation &&
-        price.toLocation === baseline.toLocation &&
-        price.truckType === baseline.truckType &&
-        (price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`) === baseline.effectiveDate
-    );
-    if (!exists) data.prices.push({ ...baseline, id: `${baseline.id}-base` });
+  if (data.prices.length === 0) {
+    data.prices = baselinePrices().map((baseline) => ({ ...baseline, id: `${baseline.id}-base` }));
   }
+  const pricesById = new Map();
+  for (const price of data.prices) {
+    const existing = pricesById.get(price.id);
+    if (!existing || effectiveDateOf(price) >= effectiveDateOf(existing)) {
+      pricesById.set(price.id, price);
+    }
+  }
+  data.prices = [...pricesById.values()];
   return data;
 }
 
@@ -596,8 +597,19 @@ function normalizeCode(value) {
   return normalizeText(value).replace(/\s+/g, "");
 }
 
+function locationMatchKey(value) {
+  return normalizeText(value)
+    .toLowerCase()
+    .replace(/\bkh[\s.]*/g, "khan")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function locationBaseKey(value) {
+  return locationMatchKey(normalizeText(value).replace(/\([^)]*\)/g, ""));
+}
+
 function toNumber(value) {
-  const number = Number(value);
+  const number = Number(String(value ?? "").replace(/[$,\s]/g, ""));
   return Number.isFinite(number) ? number : 0;
 }
 
@@ -1524,8 +1536,16 @@ async function api(req, res, url) {
       };
       if (!price.toLocation || !price.truckType) throw new Error("To Location and Truck Type are required.");
       if (!/^\d{4}-\d{2}-\d{2}$/.test(price.effectiveDate)) throw new Error("Effective Date is required.");
-      if (existingById && effectiveDateOf(existingById) !== price.effectiveDate) {
-        price.id = crypto.randomUUID();
+      const duplicateRoute = data.prices.find((item) =>
+        item.id !== price.id &&
+        item.fromLocation === price.fromLocation &&
+        item.truckType === price.truckType &&
+        locationBaseKey(item.toLocation) === locationBaseKey(price.toLocation) &&
+        item.toLocation !== price.toLocation &&
+        !existingById
+      );
+      if (duplicateRoute) {
+        throw new Error(`Duplicate location is not allowed. "${price.toLocation}" already exists as "${duplicateRoute.toLocation}" for ${price.truckType}.`);
       }
       const index = data.prices.findIndex((item) =>
         item.id === price.id ||
@@ -1542,6 +1562,90 @@ async function api(req, res, url) {
       return price;
     });
     return sendJson(res, 200, price);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/prices/bulk") {
+    const body = await readBody(req);
+    const result = await updateData((data) => {
+      const priceType = normalizeText(body.priceType || "both");
+      const truckType = normalizeText(body.truckType);
+      const effectiveDate = normalizeText(body.effectiveDate);
+      const fromLocation = normalizeText(body.fromLocation || data.settings.defaultFromLocation);
+      const rows = Array.isArray(body.rows) ? body.rows : [];
+      if (!["company", "driver", "both"].includes(priceType)) throw new Error("Price type is required.");
+      if (!truckType) throw new Error("Truck type is required.");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate)) throw new Error("Effective Date is required.");
+      if (rows.length < 1) throw new Error("Paste at least one price row.");
+
+      let added = 0;
+      let updated = 0;
+      const saved = [];
+      for (const row of rows) {
+        const toLocation = normalizeText(row.toLocation);
+        if (!toLocation) continue;
+        const routeExists = data.prices.some(
+          (price) =>
+            price.fromLocation === fromLocation &&
+            locationBaseKey(price.toLocation) === locationBaseKey(toLocation) &&
+            price.truckType === truckType
+        );
+        if (!routeExists) throw new Error(`Location does not match system price list: ${toLocation}.`);
+        const matchedLocation = data.prices.find(
+          (price) =>
+            price.fromLocation === fromLocation &&
+            locationBaseKey(price.toLocation) === locationBaseKey(toLocation) &&
+            price.truckType === truckType
+        )?.toLocation || toLocation;
+        const currentPrice = findEffectivePrice(data, { fromLocation, toLocation: matchedLocation, truckType, deliveryDate: effectiveDate });
+        const distanceKm = row.distanceKm === "" || row.distanceKm == null
+          ? toNumber(currentPrice?.distanceKm)
+          : toNumber(row.distanceKm);
+        const companyUnitPrice =
+          priceType === "driver"
+            ? toNumber(currentPrice?.companyUnitPrice)
+            : toNumber(row.companyUnitPrice);
+        const truckSalaryUnitPrice =
+          priceType === "company"
+            ? toNumber(currentPrice?.truckSalaryUnitPrice)
+            : toNumber(row.truckSalaryUnitPrice);
+        if ((priceType === "company" || priceType === "both") && companyUnitPrice <= 0) {
+          throw new Error(`Company price is required for ${toLocation}.`);
+        }
+        if ((priceType === "driver" || priceType === "both") && truckSalaryUnitPrice < 0) {
+          throw new Error(`Driver price is invalid for ${toLocation}.`);
+        }
+        const price = {
+          id: crypto.randomUUID(),
+          fromLocation,
+          toLocation: matchedLocation,
+          truckType,
+          distanceKm,
+          companyUnitPrice,
+          truckSalaryUnitPrice,
+          effectiveDate,
+          active: true
+        };
+        const index = data.prices.findIndex((item) =>
+          item.fromLocation === price.fromLocation &&
+          item.toLocation === price.toLocation &&
+          item.truckType === price.truckType &&
+          effectiveDateOf(item) === price.effectiveDate
+        );
+        if (index >= 0) {
+          price.id = data.prices[index].id;
+          data.prices[index] = price;
+          updated += 1;
+        } else {
+          data.prices.push(price);
+          added += 1;
+        }
+        saved.push(price);
+      }
+      if (saved.length < 1) throw new Error("No valid price rows found.");
+      addActivity(data, `Bulk updated ${saved.length} ${truckType} ${priceType} price row${saved.length > 1 ? "s" : ""}, effective ${effectiveDate}.`, "price");
+      return { added, updated, total: saved.length };
+    });
+    return sendJson(res, 200, result);
   }
 
   if (req.method === "DELETE" && url.pathname.startsWith("/api/prices/")) {

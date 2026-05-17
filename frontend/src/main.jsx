@@ -9,8 +9,18 @@ const localDate = (date = new Date()) => {
 const today = () => localDate();
 const currentMonth = () => localDate().slice(0, 7);
 const money = (value) => Number(value || 0).toFixed(2);
+const parseMoney = (value) => {
+  const number = Number(String(value || "").replace(/[$,\s]/g, ""));
+  return Number.isFinite(number) ? number : "";
+};
+const locationMatchKey = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/\bkh[\s.]*/g, "khan")
+    .replace(/[^a-z0-9]+/g, "");
+const locationBaseKey = (value) => locationMatchKey(String(value || "").replace(/\([^)]*\)/g, ""));
 const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
-const routeKey = (price) => [price.fromLocation, price.toLocation, price.truckType].join("::");
+const routeKey = (price) => [price.fromLocation, locationBaseKey(price.toLocation), price.truckType].join("::");
 const formatDate = (value) => {
   const text = String(value || "");
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -53,7 +63,7 @@ function groupPriceHistory(prices) {
         versions.find((price) => price.active !== false && priceEffectiveDate(price) <= today()) ||
         versions.find((price) => price.active !== false) ||
         null;
-      return { ...group, versions, activePrice };
+      return { ...group, toLocation: activePrice?.toLocation || versions[0]?.toLocation || group.toLocation, versions, activePrice };
     })
     .sort((a, b) => a.toLocation.localeCompare(b.toLocation));
 }
@@ -173,6 +183,7 @@ function App() {
   });
   const [filters, setFilters] = useState({ month: currentMonth(), statementNumber: "" });
   const [setupSection, setSetupSection] = useState("trucks");
+  const [setupLocationSearch, setSetupLocationSearch] = useState("");
   const [truckForm, setTruckForm] = useState({ truckNo: "", truckType: "With Crane", driverName: "", phone: "" });
   const [priceForm, setPriceForm] = useState({
     id: "",
@@ -192,6 +203,16 @@ function App() {
     distanceKm: "",
     truckSalaryUnitPrice: "",
     effectiveDate: today()
+  });
+  const [bulkPriceForm, setBulkPriceForm] = useState({
+    priceType: "company",
+    truckType: "With Crane",
+    fromLocation: "",
+    effectiveDate: today(),
+    locationsText: "",
+    pricesText: "",
+    driverPricesText: "",
+    rowsText: ""
   });
   const [settingsForm, setSettingsForm] = useState({ companyName: "", defaultFromLocation: "" });
   const [backupFiles, setBackupFiles] = useState([]);
@@ -370,10 +391,110 @@ function App() {
   const activeTruckCount = truckPerformance.filter((truck) => truck.trips > 0).length;
   const selectedDriverPaymentSection = driverPaymentSections.find((truck) => truck.truckNo === reportTruckNo);
   const isEditingTruck = data.trucks.some((truck) => truck.truckNo === truckForm.truckNo);
-  const filteredCompanyPrices = data.prices.filter((price) => price.truckType === priceForm.truckType);
-  const filteredDriverPrices = data.prices.filter((price) => price.truckType === driverPriceForm.truckType);
+  const setupLocationSearchKey = locationMatchKey(setupLocationSearch);
+  const matchesSetupLocationSearch = (value) => !setupLocationSearchKey || locationMatchKey(value).includes(setupLocationSearchKey);
+  const filteredCompanyPrices = data.prices
+    .filter((price) => price.truckType === priceForm.truckType)
+    .filter((price) => matchesSetupLocationSearch(price.toLocation));
+  const filteredDriverPrices = data.prices
+    .filter((price) => price.truckType === driverPriceForm.truckType)
+    .filter((price) => matchesSetupLocationSearch(price.toLocation));
   const companyPriceGroups = useMemo(() => groupPriceHistory(filteredCompanyPrices), [filteredCompanyPrices]);
   const driverPriceGroups = useMemo(() => groupPriceHistory(filteredDriverPrices), [filteredDriverPrices]);
+  const activeCompanyPriceRows = useMemo(() => {
+    const groups = new Map();
+    data.prices
+      .filter((price) => price.active !== false)
+      .filter((price) => priceEffectiveDate(price) <= today())
+      .forEach((price) => {
+        const key = routeKey(price);
+        const current = groups.get(key);
+        if (!current || priceEffectiveDate(price) > priceEffectiveDate(current)) {
+          groups.set(key, price);
+        }
+      });
+    return [...groups.values()]
+      .filter((price) => matchesSetupLocationSearch(price.toLocation))
+      .sort((a, b) => a.truckType.localeCompare(b.truckType) || a.toLocation.localeCompare(b.toLocation));
+  }, [data.prices, setupLocationSearchKey]);
+  const activeCompanyPriceCounts = useMemo(() => ({
+    withCrane: activeCompanyPriceRows.filter((price) => price.truckType === "With Crane").length,
+    withoutCrane: activeCompanyPriceRows.filter((price) => price.truckType === "Without Crane").length,
+    total: activeCompanyPriceRows.length
+  }), [activeCompanyPriceRows]);
+  const bulkPriceRows = useMemo(() => {
+    const priceType = bulkPriceForm.priceType;
+    const fromLocation = bulkPriceForm.fromLocation || data.settings.defaultFromLocation;
+    const routeMap = new Map();
+    data.prices
+      .filter((price) => price.fromLocation === fromLocation)
+      .filter((price) => price.truckType === bulkPriceForm.truckType)
+      .forEach((price) => {
+        const key = locationBaseKey(price.toLocation);
+        if (!routeMap.has(key)) routeMap.set(key, price.toLocation);
+      });
+    const locationLines = (bulkPriceForm.locationsText || bulkPriceForm.rowsText)
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const priceLines = bulkPriceForm.pricesText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const driverPriceLines = bulkPriceForm.driverPricesText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    return locationLines.map((locationText, index) => {
+        const matchedLocation = routeMap.get(locationBaseKey(locationText)) || "";
+        const companyPriceText = priceLines[index] || "";
+        const driverPriceText = priceType === "both" ? driverPriceLines[index] || "" : companyPriceText;
+        const companyUnitPrice = priceType === "driver" ? "" : parseMoney(companyPriceText);
+        const truckSalaryUnitPrice = priceType === "company" ? "" : parseMoney(driverPriceText);
+        const currentPrice = data.prices
+          .filter((price) => price.active !== false)
+          .filter((price) => price.fromLocation === fromLocation)
+          .filter((price) => price.toLocation === matchedLocation)
+          .filter((price) => price.truckType === bulkPriceForm.truckType)
+          .filter((price) => priceEffectiveDate(price) <= bulkPriceForm.effectiveDate)
+          .sort((a, b) => priceEffectiveDate(b).localeCompare(priceEffectiveDate(a)))[0];
+        const distanceKm = currentPrice?.distanceKm || "";
+        const hasRequiredPrices = (priceType === "driver" || companyUnitPrice !== "") && (priceType === "company" || truckSalaryUnitPrice !== "");
+        const oldPrice = priceType === "driver" ? currentPrice?.truckSalaryUnitPrice : currentPrice?.companyUnitPrice;
+        const newPrice = priceType === "driver" ? truckSalaryUnitPrice : companyUnitPrice;
+        const samePrice =
+          priceType === "both"
+            ? Number(currentPrice?.companyUnitPrice || 0) === Number(companyUnitPrice || 0) &&
+              Number(currentPrice?.truckSalaryUnitPrice || 0) === Number(truckSalaryUnitPrice || 0)
+            : Number(oldPrice || 0) === Number(newPrice || 0);
+        const oldComparePrice = priceType === "both" ? currentPrice?.companyUnitPrice : oldPrice;
+        const newComparePrice = priceType === "both" ? companyUnitPrice : newPrice;
+        const difference = Number(newComparePrice || 0) - Number(oldComparePrice || 0);
+        const compareText = !matchedLocation
+          ? "Location not found"
+          : !hasRequiredPrices
+            ? "Missing price"
+            : samePrice
+              ? "Same price"
+              : difference > 0
+                ? `Up $${money(difference)}`
+                : `Down $${money(Math.abs(difference))}`;
+        return {
+          line: index + 1,
+          rawLocation: locationText || "",
+          toLocation: matchedLocation || "",
+          distanceKm: distanceKm || currentPrice?.distanceKm || "",
+          companyUnitPrice,
+          truckSalaryUnitPrice,
+          currentCompanyUnitPrice: currentPrice?.companyUnitPrice || 0,
+          currentTruckSalaryUnitPrice: currentPrice?.truckSalaryUnitPrice || 0,
+          oldPrice: oldPrice || 0,
+          newPrice: newPrice === "" ? "" : newPrice,
+          compareText,
+          valid: Boolean(matchedLocation && hasRequiredPrices)
+        };
+      });
+  }, [bulkPriceForm, data.prices, data.settings.defaultFromLocation]);
 
   const isDraft = selectedStatement?.status === "Draft";
   const isEditingDelivery = Boolean(deliveryForm.id);
@@ -746,6 +867,30 @@ function App() {
       });
       await loadData();
       flash("Driver price saved.");
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
+  async function applyBulkPriceUpdate() {
+    try {
+      const rows = bulkPriceRows.filter((row) => row.valid);
+      if (rows.length < 1) throw new Error("Paste at least one valid price row.");
+      const ok = window.confirm(`Apply ${rows.length} price row${rows.length > 1 ? "s" : ""} effective ${formatDate(bulkPriceForm.effectiveDate)}?`);
+      if (!ok) return;
+      const result = await api("/api/prices/bulk", {
+        method: "POST",
+        body: JSON.stringify({
+          priceType: bulkPriceForm.priceType,
+          truckType: bulkPriceForm.truckType,
+          fromLocation: bulkPriceForm.fromLocation || data.settings.defaultFromLocation,
+          effectiveDate: bulkPriceForm.effectiveDate,
+          rows
+        })
+      });
+      await loadData();
+      setBulkPriceForm((current) => ({ ...current, locationsText: "", pricesText: "", driverPricesText: "", rowsText: "" }));
+      flash(`Bulk price update saved: ${result.added} added, ${result.updated} updated.`);
     } catch (err) {
       flash(err.message, "error");
     }
@@ -1457,11 +1602,13 @@ function App() {
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
 
           <Panel>
-            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-3">
+            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-5">
               {[
                 ["trucks", "Truck Master"],
                 ["company", "Company Price"],
-                ["driver", "Driver Price"]
+                ["driver", "Driver Price"],
+                ["active-prices", "Active Prices"],
+                ["bulk", "Bulk Price Update"]
               ].map(([key, label]) => (
                 <button
                   key={key}
@@ -1515,6 +1662,210 @@ function App() {
             </Panel>
           )}
 
+          {setupSection === "bulk" && (
+            <Panel>
+              <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">Bulk Price Update</h2>
+                  <p className="mt-1 text-sm font-bold text-slate-500">
+                    Paste rows from Excel to create new price versions. Old prices stay unchanged for old delivery dates.
+                  </p>
+                </div>
+                <span className="rounded-full bg-teal-50 px-3 py-1 text-sm font-black text-teal-800">
+                  {bulkPriceRows.filter((row) => row.valid).length} valid rows
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-4">
+                <Field label="Price Update Type">
+                  <Select value={bulkPriceForm.priceType} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, priceType: e.target.value })}>
+                    <option value="both">Company + Driver</option>
+                    <option value="company">Company Price Only</option>
+                    <option value="driver">Driver Price Only</option>
+                  </Select>
+                </Field>
+                <Field label="Truck Type">
+                  <Select value={bulkPriceForm.truckType} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, truckType: e.target.value })}>
+                    <option>With Crane</option>
+                    <option>Without Crane</option>
+                  </Select>
+                </Field>
+                <Field label="Effective Date">
+                  <Input type="date" required value={bulkPriceForm.effectiveDate} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, effectiveDate: e.target.value })} />
+                </Field>
+                <Field label="From Location">
+                  <Input placeholder={data.settings.defaultFromLocation || "Warehouse-09"} value={bulkPriceForm.fromLocation} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, fromLocation: e.target.value })} />
+                </Field>
+              </div>
+
+              <div className="mt-4 grid gap-3 lg:grid-cols-[0.9fr_1.3fr]">
+                <div>
+                  <div className={`grid gap-3 ${bulkPriceForm.priceType === "both" ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+                    <Field label="Location">
+                      <textarea
+                        className="min-h-[260px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                        placeholder={"Khan Dangkao (PP)\nKhan Mean Chey (PP)\nKhan Chbar Ampov (PP)"}
+                        value={bulkPriceForm.locationsText}
+                        onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, locationsText: e.target.value, rowsText: "" })}
+                      />
+                    </Field>
+                    <Field label={bulkPriceForm.priceType === "driver" ? "Driver Price" : "Company Price"}>
+                      <textarea
+                        className="min-h-[260px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                        placeholder={"7.51\n7.89\n9.12"}
+                        value={bulkPriceForm.pricesText}
+                        onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, pricesText: e.target.value })}
+                      />
+                    </Field>
+                    {bulkPriceForm.priceType === "both" && (
+                      <Field label="Driver Price">
+                        <textarea
+                          className="min-h-[260px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                          placeholder={"7.00\n7.20\n8.40"}
+                          value={bulkPriceForm.driverPricesText}
+                          onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, driverPricesText: e.target.value })}
+                        />
+                      </Field>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button type="button" onClick={applyBulkPriceUpdate} disabled={bulkPriceRows.filter((row) => row.valid).length < 1}>
+                      Apply Price Update
+                    </Button>
+                    <Button type="button" variant="secondary" onClick={() => setBulkPriceForm({ ...bulkPriceForm, locationsText: "", pricesText: "", driverPricesText: "", rowsText: "" })}>
+                      Clear
+                    </Button>
+                  </div>
+                  <p className="mt-3 text-xs font-bold text-slate-500">
+                    Paste the same number of rows in Location and Price. The system will only approve rows that match an existing system location.
+                  </p>
+                </div>
+
+                <div className="overflow-auto rounded-xl border border-slate-200">
+                  <table className="w-full min-w-[760px] border-collapse bg-white text-sm">
+                    <thead className="bg-slate-900 text-white">
+                      <tr>
+                        <th className="px-3 py-3 text-left font-black">New Location</th>
+                        <th className="px-3 py-3 text-right font-black">New Price</th>
+                        <th className="px-3 py-3 text-left font-black">Old Location</th>
+                        <th className="px-3 py-3 text-right font-black">Old Price</th>
+                        <th className="px-3 py-3 text-left font-black">Comparison</th>
+                        <th className="px-3 py-3 text-center font-black">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bulkPriceRows.map((row) => (
+                        <tr key={row.line} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                          <td className="px-3 py-3 font-bold">{row.rawLocation || `Line ${row.line}`}</td>
+                          <td className="px-3 py-3 text-right font-black">
+                            {bulkPriceForm.priceType === "both"
+                              ? `${row.companyUnitPrice === "" ? "Missing" : `$ ${money(row.companyUnitPrice)}`} / ${row.truckSalaryUnitPrice === "" ? "Missing" : `$ ${money(row.truckSalaryUnitPrice)}`}`
+                              : row.newPrice === "" ? "Missing" : `$ ${money(row.newPrice)}`}
+                          </td>
+                          <td className="px-3 py-3 font-bold text-teal-800">{row.toLocation || "No match"}</td>
+                          <td className="px-3 py-3 text-right">
+                            {bulkPriceForm.priceType === "both"
+                              ? `$ ${money(row.currentCompanyUnitPrice)} / $ ${money(row.currentTruckSalaryUnitPrice)}`
+                              : `$ ${money(row.oldPrice)}`}
+                          </td>
+                          <td className="px-3 py-3 font-bold">{row.compareText}</td>
+                          <td className="px-3 py-3 text-center">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-black ${row.valid ? "bg-teal-100 text-teal-800" : "bg-rose-100 text-rose-700"}`}>
+                              {row.valid ? "Approve" : "Check"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {bulkPriceRows.length === 0 && (
+                        <tr>
+                          <td className="px-3 py-6 text-center text-sm font-bold text-slate-500" colSpan="6">
+                            Paste locations and prices to verify before applying.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Panel>
+          )}
+
+          {setupSection === "active-prices" && (
+            <Panel>
+              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">Active Company Prices</h2>
+                  <p className="mt-1 text-sm font-bold text-slate-500">
+                    Latest active company price per location as of {formatDate(today())}.
+                  </p>
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-700">
+                  With Crane {activeCompanyPriceCounts.withCrane} | No Crane {activeCompanyPriceCounts.withoutCrane} | Total {activeCompanyPriceCounts.total}
+                </span>
+              </div>
+              <div className="mb-4 max-w-xl">
+                <Field label="Search To Location">
+                  <Input
+                    placeholder="Type location name"
+                    value={setupLocationSearch}
+                    onChange={(event) => setSetupLocationSearch(event.target.value)}
+                  />
+                </Field>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <KpiCard label="With Crane Locations" value={activeCompanyPriceCounts.withCrane} tone="teal" />
+                <KpiCard label="No Crane Locations" value={activeCompanyPriceCounts.withoutCrane} tone="sky" />
+                <KpiCard label="Total Active Locations" value={activeCompanyPriceCounts.total} />
+              </div>
+
+              <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                {["With Crane", "Without Crane"].map((truckType) => {
+                  const rows = activeCompanyPriceRows.filter((price) => price.truckType === truckType);
+                  return (
+                    <div key={truckType} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                      <div className={`flex items-center justify-between px-4 py-3 ${truckType === "With Crane" ? "bg-teal-50" : "bg-sky-50"}`}>
+                        <h3 className="text-sm font-black uppercase tracking-wide text-slate-700">{truckType}</h3>
+                        <span className="rounded-full bg-white px-2 py-0.5 text-xs font-black text-slate-600">{rows.length} locations</span>
+                      </div>
+                      <div className="max-h-[620px] overflow-auto">
+                        <table className="w-full min-w-[620px] border-collapse text-sm">
+                          <thead className="sticky top-0 bg-slate-900 text-white">
+                            <tr>
+                              <th className="w-14 px-3 py-3 text-center font-black">No</th>
+                              <th className="px-3 py-3 text-left font-black">To Location</th>
+                              <th className="w-24 px-3 py-3 text-right font-black">KM</th>
+                              <th className="w-32 px-3 py-3 text-right font-black">Company Price</th>
+                              <th className="w-32 px-3 py-3 text-center font-black">Effective</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map((price, index) => (
+                              <tr key={price.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                                <td className="px-3 py-3 text-center font-bold">{index + 1}</td>
+                                <td className="px-3 py-3 font-black">{price.toLocation}</td>
+                                <td className="px-3 py-3 text-right tabular-nums">{price.distanceKm || ""}</td>
+                                <td className="px-3 py-3 text-right font-black tabular-nums">$ {money(price.companyUnitPrice)}</td>
+                                <td className="px-3 py-3 text-center text-xs font-bold text-slate-500">{formatDate(priceEffectiveDate(price))}</td>
+                              </tr>
+                            ))}
+                            {rows.length === 0 && (
+                              <tr>
+                                <td className="px-3 py-6 text-center text-sm font-bold text-slate-500" colSpan="5">
+                                  No active company prices for {truckType}.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Panel>
+          )}
+
           {setupSection === "company" && (
             <Panel>
               <h2 className="mb-3 text-lg font-bold">Company Price</h2>
@@ -1532,6 +1883,15 @@ function App() {
                   )}
                 </div>
               </form>
+              <div className="mt-4 max-w-xl">
+                <Field label="Search To Location">
+                  <Input
+                    placeholder="Type location name"
+                    value={setupLocationSearch}
+                    onChange={(event) => setSetupLocationSearch(event.target.value)}
+                  />
+                </Field>
+              </div>
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
                     <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{priceForm.truckType}</h3>
@@ -1593,6 +1953,15 @@ function App() {
                   )}
                 </div>
               </form>
+              <div className="mt-4 max-w-xl">
+                <Field label="Search To Location">
+                  <Input
+                    placeholder="Type location name"
+                    value={setupLocationSearch}
+                    onChange={(event) => setSetupLocationSearch(event.target.value)}
+                  />
+                </Field>
+              </div>
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
                     <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{driverPriceForm.truckType}</h3>
