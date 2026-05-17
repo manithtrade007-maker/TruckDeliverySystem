@@ -21,6 +21,11 @@ const locationMatchKey = (value) =>
 const locationBaseKey = (value) => locationMatchKey(String(value || "").replace(/\([^)]*\)/g, ""));
 const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
 const routeKey = (price) => [price.fromLocation, locationBaseKey(price.toLocation), price.truckType].join("::");
+const deliverySort = (a, b) =>
+  String(a.deliveryDate || "").localeCompare(String(b.deliveryDate || "")) ||
+  String(a.invoiceNo || "").localeCompare(String(b.invoiceNo || "")) ||
+  String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
+const truckTypeLabel = (truckType) => truckType === "With Crane" ? "Crane" : truckType === "Without Crane" ? "No Crane" : truckType;
 const formatDate = (value) => {
   const text = String(value || "");
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -231,7 +236,7 @@ function App() {
     () =>
       data.deliveries
         .filter((row) => row.statementId === selectedStatementId)
-        .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || ""))),
+        .sort(deliverySort),
     [data.deliveries, selectedStatementId]
   );
 
@@ -239,7 +244,7 @@ function App() {
     () =>
       data.deliveries
         .filter((row) => row.statementId === viewStatementId)
-        .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || ""))),
+        .sort(deliverySort),
     [data.deliveries, viewStatementId]
   );
 
@@ -743,7 +748,7 @@ function App() {
     try {
       if (duplicateInvoice) throw new Error("Invoice number already exists. Check the invoice before saving.");
       if (truckMissing) throw new Error("Truck number does not exist or is inactive.");
-      if (truckTypeMismatch) throw new Error(`Truck ${deliveryForm.truckNo} is not allowed in this ${selectedStatement.truckType} statement.`);
+      if (truckTypeMismatch) throw new Error(`Truck ${deliveryForm.truckNo} is not allowed in this ${truckTypeLabel(selectedStatement.truckType)} statement.`);
       if (missingPrice) throw new Error(`No active price found for ${deliveryForm.toLocation} on ${formatDate(deliveryForm.deliveryDate)}.`);
       await api("/api/deliveries", {
         method: "POST",
@@ -897,7 +902,7 @@ function App() {
   }
 
   async function deletePrice(price) {
-    const ok = window.confirm(`Delete price for ${price.toLocation} (${price.truckType})? If it has delivery history, it will be deactivated instead of permanently deleted.`);
+    const ok = window.confirm(`Delete price for ${price.toLocation} (${truckTypeLabel(price.truckType)})? If it has delivery history, it will be deactivated instead of permanently deleted.`);
     if (!ok) return;
     try {
       const result = await api(`/api/prices/${encodeURIComponent(price.id)}`, { method: "DELETE" });
@@ -1084,7 +1089,7 @@ function App() {
                   {truckPerformance.map((truck) => (
                     <tr key={truck.truckNo} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
                       <td className="px-3 py-3 font-black">{truck.truckNo}</td>
-                      <td className="px-3 py-3">{truck.truckType}</td>
+                      <td className="px-3 py-3">{truckTypeLabel(truck.truckType)}</td>
                       <td className="px-3 py-3">{truck.driverName || "-"}</td>
                       <td className="px-3 py-3 text-center">{truck.workingDays}</td>
                       <td className="px-3 py-3 text-center">{truck.trips}</td>
@@ -1138,7 +1143,7 @@ function App() {
                         : "bg-white text-slate-700 hover:text-slate-950"
                     }`}
                   >
-                    <div className="text-base font-black">{truckType === "With Crane" ? "Car With Crane Entry" : "Car No Crane Entry"}</div>
+                    <div className="text-base font-black">{truckType === "With Crane" ? "Crane Entry" : "No Crane Entry"}</div>
                     <div className="mt-0.5 text-xs font-bold opacity-75">
                       {truckType === "With Crane"
                         ? `6 trucks | ${statementCounts.withCrane} statements`
@@ -1156,7 +1161,7 @@ function App() {
               <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
                 <div className="mb-4">
                   <h3 className="text-xl font-black tracking-tight">
-                    {entryActionTruckType === "With Crane" ? "Car With Crane Entry" : "Car No Crane Entry"}
+                    {entryActionTruckType === "With Crane" ? "Crane Entry" : "No Crane Entry"}
                   </h3>
                   <p className="mt-1 text-sm font-bold text-slate-500">Choose what you want to do next.</p>
                 </div>
@@ -1178,7 +1183,7 @@ function App() {
                 <div>
                   <h2 className="text-xl font-black tracking-tight">Statement {selectedViewStatement.statementNumber} - {monthName(selectedViewStatement.month)}</h2>
                   <p className="mt-1 text-sm font-bold text-slate-500">
-                    {selectedViewStatement.truckType} | {selectedViewStatement.status} | {viewStatementRows.length}/30 rows
+                    {truckTypeLabel(selectedViewStatement.truckType)} | {selectedViewStatement.status} | {viewStatementRows.length}/30 rows
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -1223,7 +1228,7 @@ function App() {
                         <td className="px-3 py-3">{formatDate(row.deliveryDate)}</td>
                         <td className="px-3 py-3">{row.invoiceNo}</td>
                         <td className="px-3 py-3 font-bold">{row.truckNo}</td>
-                        <td className="px-3 py-3">{row.truckType}</td>
+                        <td className="px-3 py-3">{truckTypeLabel(row.truckType)}</td>
                         <td className="px-3 py-3">{row.fromLocation}</td>
                         <td className="px-3 py-3">{row.toLocation}</td>
                         <td className="px-3 py-3 text-right font-bold">{Number(row.qtyTon || 0).toFixed(5)}T</td>
@@ -1244,7 +1249,7 @@ function App() {
 
           {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
           <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
-            <KpiCard label={`${statementCounts.month} With Crane Statements`} value={statementCounts.withCrane} tone="teal" />
+            <KpiCard label={`${statementCounts.month} Crane Statements`} value={statementCounts.withCrane} tone="teal" />
             <KpiCard label={`${statementCounts.month} No Crane Statements`} value={statementCounts.withoutCrane} tone="blue" />
             <KpiCard label={`${statementCounts.month} Total Statements`} value={statementCounts.total} tone="slate" />
           </div>
@@ -1255,7 +1260,7 @@ function App() {
               <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <h2 className="text-lg font-black tracking-tight">All Statements</h2>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-600">
-                  With Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}
+                  Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}
                 </span>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
@@ -1275,7 +1280,7 @@ function App() {
                       <div className="flex flex-wrap items-center gap-2">
                         <strong className="block text-sm font-black">Statement {statement.statementNumber} - {monthName(statement.month)}</strong>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
-                          {statement.truckType}
+                          {truckTypeLabel(statement.truckType)}
                         </span>
                       </div>
                       <span className="text-xs text-slate-500">{statement.month} | {statement.status} | {statement.rowCount}/30 rows | ${money(statement.companyTotalAmount)}</span>
@@ -1306,10 +1311,10 @@ function App() {
           <Panel id="statement-form-panel" className="lg:col-span-2">
             <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <h2 className="text-lg font-black tracking-tight">
-                {selectedStatement ? `${entryTruckType} Statement Details` : `Create ${entryTruckType} Statement`}
+                {selectedStatement ? `${truckTypeLabel(entryTruckType)} Statement Details` : `Create ${truckTypeLabel(entryTruckType)} Statement`}
               </h2>
               <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-black text-teal-800">
-                {selectedStatement ? `Statement ${selectedStatement.statementNumber} | ${selectedStatement.truckType} | ${selectedStatement.status} | ${statementRows.length}/30 rows` : `${entryTruckType} mode`}
+                {selectedStatement ? `Statement ${selectedStatement.statementNumber} | ${truckTypeLabel(selectedStatement.truckType)} | ${selectedStatement.status} | ${statementRows.length}/30 rows` : `${truckTypeLabel(entryTruckType)} mode`}
               </span>
             </div>
             <form className="grid gap-3 md:grid-cols-4" onSubmit={saveStatement}>
@@ -1332,7 +1337,7 @@ function App() {
                   }}
                 />
               </Field>
-              <Field label="Truck Type"><Input value={entryTruckType} disabled readOnly /></Field>
+              <Field label="Truck Type"><Input value={truckTypeLabel(entryTruckType)} disabled readOnly /></Field>
               <Field label="Statement No">
                 <Input type="number" min="1" required placeholder="Enter your statement number" value={statementForm.statementNumber} onChange={(event) => setStatementForm({ ...statementForm, statementNumber: event.target.value })} />
               </Field>
@@ -1358,7 +1363,7 @@ function App() {
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-black tracking-tight">{isEditingDelivery ? "Edit Delivery Row" : "Delivery Entry"}</h2>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600">
-                    Statement {selectedStatement.statementNumber} - {selectedStatement.truckType} - {statementRows.length}/30 rows
+                    Statement {selectedStatement.statementNumber} - {truckTypeLabel(selectedStatement.truckType)} - {statementRows.length}/30 rows
                   </span>
                 </div>
                 <form className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
@@ -1407,7 +1412,7 @@ function App() {
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 md:col-span-4">
                       {duplicateInvoice && <div>Invoice number already exists. Use a different invoice number or edit the existing row.</div>}
                       {truckMissing && <div>Truck number does not exist or is inactive.</div>}
-                      {truckTypeMismatch && <div>This truck belongs to {selectedTruck.truckType}, so it cannot be saved inside a {selectedStatement.truckType} statement.</div>}
+                      {truckTypeMismatch && <div>This truck belongs to {truckTypeLabel(selectedTruck.truckType)}, so it cannot be saved inside a {truckTypeLabel(selectedStatement.truckType)} statement.</div>}
                       {missingPrice && <div>No active price found for this location and delivery date. Add the price in Setup before saving.</div>}
                     </div>
                   )}
@@ -1455,7 +1460,7 @@ function App() {
                       <td className="px-3 py-3 text-center">{formatDate(row.deliveryDate)}</td>
                       <td className="px-3 py-3">{row.invoiceNo}</td>
                       <td className="px-3 py-3 font-bold">{row.truckNo}</td>
-                      <td className="px-3 py-3">{row.truckType}</td>
+                      <td className="px-3 py-3">{truckTypeLabel(row.truckType)}</td>
                       <td className="px-3 py-3">{row.fromLocation}</td>
                       <td className="px-3 py-3">{row.toLocation}</td>
                       <td className="px-3 py-3 text-right font-bold">{Number(row.qtyTon).toFixed(5)}T</td>
@@ -1501,7 +1506,7 @@ function App() {
                 <div>
                   <h3 className="text-lg font-black tracking-tight">{selectedDriverPaymentSection.truckNo} Driver Verification</h3>
                   <p className="mt-1 text-sm font-bold text-slate-500">
-                    {selectedDriverPaymentSection.truckType} | {selectedDriverPaymentSection.workingDays} working days | {selectedDriverPaymentSection.trips} trips | Driver payment $ {money(selectedDriverPaymentSection.driverAmount)}
+                    {truckTypeLabel(selectedDriverPaymentSection.truckType)} | {selectedDriverPaymentSection.workingDays} working days | {selectedDriverPaymentSection.trips} trips | Driver payment $ {money(selectedDriverPaymentSection.driverAmount)}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -1568,7 +1573,7 @@ function App() {
                       <div className="flex flex-wrap items-center gap-2">
                         <h4 className="text-lg font-black">{truck.truckNo}</h4>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-black ${truck.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
-                          {truck.truckType}
+                          {truckTypeLabel(truck.truckType)}
                         </span>
                       </div>
                       <div className="mt-1 text-sm font-bold text-slate-500">
@@ -1627,7 +1632,10 @@ function App() {
               <h2 className="mb-3 text-lg font-bold">Truck Master</h2>
               <form className="grid gap-3 md:grid-cols-5" onSubmit={saveTruck}>
                 <Input placeholder="Truck No" required value={truckForm.truckNo} onChange={(e) => setTruckForm({ ...truckForm, truckNo: e.target.value.toUpperCase() })} />
-                <Select value={truckForm.truckType} onChange={(e) => setTruckForm({ ...truckForm, truckType: e.target.value })}><option>With Crane</option><option>Without Crane</option></Select>
+                <Select value={truckForm.truckType} onChange={(e) => setTruckForm({ ...truckForm, truckType: e.target.value })}>
+                  <option value="With Crane">Crane</option>
+                  <option value="Without Crane">No Crane</option>
+                </Select>
                 <Input placeholder="Driver Name" value={truckForm.driverName} onChange={(e) => setTruckForm({ ...truckForm, driverName: e.target.value })} />
                 <Input placeholder="Phone" value={truckForm.phone} onChange={(e) => setTruckForm({ ...truckForm, phone: e.target.value })} />
                 <div className="flex gap-2">
@@ -1640,7 +1648,7 @@ function App() {
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                 {["With Crane", "Without Crane"].map((truckType) => (
                   <div key={truckType} className="grid gap-2">
-                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{truckType}</h3>
+                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{truckTypeLabel(truckType)}</h3>
                     {data.trucks.filter((truck) => truck.truckType === truckType).map((truck) => (
                       <div key={truck.truckNo} className="grid gap-3 rounded-2xl border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center">
                         <div>
@@ -1686,8 +1694,8 @@ function App() {
                 </Field>
                 <Field label="Truck Type">
                   <Select value={bulkPriceForm.truckType} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, truckType: e.target.value })}>
-                    <option>With Crane</option>
-                    <option>Without Crane</option>
+                    <option value="With Crane">Crane</option>
+                    <option value="Without Crane">No Crane</option>
                   </Select>
                 </Field>
                 <Field label="Effective Date">
@@ -1800,7 +1808,7 @@ function App() {
                   </p>
                 </div>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-700">
-                  With Crane {activeCompanyPriceCounts.withCrane} | No Crane {activeCompanyPriceCounts.withoutCrane} | Total {activeCompanyPriceCounts.total}
+                  Crane {activeCompanyPriceCounts.withCrane} | No Crane {activeCompanyPriceCounts.withoutCrane} | Total {activeCompanyPriceCounts.total}
                 </span>
               </div>
               <div className="mb-4 max-w-xl">
@@ -1814,7 +1822,7 @@ function App() {
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
-                <KpiCard label="With Crane Locations" value={activeCompanyPriceCounts.withCrane} tone="teal" />
+                <KpiCard label="Crane Locations" value={activeCompanyPriceCounts.withCrane} tone="teal" />
                 <KpiCard label="No Crane Locations" value={activeCompanyPriceCounts.withoutCrane} tone="sky" />
                 <KpiCard label="Total Active Locations" value={activeCompanyPriceCounts.total} />
               </div>
@@ -1825,7 +1833,7 @@ function App() {
                   return (
                     <div key={truckType} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                       <div className={`flex items-center justify-between px-4 py-3 ${truckType === "With Crane" ? "bg-teal-50" : "bg-sky-50"}`}>
-                        <h3 className="text-sm font-black uppercase tracking-wide text-slate-700">{truckType}</h3>
+                        <h3 className="text-sm font-black uppercase tracking-wide text-slate-700">{truckTypeLabel(truckType)}</h3>
                         <span className="rounded-full bg-white px-2 py-0.5 text-xs font-black text-slate-600">{rows.length} locations</span>
                       </div>
                       <div className="max-h-[620px] overflow-auto">
@@ -1852,7 +1860,7 @@ function App() {
                             {rows.length === 0 && (
                               <tr>
                                 <td className="px-3 py-6 text-center text-sm font-bold text-slate-500" colSpan="5">
-                                  No active company prices for {truckType}.
+                                  No active company prices for {truckTypeLabel(truckType)}.
                                 </td>
                               </tr>
                             )}
@@ -1872,7 +1880,10 @@ function App() {
               <form className="grid gap-3 md:grid-cols-7" onSubmit={savePrice}>
                 <Input placeholder="From Location" required value={priceForm.fromLocation} onChange={(e) => setPriceForm({ ...priceForm, fromLocation: e.target.value })} />
                 <Input placeholder="To Location" required value={priceForm.toLocation} onChange={(e) => setPriceForm({ ...priceForm, toLocation: e.target.value })} />
-                <Select value={priceForm.truckType} onChange={(e) => setPriceForm({ ...priceForm, truckType: e.target.value })}><option>With Crane</option><option>Without Crane</option></Select>
+                <Select value={priceForm.truckType} onChange={(e) => setPriceForm({ ...priceForm, truckType: e.target.value })}>
+                  <option value="With Crane">Crane</option>
+                  <option value="Without Crane">No Crane</option>
+                </Select>
                 <Input type="date" required value={priceForm.effectiveDate || today()} onChange={(e) => setPriceForm({ ...priceForm, effectiveDate: e.target.value })} />
                 <Input type="number" step="0.1" placeholder="KM" value={priceForm.distanceKm} onChange={(e) => setPriceForm({ ...priceForm, distanceKm: e.target.value })} />
                 <Input type="number" step="0.01" placeholder="Company Price" required value={priceForm.companyUnitPrice} onChange={(e) => setPriceForm({ ...priceForm, companyUnitPrice: e.target.value })} />
@@ -1894,14 +1905,14 @@ function App() {
               </div>
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
-                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{priceForm.truckType}</h3>
+                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{truckTypeLabel(priceForm.truckType)}</h3>
                     {companyPriceGroups.map((group) => (
                       <div key={group.key} className="rounded-2xl border border-slate-200 bg-white p-4">
                         <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
                           <div>
                             <strong className="block text-base">{group.fromLocation} to {group.toLocation}</strong>
                             <span className="text-xs font-bold text-slate-500">
-                              {group.truckType} | {group.versions.length} price version{group.versions.length === 1 ? "" : "s"}
+                              {truckTypeLabel(group.truckType)} | {group.versions.length} price version{group.versions.length === 1 ? "" : "s"}
                             </span>
                           </div>
                           <div className="rounded-xl bg-teal-50 px-3 py-2 text-right">
@@ -1942,7 +1953,10 @@ function App() {
               <form className="grid gap-3 md:grid-cols-7" onSubmit={saveDriverPrice}>
                 <Input placeholder="From Location" required value={driverPriceForm.fromLocation} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, fromLocation: e.target.value })} />
                 <Input placeholder="To Location" required value={driverPriceForm.toLocation} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, toLocation: e.target.value })} />
-                <Select value={driverPriceForm.truckType} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckType: e.target.value })}><option>With Crane</option><option>Without Crane</option></Select>
+                <Select value={driverPriceForm.truckType} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckType: e.target.value })}>
+                  <option value="With Crane">Crane</option>
+                  <option value="Without Crane">No Crane</option>
+                </Select>
                 <Input type="date" required value={driverPriceForm.effectiveDate || today()} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, effectiveDate: e.target.value })} />
                 <Input type="number" step="0.1" placeholder="KM" value={driverPriceForm.distanceKm} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, distanceKm: e.target.value })} />
                 <Input type="number" step="0.01" placeholder="Driver Price" required value={driverPriceForm.truckSalaryUnitPrice} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckSalaryUnitPrice: e.target.value })} />
@@ -1964,14 +1978,14 @@ function App() {
               </div>
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
-                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{driverPriceForm.truckType}</h3>
+                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{truckTypeLabel(driverPriceForm.truckType)}</h3>
                     {driverPriceGroups.map((group) => (
                       <div key={group.key} className="rounded-2xl border border-slate-200 bg-white p-4">
                         <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
                           <div>
                             <strong className="block text-base">{group.fromLocation} to {group.toLocation}</strong>
                             <span className="text-xs font-bold text-slate-500">
-                              {group.truckType} | {group.versions.length} driver price version{group.versions.length === 1 ? "" : "s"}
+                              {truckTypeLabel(group.truckType)} | {group.versions.length} driver price version{group.versions.length === 1 ? "" : "s"}
                             </span>
                           </div>
                           <div className="rounded-xl bg-amber-50 px-3 py-2 text-right">

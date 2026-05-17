@@ -712,7 +712,7 @@ function enrichDelivery(data, input) {
   if (!truckNo) throw new Error("Truck number is required.");
   if (!truck) throw new Error("Truck number does not exist.");
   if (truck.truckType !== statement.truckType) {
-    throw new Error(`Truck ${truckNo} is ${truck.truckType}, but this statement is ${statement.truckType}.`);
+    throw new Error(`Truck ${truckNo} is ${truckTypeLabel(truck.truckType)}, but this statement is ${truckTypeLabel(statement.truckType)}.`);
   }
   if (monthFromDate(deliveryDate) !== statement.month) {
     throw new Error("Delivery date must be inside the selected statement month.");
@@ -732,7 +732,7 @@ function enrichDelivery(data, input) {
     deliveryDate
   });
   if (!price) {
-    throw new Error(`No effective price found for ${fromLocation} to ${toLocation} (${truck.truckType}) on ${deliveryDate}.`);
+    throw new Error(`No effective price found for ${fromLocation} to ${toLocation} (${truckTypeLabel(truck.truckType)}) on ${deliveryDate}.`);
   }
 
   const companyUnitPrice = toNumber(price.companyUnitPrice);
@@ -771,10 +771,12 @@ function filteredDeliveries(data, query) {
   if (query.month) rows = filterByMonth(rows, query.month);
   if (query.truckNo) rows = rows.filter((item) => item.truckNo === query.truckNo);
   if (query.truckType) rows = rows.filter((item) => item.truckType === query.truckType);
-  if (query.statementId) {
-    return rows.sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
-  }
-  return rows.sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate) || a.invoiceNo.localeCompare(b.invoiceNo));
+  return rows.sort(
+    (a, b) =>
+      String(a.deliveryDate || "").localeCompare(String(b.deliveryDate || "")) ||
+      String(a.invoiceNo || "").localeCompare(String(b.invoiceNo || "")) ||
+      String(a.createdAt || "").localeCompare(String(b.createdAt || ""))
+  );
 }
 
 function statementsWithCounts(data) {
@@ -841,6 +843,12 @@ function monthLabel(value) {
 
 function truckTypeFileLabel(truckType) {
   return truckType === "With Crane" ? "car-with-crane" : "car-no-crane";
+}
+
+function truckTypeLabel(truckType) {
+  if (truckType === "With Crane") return "Crane";
+  if (truckType === "Without Crane") return "No Crane";
+  return truckType || "";
 }
 
 function rowsByPage(rows, pageSize = 30) {
@@ -934,7 +942,7 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
     .subtitle { font-size: 11px; text-align: right; border-top: 0; }
     .right { text-align: right; }
     .center { text-align: center; }
-    .date { text-align: center; }
+    .date { text-align: center; mso-number-format:"\\@"; }
     .text { mso-number-format:"\\@"; }
     .signature td { height: 24px; }
     .line { border-bottom: 1px dotted #333; }
@@ -950,6 +958,7 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
 
 function accountingExport(data, rows) {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
+  const displayRows = rows.map((row) => ({ ...row, truckType: truckTypeLabel(row.truckType) }));
   const signatureHtml = `
     <tr class="signature">
       <td class="center" colspan="3">Prepared By</td>
@@ -993,7 +1002,7 @@ function accountingExport(data, rows) {
     </tr>`;
   return excelTable(
     data.settings.companyName,
-    rows,
+    displayRows,
     [
       { key: "rowNo", label: "No", align: "center" },
       { key: "deliveryDate", label: "Delivery Date", type: "date" },
@@ -1014,7 +1023,7 @@ function accountingExport(data, rows) {
 function salaryExport(data, rows, query = {}) {
   const truck = data.trucks.find((item) => item.truckNo === query.truckNo) || {};
   const truckNo = query.truckNo || rows[0]?.truckNo || "All Trucks";
-  const truckType = rows[0]?.truckType || truck.truckType || query.truckType || "No Data";
+  const truckType = truckTypeLabel(rows[0]?.truckType || truck.truckType || query.truckType || "No Data");
   const driverName = rows[0]?.driverName || truck.driverName || "-";
   const reportMonth = monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
   const totalDriverAmount = rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0);
@@ -1092,9 +1101,10 @@ function monthlyTruckPerformance(data, month) {
 
 function dashboardExport(rows, month) {
   const label = monthLabel(month);
+  const displayRows = rows.map((row) => ({ ...row, truckType: truckTypeLabel(row.truckType) }));
   return excelTable(
     `Truck Performance - ${label}`,
-    rows,
+    displayRows,
     [
       { key: "rowNo", label: "No", align: "center" },
       { key: "truckNo", label: "Truck No", type: "text" },
@@ -1291,14 +1301,14 @@ function statementPdf(data, rows) {
   ];
   return tablePdf({
     title: `Statement ${statement?.statementNumber || ""} - ${monthLabel(statement?.month)}`,
-    subtitle: `${statement?.truckType || ""} | ${statement?.status || ""} | ${rows.length}/30 rows | From: ${data.settings.fromName || "Nhep Manith"} | To: ${data.settings.toName || "SLP"} | Date: ${formatShortDate(statement?.statementDate || "")}`,
+    subtitle: `${truckTypeLabel(statement?.truckType) || ""} | ${statement?.status || ""} | ${rows.length}/30 rows | From: ${data.settings.fromName || "Nhep Manith"} | To: ${data.settings.toName || "SLP"} | Date: ${formatShortDate(statement?.statementDate || "")}`,
     columns,
     rows: rows.map((row, index) => ({
       no: index + 1,
       date: formatShortDate(row.deliveryDate),
       invoice: row.invoiceNo,
       truckNo: row.truckNo,
-      truckType: row.truckType,
+      truckType: truckTypeLabel(row.truckType),
       from: row.fromLocation,
       to: row.toLocation,
       qty: `${Number(row.qtyTon || 0).toFixed(5)}T`,
@@ -1336,7 +1346,7 @@ function dashboardPdf(rows, month) {
     columns,
     rows: rows.map((row) => ({
       truckNo: row.truckNo,
-      truckType: row.truckType,
+      truckType: truckTypeLabel(row.truckType),
       driverName: row.driverName || "-",
       workingDays: row.workingDays || 0,
       trips: row.trips || 0,
@@ -1495,7 +1505,7 @@ async function api(req, res, url) {
       const index = data.trucks.findIndex((item) => item.truckNo === truck.truckNo);
       if (index >= 0) data.trucks[index] = truck;
       else data.trucks.push(truck);
-      addActivity(data, `${index >= 0 ? "Updated" : "Added"} truck ${truck.truckNo} (${truck.truckType}).`, "truck");
+      addActivity(data, `${index >= 0 ? "Updated" : "Added"} truck ${truck.truckNo} (${truckTypeLabel(truck.truckType)}).`, "truck");
       return truck;
     });
     return sendJson(res, 200, truck);
@@ -1545,7 +1555,7 @@ async function api(req, res, url) {
         !existingById
       );
       if (duplicateRoute) {
-        throw new Error(`Duplicate location is not allowed. "${price.toLocation}" already exists as "${duplicateRoute.toLocation}" for ${price.truckType}.`);
+        throw new Error(`Duplicate location is not allowed. "${price.toLocation}" already exists as "${duplicateRoute.toLocation}" for ${truckTypeLabel(price.truckType)}.`);
       }
       const index = data.prices.findIndex((item) =>
         item.id === price.id ||
@@ -1558,7 +1568,7 @@ async function api(req, res, url) {
       );
       if (index >= 0) data.prices[index] = price;
       else data.prices.push(price);
-      addActivity(data, `${index >= 0 ? "Updated" : "Added"} ${price.truckType} price for ${price.toLocation}, effective ${price.effectiveDate}.`, "price");
+      addActivity(data, `${index >= 0 ? "Updated" : "Added"} ${truckTypeLabel(price.truckType)} price for ${price.toLocation}, effective ${price.effectiveDate}.`, "price");
       return price;
     });
     return sendJson(res, 200, price);
@@ -1642,7 +1652,7 @@ async function api(req, res, url) {
         saved.push(price);
       }
       if (saved.length < 1) throw new Error("No valid price rows found.");
-      addActivity(data, `Bulk updated ${saved.length} ${truckType} ${priceType} price row${saved.length > 1 ? "s" : ""}, effective ${effectiveDate}.`, "price");
+      addActivity(data, `Bulk updated ${saved.length} ${truckTypeLabel(truckType)} ${priceType} price row${saved.length > 1 ? "s" : ""}, effective ${effectiveDate}.`, "price");
       return { added, updated, total: saved.length };
     });
     return sendJson(res, 200, result);
@@ -1662,11 +1672,11 @@ async function api(req, res, url) {
       );
       if (hasDeliveryHistory) {
         price.active = false;
-        addActivity(data, `Deactivated ${price.truckType} price for ${price.toLocation}, effective ${effectiveDateOf(price)}, because it may be used by delivery history.`, "price");
+        addActivity(data, `Deactivated ${truckTypeLabel(price.truckType)} price for ${price.toLocation}, effective ${effectiveDateOf(price)}, because it may be used by delivery history.`, "price");
         return { ok: true, action: "deactivated" };
       }
       data.prices = data.prices.filter((item) => item.id !== id);
-      addActivity(data, `Deleted unused ${price.truckType} price for ${price.toLocation}, effective ${effectiveDateOf(price)}.`, "price");
+      addActivity(data, `Deleted unused ${truckTypeLabel(price.truckType)} price for ${price.toLocation}, effective ${effectiveDateOf(price)}.`, "price");
       return { ok: true, action: "deleted" };
     });
     return sendJson(res, 200, result);
@@ -1705,7 +1715,7 @@ async function api(req, res, url) {
       throw new Error("A statement export cannot contain more than 30 rows.");
     }
     if (!query.truckType && new Set(rows.map((row) => row.truckType)).size > 1) {
-      throw new Error("Please export With Crane and Without Crane accounting reports separately.");
+      throw new Error("Please export Crane and No Crane accounting reports separately.");
     }
     if (query.statementId) {
       await updateData((data) => {
@@ -1740,7 +1750,7 @@ async function api(req, res, url) {
   if (req.method === "GET" && url.pathname === "/api/export/salary") {
     const rows = filteredDeliveries(data, query);
     if (!query.truckType && !query.truckNo && new Set(rows.map((row) => row.truckType)).size > 1) {
-      throw new Error("Please export With Crane and Without Crane salary reports separately, or select one truck.");
+      throw new Error("Please export Crane and No Crane salary reports separately, or select one truck.");
     }
     const truckTypeName = query.truckNo || query.truckType || rows[0]?.truckType || "all";
     const fileName = `driver-payment-${slug(truckTypeName)}-${slug(monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7)))}`;
