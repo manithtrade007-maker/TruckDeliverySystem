@@ -442,8 +442,10 @@ function App() {
       .filter((price) => price.truckType === bulkPriceForm.truckType)
       .forEach((price) => {
         const key = locationBaseKey(price.toLocation);
-        if (!routeMap.has(key)) routeMap.set(key, price.toLocation);
+        const existing = routeMap.get(key);
+        if (!existing || priceEffectiveDate(price) > priceEffectiveDate(existing)) routeMap.set(key, price);
       });
+    const seenPastedLocations = new Map();
     const locationLines = (bulkPriceForm.locationsText || bulkPriceForm.rowsText)
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -457,7 +459,11 @@ function App() {
       .map((line) => line.trim())
       .filter(Boolean);
     return locationLines.map((locationText, index) => {
-        const matchedLocation = routeMap.get(locationBaseKey(locationText)) || "";
+        const locationKey = locationBaseKey(locationText);
+        const matchedRoute = routeMap.get(locationKey);
+        const matchedLocation = matchedRoute?.toLocation || "";
+        const duplicateLine = seenPastedLocations.get(locationKey);
+        if (!duplicateLine) seenPastedLocations.set(locationKey, index + 1);
         const companyPriceText = priceLines[index] || "";
         const driverPriceText = priceType === "both" ? driverPriceLines[index] || "" : companyPriceText;
         const companyUnitPrice = priceType === "driver" ? "" : parseMoney(companyPriceText);
@@ -488,8 +494,15 @@ function App() {
             : samePrice
               ? "Same price"
               : difference > 0
-                ? `Up $${money(difference)}`
-                : `Down $${money(Math.abs(difference))}`;
+            ? `Up $${money(difference)}`
+            : `Down $${money(Math.abs(difference))}`;
+        const statusText = duplicateLine
+          ? `Duplicate of line ${duplicateLine}`
+          : !matchedLocation
+            ? "Check location"
+            : !hasRequiredPrices
+              ? "Check price"
+              : "Approve";
         return {
           line: index + 1,
           rawLocation: locationText || "",
@@ -502,7 +515,8 @@ function App() {
           oldPrice: oldPrice || 0,
           newPrice: newPrice === "" ? "" : newPrice,
           compareText,
-          valid: Boolean(matchedLocation && hasRequiredPrices)
+          statusText,
+          valid: Boolean(!duplicateLine && matchedLocation && hasRequiredPrices)
         };
       });
   }, [bulkPriceForm, data.prices, data.settings.defaultFromLocation]);
@@ -885,6 +899,10 @@ function App() {
 
   async function applyBulkPriceUpdate() {
     try {
+      const invalidRows = bulkPriceRows.filter((row) => !row.valid);
+      if (invalidRows.length > 0) {
+        throw new Error(`Please fix ${invalidRows.length} row${invalidRows.length > 1 ? "s" : ""} before applying bulk prices.`);
+      }
       const rows = bulkPriceRows.filter((row) => row.valid);
       if (rows.length < 1) throw new Error("Paste at least one valid price row.");
       const ok = window.confirm(`Apply ${rows.length} price row${rows.length > 1 ? "s" : ""} effective ${formatDate(bulkPriceForm.effectiveDate)}?`);
@@ -1697,11 +1715,11 @@ function App() {
                 <div>
                   <h2 className="text-lg font-bold">Bulk Price Update</h2>
                   <p className="mt-1 text-sm font-bold text-slate-500">
-                    Paste rows from Excel to create new price versions. Old prices stay unchanged for old delivery dates.
+                    Paste fixed system locations and new prices. The system will block unknown or duplicated locations before updating.
                   </p>
                 </div>
                 <span className="rounded-full bg-teal-50 px-3 py-1 text-sm font-black text-teal-800">
-                  {bulkPriceRows.filter((row) => row.valid).length} valid rows
+                  {bulkPriceRows.filter((row) => row.valid).length} ready / {bulkPriceRows.length} rows
                 </span>
               </div>
 
@@ -1733,7 +1751,7 @@ function App() {
                     <Field label="Location">
                       <textarea
                         className="min-h-[260px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
-                        placeholder={"Khan Dangkao (PP)\nKhan Mean Chey (PP)\nKhan Chbar Ampov (PP)"}
+                        placeholder={"KH.Dangkao (PP)\nKH.Mean Chey (PP)\nD.Ang Snuol (Kandal)"}
                         value={bulkPriceForm.locationsText}
                         onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, locationsText: e.target.value, rowsText: "" })}
                       />
@@ -1758,7 +1776,7 @@ function App() {
                     )}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Button type="button" onClick={applyBulkPriceUpdate} disabled={bulkPriceRows.filter((row) => row.valid).length < 1}>
+                    <Button type="button" onClick={applyBulkPriceUpdate} disabled={bulkPriceRows.length < 1 || bulkPriceRows.some((row) => !row.valid)}>
                       Apply Price Update
                     </Button>
                     <Button type="button" variant="secondary" onClick={() => setBulkPriceForm({ ...bulkPriceForm, locationsText: "", pricesText: "", driverPricesText: "", rowsText: "" })}>
@@ -1766,7 +1784,7 @@ function App() {
                     </Button>
                   </div>
                   <p className="mt-3 text-xs font-bold text-slate-500">
-                    Paste the same number of rows in Location and Price. The system will only approve rows that match an existing system location.
+                    Paste the same number of rows in Location and Price. All rows must match an existing system location before Apply is enabled.
                   </p>
                 </div>
 
@@ -1774,10 +1792,10 @@ function App() {
                   <table className="w-full min-w-[760px] border-collapse bg-white text-sm">
                     <thead className="bg-slate-900 text-white">
                       <tr>
-                        <th className="px-3 py-3 text-left font-black">New Location</th>
-                        <th className="px-3 py-3 text-right font-black">New Price</th>
-                        <th className="px-3 py-3 text-left font-black">Old Location</th>
+                        <th className="px-3 py-3 text-left font-black">Pasted Location</th>
+                        <th className="px-3 py-3 text-left font-black">System Location</th>
                         <th className="px-3 py-3 text-right font-black">Old Price</th>
+                        <th className="px-3 py-3 text-right font-black">New Price</th>
                         <th className="px-3 py-3 text-left font-black">Comparison</th>
                         <th className="px-3 py-3 text-center font-black">Status</th>
                       </tr>
@@ -1786,21 +1804,21 @@ function App() {
                       {bulkPriceRows.map((row) => (
                         <tr key={row.line} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
                           <td className="px-3 py-3 font-bold">{row.rawLocation || `Line ${row.line}`}</td>
-                          <td className="px-3 py-3 text-right font-black">
-                            {bulkPriceForm.priceType === "both"
-                              ? `${row.companyUnitPrice === "" ? "Missing" : `$ ${unitMoney(row.companyUnitPrice)}`} / ${row.truckSalaryUnitPrice === "" ? "Missing" : `$ ${unitMoney(row.truckSalaryUnitPrice)}`}`
-                              : row.newPrice === "" ? "Missing" : `$ ${unitMoney(row.newPrice)}`}
-                          </td>
                           <td className="px-3 py-3 font-bold text-teal-800">{row.toLocation || "No match"}</td>
                           <td className="px-3 py-3 text-right">
                             {bulkPriceForm.priceType === "both"
                               ? `$ ${unitMoney(row.currentCompanyUnitPrice)} / $ ${unitMoney(row.currentTruckSalaryUnitPrice)}`
                               : `$ ${unitMoney(row.oldPrice)}`}
                           </td>
+                          <td className="px-3 py-3 text-right font-black">
+                            {bulkPriceForm.priceType === "both"
+                              ? `${row.companyUnitPrice === "" ? "Missing" : `$ ${unitMoney(row.companyUnitPrice)}`} / ${row.truckSalaryUnitPrice === "" ? "Missing" : `$ ${unitMoney(row.truckSalaryUnitPrice)}`}`
+                              : row.newPrice === "" ? "Missing" : `$ ${unitMoney(row.newPrice)}`}
+                          </td>
                           <td className="px-3 py-3 font-bold">{row.compareText}</td>
                           <td className="px-3 py-3 text-center">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-black ${row.valid ? "bg-teal-100 text-teal-800" : "bg-rose-100 text-rose-700"}`}>
-                              {row.valid ? "Approve" : "Check"}
+                              {row.statusText || (row.valid ? "Approve" : "Check")}
                             </span>
                           </td>
                         </tr>

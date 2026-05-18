@@ -1622,22 +1622,24 @@ async function api(req, res, url) {
       let added = 0;
       let updated = 0;
       const saved = [];
+      const seenRows = new Map();
       for (const row of rows) {
-        const toLocation = normalizeText(row.toLocation);
-        if (!toLocation) continue;
-        const routeExists = data.prices.some(
+        const pastedLocation = normalizeText(row.rawLocation || row.toLocation);
+        const toLocation = normalizeText(row.toLocation || pastedLocation);
+        if (!toLocation) throw new Error(`Missing location on row ${row.line || saved.length + 1}.`);
+        const rowKey = locationBaseKey(toLocation);
+        if (seenRows.has(rowKey)) {
+          throw new Error(`Duplicate location in pasted rows: "${toLocation}" also appears on row ${seenRows.get(rowKey)}.`);
+        }
+        seenRows.set(rowKey, row.line || saved.length + 1);
+        const matchedRoute = data.prices.find(
           (price) =>
             price.fromLocation === fromLocation &&
             locationBaseKey(price.toLocation) === locationBaseKey(toLocation) &&
             price.truckType === truckType
         );
-        if (!routeExists) throw new Error(`Location does not match system price list: ${toLocation}.`);
-        const matchedLocation = data.prices.find(
-          (price) =>
-            price.fromLocation === fromLocation &&
-            locationBaseKey(price.toLocation) === locationBaseKey(toLocation) &&
-            price.truckType === truckType
-        )?.toLocation || toLocation;
+        if (!matchedRoute) throw new Error(`Location does not match system price list: ${toLocation}.`);
+        const matchedLocation = matchedRoute.toLocation;
         const currentPrice = findEffectivePrice(data, { fromLocation, toLocation: matchedLocation, truckType, deliveryDate: effectiveDate });
         const distanceKm = row.distanceKm === "" || row.distanceKm == null
           ? toNumber(currentPrice?.distanceKm)
