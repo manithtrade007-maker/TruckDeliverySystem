@@ -966,6 +966,21 @@ function App() {
     input.click();
   }
 
+  async function clearLocationPriceList() {
+    const ok = window.confirm("Clear all location price records? This will not delete trucks, statements, or delivery rows. A safety backup will be created first.");
+    if (!ok) return;
+    const typed = window.prompt('Type "CLEAR PRICES" to confirm.');
+    if (typed !== "CLEAR PRICES") return;
+    try {
+      const result = await api("/api/prices", { method: "DELETE" });
+      await loadData();
+      await loadBackups();
+      flash(`Cleared ${result.deletedCount} location price records.`);
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   function exportStatement() {
     if (!selectedStatement) return;
     window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedStatement.id)}&truckType=${encodeURIComponent(selectedStatement.truckType)}`;
@@ -2053,6 +2068,18 @@ function App() {
                 <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
                 <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
               </div>
+            </div>
+          </Panel>
+
+          <Panel>
+            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <h2 className="text-lg font-bold">Location Price Reset</h2>
+                <p className="mt-1 text-sm font-bold text-slate-500">
+                  Clear the current location price list before entering the new official location format. Existing statements and delivery rows stay unchanged.
+                </p>
+              </div>
+              <Button type="button" variant="danger" onClick={clearLocationPriceList}>Clear Location Prices</Button>
             </div>
           </Panel>
         </main>

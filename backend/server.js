@@ -338,9 +338,6 @@ function normalizeDataShape(data) {
     ...price,
     effectiveDate: price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`
   }));
-  if (data.prices.length === 0) {
-    data.prices = baselinePrices().map((baseline) => ({ ...baseline, id: `${baseline.id}-base` }));
-  }
   const pricesById = new Map();
   for (const price of data.prices) {
     const existing = pricesById.get(price.id);
@@ -1680,6 +1677,17 @@ async function api(req, res, url) {
       if (saved.length < 1) throw new Error("No valid price rows found.");
       addActivity(data, `Bulk updated ${saved.length} ${truckTypeLabel(truckType)} ${priceType} price row${saved.length > 1 ? "s" : ""}, effective ${effectiveDate}.`, "price");
       return { added, updated, total: saved.length };
+    });
+    return sendJson(res, 200, result);
+  }
+
+  if (req.method === "DELETE" && url.pathname === "/api/prices") {
+    const result = await updateData(async (data) => {
+      await createBackup(data, "before-clear-prices");
+      const deletedCount = data.prices.length;
+      data.prices = [];
+      addActivity(data, `Cleared ${deletedCount} location price records.`, "setup");
+      return { ok: true, deletedCount };
     });
     return sendJson(res, 200, result);
   }
