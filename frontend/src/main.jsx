@@ -9,6 +9,12 @@ const localDate = (date = new Date()) => {
 const today = () => localDate();
 const currentMonth = () => localDate().slice(0, 7);
 const money = (value) => Number(value || 0).toFixed(2);
+const unitMoney = (value) => {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number)) return "0.000";
+  const [whole, decimal = ""] = String(number).split(".");
+  return `${whole}.${decimal.slice(0, 3).padEnd(3, "0")}`;
+};
 const parseMoney = (value) => {
   const number = Number(String(value || "").replace(/[$,\s]/g, ""));
   return Number.isFinite(number) ? number : "";
@@ -1247,7 +1253,7 @@ function App() {
                         <td className="px-3 py-3">{row.fromLocation}</td>
                         <td className="px-3 py-3">{row.toLocation}</td>
                         <td className="px-3 py-3 text-right font-bold">{Number(row.qtyTon || 0).toFixed(5)}T</td>
-                        <td className="px-3 py-3 text-right">$ {money(row.companyUnitPrice)}</td>
+                        <td className="px-3 py-3 text-right">$ {unitMoney(row.companyUnitPrice)}</td>
                         <td className="px-3 py-3 text-right font-black">$ {money(row.companyTotalAmount)}</td>
                       </tr>
                     ))}
@@ -1422,7 +1428,7 @@ function App() {
                     </datalist>
                   </Field>
                   <Field label="QTY(T)"><Input type="number" step="any" min="0" required disabled={!canEditRows} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} /></Field>
-                  <Field label="Unit Price"><Input disabled value={selectedPrice ? `$${money(selectedPrice.companyUnitPrice)}` : ""} readOnly /></Field>
+                  <Field label="Unit Price"><Input disabled value={selectedPrice ? `$${unitMoney(selectedPrice.companyUnitPrice)}` : ""} readOnly /></Field>
                   {(duplicateInvoice || truckMissing || truckTypeMismatch || missingPrice) && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 md:col-span-4">
                       {duplicateInvoice && <div>Invoice number already exists. Use a different invoice number or edit the existing row.</div>}
@@ -1479,7 +1485,7 @@ function App() {
                       <td className="px-3 py-3">{row.fromLocation}</td>
                       <td className="px-3 py-3">{row.toLocation}</td>
                       <td className="px-3 py-3 text-right font-bold">{Number(row.qtyTon).toFixed(5)}T</td>
-                      <td className="px-3 py-3 text-right">$ {money(row.companyUnitPrice)}</td>
+                      <td className="px-3 py-3 text-right">$ {unitMoney(row.companyUnitPrice)}</td>
                       <td className="px-3 py-3 text-right font-bold">$ {money(row.companyTotalAmount)}</td>
                       <td className="px-3 py-3">
                         <div className="flex gap-2">
@@ -1559,7 +1565,7 @@ function App() {
                         <td className="px-3 py-3">{row.fromLocation}</td>
                         <td className="px-3 py-3">{row.toLocation}</td>
                         <td className="px-3 py-3 text-right font-bold tabular-nums">{Number(row.qtyTon || 0).toFixed(4)}T</td>
-                        <td className="px-3 py-3 text-right font-bold tabular-nums">$ {money(row.truckSalaryUnitPrice)}</td>
+                        <td className="px-3 py-3 text-right font-bold tabular-nums">$ {unitMoney(row.truckSalaryUnitPrice)}</td>
                         <td className="px-3 py-3 text-right font-black tabular-nums">$ {money(row.truckSalaryAmount)}</td>
                       </tr>
                     ))}
@@ -1782,14 +1788,14 @@ function App() {
                           <td className="px-3 py-3 font-bold">{row.rawLocation || `Line ${row.line}`}</td>
                           <td className="px-3 py-3 text-right font-black">
                             {bulkPriceForm.priceType === "both"
-                              ? `${row.companyUnitPrice === "" ? "Missing" : `$ ${money(row.companyUnitPrice)}`} / ${row.truckSalaryUnitPrice === "" ? "Missing" : `$ ${money(row.truckSalaryUnitPrice)}`}`
-                              : row.newPrice === "" ? "Missing" : `$ ${money(row.newPrice)}`}
+                              ? `${row.companyUnitPrice === "" ? "Missing" : `$ ${unitMoney(row.companyUnitPrice)}`} / ${row.truckSalaryUnitPrice === "" ? "Missing" : `$ ${unitMoney(row.truckSalaryUnitPrice)}`}`
+                              : row.newPrice === "" ? "Missing" : `$ ${unitMoney(row.newPrice)}`}
                           </td>
                           <td className="px-3 py-3 font-bold text-teal-800">{row.toLocation || "No match"}</td>
                           <td className="px-3 py-3 text-right">
                             {bulkPriceForm.priceType === "both"
-                              ? `$ ${money(row.currentCompanyUnitPrice)} / $ ${money(row.currentTruckSalaryUnitPrice)}`
-                              : `$ ${money(row.oldPrice)}`}
+                              ? `$ ${unitMoney(row.currentCompanyUnitPrice)} / $ ${unitMoney(row.currentTruckSalaryUnitPrice)}`
+                              : `$ ${unitMoney(row.oldPrice)}`}
                           </td>
                           <td className="px-3 py-3 font-bold">{row.compareText}</td>
                           <td className="px-3 py-3 text-center">
@@ -1868,7 +1874,7 @@ function App() {
                                 <td className="px-3 py-3 text-center font-bold">{index + 1}</td>
                                 <td className="px-3 py-3 font-black">{price.toLocation}</td>
                                 <td className="px-3 py-3 text-right tabular-nums">{price.distanceKm || ""}</td>
-                                <td className="px-3 py-3 text-right font-black tabular-nums">$ {money(price.companyUnitPrice)}</td>
+                                <td className="px-3 py-3 text-right font-black tabular-nums">$ {unitMoney(price.companyUnitPrice)}</td>
                                 <td className="px-3 py-3 text-center text-xs font-bold text-slate-500">{formatDate(priceEffectiveDate(price))}</td>
                               </tr>
                             ))}
@@ -1901,7 +1907,7 @@ function App() {
                 </Select>
                 <Input type="date" required value={priceForm.effectiveDate || today()} onChange={(e) => setPriceForm({ ...priceForm, effectiveDate: e.target.value })} />
                 <Input type="number" step="0.1" placeholder="KM" value={priceForm.distanceKm} onChange={(e) => setPriceForm({ ...priceForm, distanceKm: e.target.value })} />
-                <Input type="number" step="0.01" placeholder="Company Price" required value={priceForm.companyUnitPrice} onChange={(e) => setPriceForm({ ...priceForm, companyUnitPrice: e.target.value })} />
+                <Input type="number" step="0.001" placeholder="Company Price" required value={priceForm.companyUnitPrice} onChange={(e) => setPriceForm({ ...priceForm, companyUnitPrice: e.target.value })} />
                 <div className="flex gap-2">
                   <Button type="submit">{priceForm.id ? "Save Company Price" : "Add Company Price"}</Button>
                   {priceForm.id && (
@@ -1932,7 +1938,7 @@ function App() {
                           </div>
                           <div className="rounded-xl bg-teal-50 px-3 py-2 text-right">
                             <div className="text-[11px] font-black uppercase tracking-wide text-teal-700">Active Today</div>
-                            <div className="text-lg font-black text-teal-950">{group.activePrice ? `$ ${money(group.activePrice.companyUnitPrice)}` : "No active price"}</div>
+                            <div className="text-lg font-black text-teal-950">{group.activePrice ? `$ ${unitMoney(group.activePrice.companyUnitPrice)}` : "No active price"}</div>
                             {group.activePrice && <div className="text-xs font-bold text-teal-700">from {formatDate(priceEffectiveDate(group.activePrice))}</div>}
                           </div>
                         </div>
@@ -1943,7 +1949,7 @@ function App() {
                               <div key={price.id} className={`grid gap-3 border-b border-slate-100 p-3 last:border-b-0 md:grid-cols-[130px_1fr_auto] md:items-center ${isActive ? "bg-teal-50/70" : "bg-white"}`}>
                                 <div className="font-black text-slate-900">{formatDate(priceEffectiveDate(price))}</div>
                                 <div className="text-sm font-bold text-slate-600">
-                                  {Number(price.distanceKm || 0).toFixed(1)} KM | Company $ {money(price.companyUnitPrice)}
+                                  {Number(price.distanceKm || 0).toFixed(1)} KM | Company $ {unitMoney(price.companyUnitPrice)}
                                   {isActive && <span className="ml-2 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-black text-teal-800">Active</span>}
                                   {price.active === false && <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-black text-slate-500">Inactive</span>}
                                 </div>
@@ -1974,7 +1980,7 @@ function App() {
                 </Select>
                 <Input type="date" required value={driverPriceForm.effectiveDate || today()} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, effectiveDate: e.target.value })} />
                 <Input type="number" step="0.1" placeholder="KM" value={driverPriceForm.distanceKm} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, distanceKm: e.target.value })} />
-                <Input type="number" step="0.01" placeholder="Driver Price" required value={driverPriceForm.truckSalaryUnitPrice} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckSalaryUnitPrice: e.target.value })} />
+                <Input type="number" step="0.001" placeholder="Driver Price" required value={driverPriceForm.truckSalaryUnitPrice} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckSalaryUnitPrice: e.target.value })} />
                 <div className="flex gap-2">
                   <Button type="submit">{driverPriceForm.id ? "Save Driver Price" : "Add Driver Price"}</Button>
                   {driverPriceForm.id && (
@@ -2005,7 +2011,7 @@ function App() {
                           </div>
                           <div className="rounded-xl bg-amber-50 px-3 py-2 text-right">
                             <div className="text-[11px] font-black uppercase tracking-wide text-amber-700">Active Today</div>
-                            <div className="text-lg font-black text-amber-950">{group.activePrice ? `$ ${money(group.activePrice.truckSalaryUnitPrice)}` : "No active price"}</div>
+                            <div className="text-lg font-black text-amber-950">{group.activePrice ? `$ ${unitMoney(group.activePrice.truckSalaryUnitPrice)}` : "No active price"}</div>
                             {group.activePrice && <div className="text-xs font-bold text-amber-700">from {formatDate(priceEffectiveDate(group.activePrice))}</div>}
                           </div>
                         </div>
@@ -2016,7 +2022,7 @@ function App() {
                               <div key={price.id} className={`grid gap-3 border-b border-slate-100 p-3 last:border-b-0 md:grid-cols-[130px_1fr_auto] md:items-center ${isActive ? "bg-amber-50/70" : "bg-white"}`}>
                                 <div className="font-black text-slate-900">{formatDate(priceEffectiveDate(price))}</div>
                                 <div className="text-sm font-bold text-slate-600">
-                                  {Number(price.distanceKm || 0).toFixed(1)} KM | Driver $ {money(price.truckSalaryUnitPrice)}
+                                  {Number(price.distanceKm || 0).toFixed(1)} KM | Driver $ {unitMoney(price.truckSalaryUnitPrice)}
                                   {isActive && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-black text-amber-800">Active</span>}
                                   {price.active === false && <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-black text-slate-500">Inactive</span>}
                                 </div>

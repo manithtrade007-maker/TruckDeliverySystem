@@ -829,6 +829,13 @@ function money(value) {
   return Number(value || 0).toFixed(2);
 }
 
+function unitMoney(value) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number)) return "0.000";
+  const [whole, decimal = ""] = String(number).split(".");
+  return `${whole}.${decimal.slice(0, 3).padEnd(3, "0")}`;
+}
+
 function formatShortDate(value) {
   const text = normalizeText(value);
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -885,6 +892,8 @@ function rowsByPage(rows, pageSize = 30) {
 function formatExcelValue(value, column) {
   if (column.key === "rowNo") return value;
   if (column.type === "date") return formatShortDate(value);
+  if (column.type === "unitCurrency") return `$ ${unitMoney(value)}`;
+  if (column.type === "unitMoney") return `$ ${unitMoney(value)}`;
   if (column.type === "currency") return `$ ${money(value)}`;
   if (column.type === "money") return `$ ${money(value)}`;
   if (column.type === "qty") return `${Number(value || 0).toFixed(5)}T`;
@@ -1035,7 +1044,7 @@ function accountingExport(data, rows) {
       { key: "fromLocation", label: "From" },
       { key: "toLocation", label: "To" },
       { key: "qtyTon", label: "QTY(T)", type: "qty", align: "right" },
-      { key: "companyUnitPrice", label: "Unit Price", type: "currency", align: "right" },
+      { key: "companyUnitPrice", label: "Unit Price", type: "unitCurrency", align: "right" },
       { key: "companyTotalAmount", label: "Total Amount", type: "currency", align: "right" }
     ],
     ["qtyTon", "companyTotalAmount"],
@@ -1078,7 +1087,7 @@ function salaryExport(data, rows, query = {}) {
       { key: "fromLocation", label: "From" },
       { key: "toLocation", label: "To" },
       { key: "qtyTon", label: "QTY(T)", type: "qty", align: "right" },
-      { key: "truckSalaryUnitPrice", label: "Driver Price", type: "money", align: "right" },
+      { key: "truckSalaryUnitPrice", label: "Driver Price", type: "unitMoney", align: "right" },
       { key: "truckSalaryAmount", label: "Driver Amount", type: "money", align: "right" }
     ],
     ["qtyTon", "truckSalaryAmount"],
@@ -1335,7 +1344,7 @@ function statementPdf(data, rows) {
       from: row.fromLocation,
       to: row.toLocation,
       qty: `${Number(row.qtyTon || 0).toFixed(5)}T`,
-      unit: `$ ${money(row.companyUnitPrice)}`,
+      unit: `$ ${unitMoney(row.companyUnitPrice)}`,
       amount: `$ ${money(row.companyTotalAmount)}`
     })),
     totals: {

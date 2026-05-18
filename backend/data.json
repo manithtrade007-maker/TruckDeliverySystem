@@ -72,383 +72,229 @@
   ],
   "prices": [
     {
-      "id": "fbea1c41-12ec-437e-8c81-69496e505f07",
+      "id": "1b623044-c5a3-4a17-b2c5-0cd09e1f8d3b",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Ang Snuol (Kandal)",
+      "toLocation": "D.Ang Snuol (Kandal)",
       "truckType": "With Crane",
       "distanceKm": 32,
-      "companyUnitPrice": 15.7,
-      "truckSalaryUnitPrice": 11.07,
+      "companyUnitPrice": 11.4,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "a03e7c3a-4403-45eb-901b-e88581db9363",
+      "id": "3a43c67d-1867-495f-a190-f3e8c4ef73f7",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Angkor Borei (Takeo)",
+      "toLocation": "D.Angkor Borei (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 70,
       "companyUnitPrice": 14.35,
-      "truckSalaryUnitPrice": 13.77,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "0ab7c3d1-3b88-4d23-b84d-f74a02fd3b72",
+      "id": "8ab33a5e-5614-4e71-b550-914c18e7097c",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Baphnom (Prey Veng)",
+      "toLocation": "D.Baphnom (Prey Veng)",
       "truckType": "With Crane",
       "distanceKm": 88,
       "companyUnitPrice": 14.44,
-      "truckSalaryUnitPrice": 15.25,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "be34c0ae-37ef-436d-977e-07845c800c8f",
+      "id": "53372fa7-e4cf-4a30-92d7-dfe16c34b822",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Baset (K.Speu)",
+      "toLocation": "D.Baset (K.Speu)",
       "truckType": "With Crane",
       "distanceKm": 62,
       "companyUnitPrice": 13.78,
-      "truckSalaryUnitPrice": 14.01,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "666e7248-b62d-4490-ab68-5b94fbbbef9f",
+      "id": "5d610a1b-1738-4951-bd9c-82245cec1749",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Batheay (K.Cham)",
+      "toLocation": "D.Batheay (K.Cham)",
       "truckType": "With Crane",
       "distanceKm": 81,
       "companyUnitPrice": 14.73,
-      "truckSalaryUnitPrice": 15.53,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "560a746c-fd18-4cf7-b318-771cd4da705f",
+      "id": "48a15744-6ca8-40b1-ae07-8094b66949df",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Bati (Takeo)",
+      "toLocation": "D.Bati (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 23,
       "companyUnitPrice": 9.41,
-      "truckSalaryUnitPrice": 9.08,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "313f3296-6d91-41df-9ae6-d97395c54efd",
+      "id": "6cc88955-bc49-4d3f-ad02-d1adf1088c15",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Borei Chulsar (Takeo)",
+      "toLocation": "D.Borei Chulsar (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 96,
       "companyUnitPrice": 17.1,
-      "truckSalaryUnitPrice": 17,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "3311e8c6-0f8a-431b-9ea2-57bc17e7821e",
+      "id": "640a2bd4-40d0-447e-924b-343454bc91ff",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Chbar Morn (K.Speu)",
+      "toLocation": "D.Chbar Morn (K.Speu)",
       "truckType": "With Crane",
       "distanceKm": 52,
       "companyUnitPrice": 12.35,
-      "truckSalaryUnitPrice": 12.4,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "f6f0c8b8-fb4b-4f59-816b-042e1167f6f4",
+      "id": "a51d2d1e-7086-4cd9-bbf2-fbe7815295bc",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Daun Keo (Takeo)",
+      "toLocation": "D.Daun Keo (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 56,
       "companyUnitPrice": 12.64,
-      "truckSalaryUnitPrice": 12.78,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "530121b8-ee85-4647-881e-e8a39255e070",
+      "id": "aa5b5377-ab27-4c8e-b4ce-51d1eabb4f17",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kamchay Mea (Prey Veng)",
+      "toLocation": "D.Kamchay Mea (Prey Veng)",
       "truckType": "With Crane",
       "distanceKm": 145,
       "companyUnitPrice": 16.53,
-      "truckSalaryUnitPrice": 18.78,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "33e98dfa-a0ae-476b-bed1-1bbffd32b12a",
+      "id": "edf4e2d3-e273-436e-9c50-84a8bb8a6be2",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Siem (K.Cham)",
+      "toLocation": "D.Kampong Siem (K.Cham)",
       "truckType": "With Crane",
       "distanceKm": 135,
       "companyUnitPrice": 17.67,
-      "truckSalaryUnitPrice": 18.71,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "b9f722bf-49c2-45d8-a55a-16d382dd700e",
+      "id": "534e6e3c-5ad8-49a5-8c37-5ae91521d8ed",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Trabek (Prey Veng)",
+      "toLocation": "D.Kampong Trabek (Prey Veng)",
       "truckType": "With Crane",
       "distanceKm": 96,
       "companyUnitPrice": 14.82,
-      "truckSalaryUnitPrice": 16.02,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "d4d5ff11-04de-499a-89f7-878c4ec19372",
+      "id": "30291474-e36c-4841-bc36-8ad84e78d445",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Tralach (K.Chhnang)",
+      "toLocation": "D.Kampong Tralach (K.Chhnang)",
       "truckType": "With Crane",
       "distanceKm": 89,
       "companyUnitPrice": 16.15,
-      "truckSalaryUnitPrice": 15.58,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "7b1577a2-3352-43e3-bf96-30f1fc05ee42",
+      "id": "f354131a-386f-4e67-9871-4bf2e19b601e",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kandal Stueng (Kandal)",
+      "toLocation": "D.Kandal Stueng (Kandal)",
       "truckType": "With Crane",
       "distanceKm": 8,
       "companyUnitPrice": 7.6,
-      "truckSalaryUnitPrice": 7.14,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "edb42e6b-dc6c-415f-840a-f9f8dcb58c63",
+      "id": "acaa45d5-c278-47c8-930d-b20b83535922",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kanh Chreach (Prey Veng)",
+      "toLocation": "D.Kanh Chreach (Prey Veng)",
       "truckType": "With Crane",
       "distanceKm": 132,
       "companyUnitPrice": 16.15,
-      "truckSalaryUnitPrice": 16.81,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "e43fda2a-459d-45a7-8f9c-c283335d521c",
+      "id": "d8174a3a-ba13-4ffc-b4c3-6fea1a790d6d",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan 7 Makara (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 21,
-      "companyUnitPrice": 9.22,
-      "truckSalaryUnitPrice": 8.9,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "af2aa14a-92b6-4abf-b91f-7d8d78e4be90",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Boeng Keng Kong (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 18,
-      "companyUnitPrice": 9.12,
-      "truckSalaryUnitPrice": 8.71,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "7ff70342-f5c4-4d51-9e8b-55939e93b77f",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chamkar Morn (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 18,
-      "companyUnitPrice": 9.12,
-      "truckSalaryUnitPrice": 8.71,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "09f1ffd0-dc8c-4296-8f3d-666a8a6a4499",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chba Ampeou (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 20,
-      "companyUnitPrice": 8.36,
-      "truckSalaryUnitPrice": 7.95,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "198ca2f4-aca5-41e0-9a80-14c3314a7148",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chroy Changvar (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 49,
-      "companyUnitPrice": 13.02,
-      "truckSalaryUnitPrice": 12.48,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "512d1030-e4c7-491d-8366-f0305267c719",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 9,
-      "companyUnitPrice": 7.51,
-      "truckSalaryUnitPrice": 7,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "fba47081-036f-46fa-89b3-690abadfe8ab",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Doun Penh (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 21,
-      "companyUnitPrice": 9.22,
-      "truckSalaryUnitPrice": 8.9,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "f0b7f96c-ccd3-4bcc-8612-d220c4cacd95",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Kambol (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 19,
-      "companyUnitPrice": 9.69,
-      "truckSalaryUnitPrice": 9.28,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "be5f0406-23ee-4bf8-a6ed-50223eeac3a9",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 14,
-      "companyUnitPrice": 7.89,
-      "truckSalaryUnitPrice": 7.38,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "01455f5c-4c68-48a5-8434-2c7b78fcb1f5",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 29,
-      "companyUnitPrice": 9.79,
-      "truckSalaryUnitPrice": 9.46,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "192d46d8-34f8-4f5f-9ac9-f17a1b66f4cd",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Prek Phnov (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 30,
-      "companyUnitPrice": 11.78,
-      "truckSalaryUnitPrice": 11.46,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "a1b94c43-68ec-4b62-bc35-cd379ae9fd7c",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Russei Keo (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 24,
-      "companyUnitPrice": 9.5,
-      "truckSalaryUnitPrice": 9.18,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "c3e41e89-5869-4b22-b651-bb64d9102a5c",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 24,
-      "companyUnitPrice": 9.5,
-      "truckSalaryUnitPrice": 9.18,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "7b1af3d6-f38d-4b4a-83f8-827b08522c0e",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Tuol Kouk (PP)",
-      "truckType": "With Crane",
-      "distanceKm": 18,
-      "companyUnitPrice": 9.22,
-      "truckSalaryUnitPrice": 8.8,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "1a322a27-1e53-4160-9fb8-df3119fd57d3",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khsach Kandal (Kandal)",
+      "toLocation": "D.Khsach Kandal (Kandal)",
       "truckType": "With Crane",
       "distanceKm": 50,
       "companyUnitPrice": 12.26,
-      "truckSalaryUnitPrice": 12.3,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "08dd3b6b-f5a8-4b16-81ea-cedb2f5d22ed",
+      "id": "81c1e8aa-c74d-4250-89a6-6754ebd2cabf",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kien Svay (Kandal)",
+      "toLocation": "D.Kien Svay (Kandal)",
       "truckType": "With Crane",
       "distanceKm": 27,
       "companyUnitPrice": 9.69,
-      "truckSalaryUnitPrice": 9.36,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "b512d2e6-be6b-46c5-9ef0-019c9153d3b8",
+      "id": "0ae8abef-24b7-4496-a8dd-fa4ea523435e",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kirivong (Takeo)",
+      "toLocation": "D.Kirivong (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 97,
       "companyUnitPrice": 17.01,
-      "truckSalaryUnitPrice": 17,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "3395d9c8-0824-475d-8945-121cb8a0b5ac",
+      "id": "dd8025e7-524b-4a41-be6f-d5ba69b59f98",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Andet (Takeo)",
+      "toLocation": "D.Koh Andet (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 92,
       "companyUnitPrice": 16.91,
-      "truckSalaryUnitPrice": 15.81,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "edb00135-2e55-4463-8203-785d83e340bb",
+      "id": "4e476082-d093-4289-a5b8-182af2da9a2e",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Thom (Kandal)",
+      "toLocation": "D.Koh Thom (Kandal)",
       "truckType": "With Crane",
       "distanceKm": 54,
       "companyUnitPrice": 12.73,
-      "truckSalaryUnitPrice": 12.78,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "7525cdc2-6a36-42f5-8117-f7712e84dd8c",
+      "id": "c92792f3-d941-4e2b-a961-7640dd2e7d16",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kompong Ro (Svay Rieng)",
+      "toLocation": "D.Kompong Ro (S.Rieng)",
       "truckType": "With Crane",
       "distanceKm": 158,
       "companyUnitPrice": 17.1,
@@ -457,174 +303,174 @@
       "active": true
     },
     {
-      "id": "dee4021e-88ed-451e-9dc5-22e0bf058310",
+      "id": "7db1e866-40b0-4834-b786-1d23ad40b7e3",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kong Pisei (K.Speu)",
+      "toLocation": "D.Kong Pisei (K.Speu)",
       "truckType": "With Crane",
       "distanceKm": 43,
       "companyUnitPrice": 12.83,
-      "truckSalaryUnitPrice": 12.68,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "d4d29fae-c887-4462-b400-d7e3426a3532",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Leukdek (Kandal)",
-      "truckType": "With Crane",
-      "distanceKm": 79,
-      "companyUnitPrice": 14.82,
-      "truckSalaryUnitPrice": 14.44,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "09ced851-12f3-46ec-9525-f16602176407",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Lvea Em (Kandal)",
-      "truckType": "With Crane",
-      "distanceKm": 83,
-      "companyUnitPrice": 15.11,
-      "truckSalaryUnitPrice": 14.82,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "cc8ffc84-709c-4614-adb7-f373631023fe",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Mesang (Prey Veng)",
-      "truckType": "With Crane",
-      "distanceKm": 113,
-      "companyUnitPrice": 15.49,
-      "truckSalaryUnitPrice": 17.07,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "560e742d-9179-4dba-a35e-1a734676bbf7",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Muk Kampoul (Kandal)",
-      "truckType": "With Crane",
-      "distanceKm": 47,
-      "companyUnitPrice": 12.16,
-      "truckSalaryUnitPrice": 12.11,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "14cf3a90-5079-4386-a8da-3b925a6c7d2e",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Oudong (K.Speu)",
-      "truckType": "With Crane",
-      "distanceKm": 57,
-      "companyUnitPrice": 12.83,
-      "truckSalaryUnitPrice": 12.47,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "fa85cdc5-a06a-498b-b4e3-49e96518a3ec",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Pea Reang (Prey Veng)",
-      "truckType": "With Crane",
-      "distanceKm": 82,
-      "companyUnitPrice": 14.92,
-      "truckSalaryUnitPrice": 14.53,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "452bde9f-9f33-4a2f-b642-85b4a829b43e",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Peam Chor (Prey Veng)",
-      "truckType": "With Crane",
-      "distanceKm": 91,
-      "companyUnitPrice": 14.73,
-      "truckSalaryUnitPrice": 15.53,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "e882d090-ec31-45de-ba0d-919c3db9de45",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Peam Ro (Prey Veng)",
-      "truckType": "With Crane",
-      "distanceKm": 79,
-      "companyUnitPrice": 14.16,
-      "truckSalaryUnitPrice": 14.77,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "9fe3f099-c8cc-4e3b-8869-cf6a16fbaee4",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Po Rieng (Prey Veng)",
-      "truckType": "With Crane",
-      "distanceKm": 106,
-      "companyUnitPrice": 15.11,
-      "truckSalaryUnitPrice": 16.29,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "8967fed8-ace4-4eb3-8c24-efe2ddf07cf0",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Ponhea Leu (Kandal)",
-      "truckType": "With Crane",
-      "distanceKm": 53,
-      "companyUnitPrice": 12.64,
-      "truckSalaryUnitPrice": 12.18,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "72aea6e0-af15-44e8-92ab-022462735d7e",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Preah Sdach (Prey Veng)",
-      "truckType": "With Crane",
-      "distanceKm": 96,
-      "companyUnitPrice": 14.82,
-      "truckSalaryUnitPrice": 14.72,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "7594d8c3-2ebf-4b46-8c30-f2fa96ec6669",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Prey Kabas (Takeo)",
-      "truckType": "With Crane",
-      "distanceKm": 52,
-      "companyUnitPrice": 10.93,
-      "truckSalaryUnitPrice": 10.77,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "f35ac7b2-ed8e-4041-b17f-e9f2ce986c3b",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Prey Veng (Prey Veng)",
-      "truckType": "With Crane",
-      "distanceKm": 102,
-      "companyUnitPrice": 17.67,
-      "truckSalaryUnitPrice": 17.76,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "570d4cd7-9756-4f4f-a65b-779f09591512",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Romeas Hek (Svay Rieng)",
-      "truckType": "With Crane",
-      "distanceKm": 153,
-      "companyUnitPrice": 16.815,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "60cc2046-47d4-4921-8e74-c17f3ae997b7",
+      "id": "e6c9d706-9bbb-49b4-9050-7b1f4bce2ff6",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Rum Duol (Svay Rieng)",
+      "toLocation": "D.Leukdek (Kandal)",
+      "truckType": "With Crane",
+      "distanceKm": 79,
+      "companyUnitPrice": 14.82,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "6df1f3e2-0a64-450a-b79d-26777d0f2ebf",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Lvea Em (Kandal)",
+      "truckType": "With Crane",
+      "distanceKm": 83,
+      "companyUnitPrice": 15.11,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "d8fc5255-c956-442e-a905-c33adab6cb01",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Mesang (Prey Veng)",
+      "truckType": "With Crane",
+      "distanceKm": 113,
+      "companyUnitPrice": 15.49,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "d42cbede-0663-445e-9d17-2cf8bc9aefcb",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Muk Kampoul (Kandal)",
+      "truckType": "With Crane",
+      "distanceKm": 47,
+      "companyUnitPrice": 12.16,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "375e76c9-dc12-4f63-b1f5-d02927c091e9",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Oudong (K.Speu)",
+      "truckType": "With Crane",
+      "distanceKm": 57,
+      "companyUnitPrice": 12.83,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "0e37b9fb-adb1-439f-9d71-855a272654e2",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Pea Reang (Prey Veng)",
+      "truckType": "With Crane",
+      "distanceKm": 82,
+      "companyUnitPrice": 14.92,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "f1bdde79-6062-4b42-ad50-e802d499366a",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Peam Chor (Prey Veng)",
+      "truckType": "With Crane",
+      "distanceKm": 91,
+      "companyUnitPrice": 14.73,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "cde056c5-1b84-44ad-8363-ac21cf3b1656",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Peam Ro (Prey Veng)",
+      "truckType": "With Crane",
+      "distanceKm": 79,
+      "companyUnitPrice": 14.16,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "9eb777d3-e3af-4eaf-81ce-e82cdad6d46d",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Po Rieng (Prey Veng)",
+      "truckType": "With Crane",
+      "distanceKm": 106,
+      "companyUnitPrice": 15.11,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "1246d49a-9183-438e-8d4c-57be7c4a8419",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Ponhea Leu (Kandal)",
+      "truckType": "With Crane",
+      "distanceKm": 53,
+      "companyUnitPrice": 12.64,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "e2fca738-c6df-46aa-a1b5-0064864f7c89",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Preah Sdach (Prey Veng)",
+      "truckType": "With Crane",
+      "distanceKm": 96,
+      "companyUnitPrice": 14.82,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "a1a310f8-d89d-481e-8057-d02f6d677752",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Prey Kabas (Takeo)",
+      "truckType": "With Crane",
+      "distanceKm": 52,
+      "companyUnitPrice": 10.93,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "5deafa04-b432-4678-82a0-fcadd1eaed52",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Prey Veng (Prey Veng)",
+      "truckType": "With Crane",
+      "distanceKm": 102,
+      "companyUnitPrice": 17.67,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "42515070-e226-44b2-b58d-3b87508239f3",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Romeas Hek (S.Rieng)",
+      "truckType": "With Crane",
+      "distanceKm": 153,
+      "companyUnitPrice": 16.82,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "613f1689-6105-40c0-9ace-87e9ff673ca2",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Rum Duol (S.Rieng)",
       "truckType": "With Crane",
       "distanceKm": 149,
       "companyUnitPrice": 16.72,
@@ -633,64 +479,64 @@
       "active": true
     },
     {
-      "id": "354dc379-28b1-43d8-b31f-37fb925b7d56",
+      "id": "c683361f-193d-4120-a32d-4184e78eb1a2",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Saang (Kandal)",
+      "toLocation": "D.Saang (Kandal)",
       "truckType": "With Crane",
       "distanceKm": 25,
       "companyUnitPrice": 10.07,
-      "truckSalaryUnitPrice": 9.85,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "082a861b-0e03-474b-927e-b0af962aa662",
+      "id": "79c9c73b-c7bc-40fa-8060-d08aa9ef39b9",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Samrong (Takeo)",
+      "toLocation": "D.Samrong (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 38,
       "companyUnitPrice": 11.59,
-      "truckSalaryUnitPrice": 11.35,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "1033edbb-5c4b-426d-9133-1bf3cc4a3268",
+      "id": "1894676a-e57f-4ff3-a5b7-3131d07ec5e5",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Samrong Torng (K.Speu)",
+      "toLocation": "D.Samrong Torng (K.Speu)",
       "truckType": "With Crane",
       "distanceKm": 60,
       "companyUnitPrice": 12.73,
-      "truckSalaryUnitPrice": 12.97,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "ade3c451-66eb-480d-877a-f2a7d973d4a0",
+      "id": "f415b018-de6b-4f38-8539-e72ae1e48850",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Sithor Kandal (Prey Veng)",
+      "toLocation": "D.Sithor Kandal (Prey Veng)",
       "truckType": "With Crane",
       "distanceKm": 112,
       "companyUnitPrice": 15.49,
-      "truckSalaryUnitPrice": 15.77,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "020a4d40-b196-4699-8ca6-93d0f43e2446",
+      "id": "79ced5a4-53d3-439c-adc6-ead3a1176065",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Svay Antor (Prey Veng)",
+      "toLocation": "D.Svay Antor (Prey Veng)",
       "truckType": "With Crane",
       "distanceKm": 116,
       "companyUnitPrice": 15.87,
-      "truckSalaryUnitPrice": 15.74,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "3ff70181-cf63-495d-8942-847df23640f0",
+      "id": "9d31f4d4-7c05-403a-97db-a4fc6959b2e0",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Svay Chrum (Svay Rieng)",
+      "toLocation": "D.Svay Chrum (S.Rieng)",
       "truckType": "With Crane",
       "distanceKm": 120,
       "companyUnitPrice": 15.77,
@@ -699,20 +545,20 @@
       "active": true
     },
     {
-      "id": "crane-company-41-base",
+      "id": "39104dad-b76c-4a03-ab23-c5aa63abe427",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Svay Rieng (S.Rieng)",
+      "toLocation": "D.Svay Rieng (S.Rieng)",
       "truckType": "With Crane",
       "distanceKm": 131,
-      "companyUnitPrice": 18.72,
-      "truckSalaryUnitPrice": 16.72,
+      "companyUnitPrice": 16.06,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "aff74c97-a1d9-4b07-b783-2500df5f4f01",
+      "id": "16396ce4-d53b-4240-a35d-35c95d0949a0",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Svay Tiep (Svay Rieng)",
+      "toLocation": "D.Svay Tiep (S.Rieng)",
       "truckType": "With Crane",
       "distanceKm": 158,
       "companyUnitPrice": 17.1,
@@ -721,251 +567,207 @@
       "active": true
     },
     {
-      "id": "198fa4e6-0fc6-4b60-988d-4a938761c0e1",
+      "id": "a93e33a1-6d1e-4f6f-aa77-ee46d4236a02",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Takhmao (Kandal)",
+      "toLocation": "D.Takhmao (Kandal)",
       "truckType": "With Crane",
       "distanceKm": 11,
       "companyUnitPrice": 7.41,
-      "truckSalaryUnitPrice": 7,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "5acad33b-a6fd-44e4-b54c-30b5cb2d2979",
+      "id": "2265306a-b394-482f-80dc-616dea1d7cec",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Thpong (K.Speu)",
+      "toLocation": "D.Thpong (K.Speu)",
       "truckType": "With Crane",
       "distanceKm": 93,
       "companyUnitPrice": 15.49,
-      "truckSalaryUnitPrice": 15.89,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "a3ce8759-64dc-4bf3-8482-46fd245b0231",
+      "id": "cdfa3d1a-270d-45e8-98cc-8f380fedaaf3",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Tram Kak (Takeo)",
+      "toLocation": "D.Tram Kak (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 77,
       "companyUnitPrice": 13.87,
-      "truckSalaryUnitPrice": 13.89,
+      "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "dd2076c2-f20a-4020-b726-035f3eb6bf27",
+      "id": "b8794b38-4c9d-4b96-a223-06a0ce4b99ca",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Treang (Takeo)",
+      "toLocation": "D.Treang (Takeo)",
       "truckType": "With Crane",
       "distanceKm": 64,
       "companyUnitPrice": 13.02,
-      "truckSalaryUnitPrice": 13.35,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "5a655b6c-133f-43e8-969d-75a7659c2f46",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Ang Snuol (Kandal)",
-      "truckType": "Without Crane",
-      "distanceKm": 32,
-      "companyUnitPrice": 12.73,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "3872ee16-12a7-440c-a118-87c9e91d0a81",
+      "id": "06aedafd-277d-4491-a943-6d3293028de3",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Angkor Borei (Takeo)",
-      "truckType": "Without Crane",
-      "distanceKm": 70,
-      "companyUnitPrice": 15.96,
+      "toLocation": "KH. Boeng Keng Kong (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 18,
+      "companyUnitPrice": 9.12,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "b92e70eb-fa47-447c-a05f-3fa24b538ffb",
+      "id": "3006bfbd-b5d5-4447-9aba-4d06dc216f72",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Angkor Chey (Kampot)",
-      "truckType": "Without Crane",
-      "distanceKm": 91,
-      "companyUnitPrice": 15.96,
+      "toLocation": "KH.7 Makara (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 21,
+      "companyUnitPrice": 9.22,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "07ad880a-a312-4ab8-9967-70d6f95785b9",
+      "id": "02cf16a2-c653-405b-9617-4aeab8674457",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Banteay Meas (Kampot)",
-      "truckType": "Without Crane",
-      "distanceKm": 106,
-      "companyUnitPrice": 16.53,
+      "toLocation": "KH.Chamkar Morn (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 18,
+      "companyUnitPrice": 9.12,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "aee2bef4-0daf-41de-83c0-baab4dcc1682",
+      "id": "593763a6-fea6-43fe-bc05-c1f6fbc37535",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Baphnom (Prey Veng)",
-      "truckType": "Without Crane",
-      "distanceKm": 88,
-      "companyUnitPrice": 14.25,
+      "toLocation": "KH.Chba Ampeou (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 20,
+      "companyUnitPrice": 8.36,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "a28e7147-7f04-44de-94b3-7fcd675b0e7a",
+      "id": "6a7ee067-ec91-4010-8435-7abece200594",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Baset (K.Speu)",
-      "truckType": "Without Crane",
-      "distanceKm": 62,
-      "companyUnitPrice": 15.3,
+      "toLocation": "KH.Chroy Changvar (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 49,
+      "companyUnitPrice": 13.02,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "df6a9ca6-ec95-40af-af46-9141cd79fd7d",
+      "id": "5d5c9c7b-f660-4b7c-b70c-4d6922bfdd49",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Batheay (K.Cham)",
-      "truckType": "Without Crane",
-      "distanceKm": 81,
-      "companyUnitPrice": 15.58,
+      "toLocation": "KH.Dangkao (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 9,
+      "companyUnitPrice": 7.51,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "ab707b4d-4689-492f-b4b9-00b955e41ad4",
+      "id": "16e7d5ae-0ded-42c1-a5f2-656d35fd23b0",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Bati (Takeo)",
-      "truckType": "Without Crane",
-      "distanceKm": 23,
-      "companyUnitPrice": 10.55,
+      "toLocation": "KH.Doun Penh (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 21,
+      "companyUnitPrice": 9.22,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "df36d088-7e7a-4e55-ac7e-4c926f15910c",
+      "id": "17723221-e200-4c75-a9f5-62879224a95b",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Bavet (Svay Rieng)",
-      "truckType": "Without Crane",
-      "distanceKm": 100,
-      "companyUnitPrice": 14.25,
+      "toLocation": "KH.Kambol (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 19,
+      "companyUnitPrice": 9.69,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "e5b6efda-20ec-4100-8d9f-9e478342b775",
+      "id": "a8c9257e-ceec-459b-aa3b-cbc3b4869270",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Borei Chulsar (Takeo)",
-      "truckType": "Without Crane",
-      "distanceKm": 96,
-      "companyUnitPrice": 17.96,
+      "toLocation": "KH.Mean Chey (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 14,
+      "companyUnitPrice": 7.89,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "ef4a5a10-a81a-47f0-aab7-9f48ff128938",
+      "id": "156fdf68-ec30-43bf-b8f1-76ec8ae5542d",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Boribo (K.Chhnang)",
-      "truckType": "Without Crane",
-      "distanceKm": 142,
-      "companyUnitPrice": 17.96,
+      "toLocation": "KH.Posenchey (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 29,
+      "companyUnitPrice": 9.79,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "be1cc96f-c714-4d79-adcd-ac1241cc8489",
+      "id": "56f6cc4c-b79a-4f86-8c3c-f6679673aa0d",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Chamkar Leu (K.Cham)",
-      "truckType": "Without Crane",
-      "distanceKm": 156,
-      "companyUnitPrice": 18.53,
+      "toLocation": "KH.Prek Phnov (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 30,
+      "companyUnitPrice": 11.78,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "663f70ae-fe53-4cb8-89ce-ee90ed9691e6",
+      "id": "535e2e36-a12c-4ea8-a443-e1e9d24dfb96",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Chantrea (Svay Rieng)",
-      "truckType": "Without Crane",
-      "distanceKm": 100,
-      "companyUnitPrice": 14.25,
+      "toLocation": "KH.Russei Keo (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 24,
+      "companyUnitPrice": 9.5,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "624f8ab4-6e70-48eb-a0f5-cf95e112a434",
+      "id": "53b09605-fc0d-43a2-b859-00063dfc940d",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Chbar Morn (K.Speu)",
-      "truckType": "Without Crane",
-      "distanceKm": 52,
-      "companyUnitPrice": 13.78,
+      "toLocation": "KH.Sen Sok (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 24,
+      "companyUnitPrice": 9.5,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "no-crane-company-89",
+      "id": "34a668e1-24d4-420b-afd5-20e7478528ec",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Cheung Prey (K.Cham)",
-      "truckType": "Without Crane",
-      "distanceKm": 107,
-      "companyUnitPrice": 18.34,
+      "toLocation": "KH.Tuol Kouk (PP)",
+      "truckType": "With Crane",
+      "distanceKm": 18,
+      "companyUnitPrice": 9.22,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "027cd175-d05d-489b-8601-3b1fab687dbd",
+      "id": "b32e333d-cd2f-4231-929e-88b39c3482d8",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Chhouk (Kampot)",
-      "truckType": "Without Crane",
-      "distanceKm": 94,
-      "companyUnitPrice": 16.15,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "d9195fa5-0400-4bae-8999-240858ea1246",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Chulkiri (K.Chhnang)",
-      "truckType": "Without Crane",
-      "distanceKm": 115,
-      "companyUnitPrice": 16.82,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "5499de87-f666-4717-a100-a0301e4ba238",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Chumkiri (Kampot)",
-      "truckType": "Without Crane",
-      "distanceKm": 107,
-      "companyUnitPrice": 16.63,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "d20c64a5-d5db-478b-90bf-bf65df7cffdc",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Damnak Changoer (Kep)",
+      "toLocation": "D. Damnak Changoer (Kep)",
       "truckType": "Without Crane",
       "distanceKm": 137,
       "companyUnitPrice": 17.77,
@@ -974,152 +776,9 @@
       "active": true
     },
     {
-      "id": "ed35968b-40a4-4c94-9a4f-fd18beec60e6",
+      "id": "532d2e4f-1b04-485c-8b6e-4db3852b2df6",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Daun Keo (Takeo)",
-      "truckType": "Without Crane",
-      "distanceKm": 56,
-      "companyUnitPrice": 14.06,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "ab398500-5a92-4282-9753-73e817edb231",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Dong Tung (Kampot)",
-      "truckType": "Without Crane",
-      "distanceKm": 110,
-      "companyUnitPrice": 16.72,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "df9cb6f0-f000-415c-b05d-e89a9335a674",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kamchay Mea (Prey Veng)",
-      "truckType": "Without Crane",
-      "distanceKm": 145,
-      "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "82e1cafd-05a5-4581-8996-cee858b95565",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Chhnang (K.Chhnang)",
-      "truckType": "Without Crane",
-      "distanceKm": 109,
-      "companyUnitPrice": 16.63,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "0107dfcf-bf11-48d2-89b2-755f3d7b77bc",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Leng (K.Chhnang)",
-      "truckType": "Without Crane",
-      "distanceKm": 231,
-      "companyUnitPrice": 21.57,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "c3883a43-6e17-40ae-ba98-bc27665a1c18",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Siem (K.Cham)",
-      "truckType": "Without Crane",
-      "distanceKm": 135,
-      "companyUnitPrice": 16.15,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "c90305bc-c8ff-46e3-8f6e-3d97f56efc6b",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Trabek (Prey Veng)",
-      "truckType": "Without Crane",
-      "distanceKm": 96,
-      "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "c39c520f-2855-48db-964f-aeb4285282a1",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Trach (Kampot)",
-      "truckType": "Without Crane",
-      "distanceKm": 124,
-      "companyUnitPrice": 17.2,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "262c6614-12df-46ce-b89b-c3f6d9f2df24",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kampong Tralach (K.Chhnang)",
-      "truckType": "Without Crane",
-      "distanceKm": 89,
-      "companyUnitPrice": 15.96,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "52904de4-ee05-43f7-bcb2-7aa45ada9d91",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kampot (Kampot)",
-      "truckType": "Without Crane",
-      "distanceKm": 137,
-      "companyUnitPrice": 17.765,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-17",
-      "active": true
-    },
-    {
-      "id": "9004e052-54d5-4867-9e73-6751f379b1f8",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kandal Stueng (Kandal)",
-      "truckType": "Without Crane",
-      "distanceKm": 8,
-      "companyUnitPrice": 8.65,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "3ef5c239-3367-44bd-9f09-84791c30595a",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kang Meas (K.Cham)",
-      "truckType": "Without Crane",
-      "distanceKm": 160,
-      "companyUnitPrice": 18.72,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "4e235e74-3a81-482d-9b43-04210b981c96",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kanh Chreach (Prey Veng)",
-      "truckType": "Without Crane",
-      "distanceKm": 132,
-      "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "d0012f0c-648d-46c1-9cfb-15b787d2dc5b",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kep (Kep)",
+      "toLocation": "D. Kep (Kep)",
       "truckType": "Without Crane",
       "distanceKm": 151,
       "companyUnitPrice": 18.34,
@@ -1128,383 +787,273 @@
       "active": true
     },
     {
-      "id": "b1f151fd-cd9b-451c-a362-5dc573634759",
+      "id": "7f9fe833-96e6-472d-940e-3e705be3d441",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan 7 Makara (PP)",
+      "toLocation": "D.Ang Snuol (Kandal)",
       "truckType": "Without Crane",
-      "distanceKm": 21,
-      "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "cacb0b76-7b3a-420f-8848-457dcd4b4297",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Boeng Keng Kong (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 18,
-      "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "c943e29b-8a70-4aa3-8de5-3995e7a6cd6e",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chamkar Morn (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 18,
-      "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "8d1447af-b471-4f96-86cd-213864791d44",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chba Ampeou (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 20,
-      "companyUnitPrice": 9.31,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "6d0e7497-6a74-4e50-90dc-81ad6c9a28ec",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chroy Changvar (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 49,
-      "companyUnitPrice": 13.97,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "6ff061eb-2229-4c95-87d6-bf648c46c4d6",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 9,
-      "companyUnitPrice": 8.46,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "4c565158-854f-467e-93ca-ca08e58442e8",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Doun Penh (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 21,
-      "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "74d29717-6b10-4150-993c-519a7b2b39d9",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Kambol (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 19,
-      "companyUnitPrice": 10.64,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "c67028c5-9b07-4b95-869c-9ec13f38cf5d",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 14,
-      "companyUnitPrice": 8.84,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "9ba2cb59-e740-4f9a-ad12-d6272766a097",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 29,
-      "companyUnitPrice": 10.74,
-      "truckSalaryUnitPrice": 8.5,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "0dfc3966-a098-46ec-97e5-7d764485ca41",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Prek Phnov (PP)",
-      "truckType": "Without Crane",
-      "distanceKm": 30,
+      "distanceKm": 32,
       "companyUnitPrice": 12.73,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "d048a212-4455-4a25-a336-77cd2aaafaf0",
+      "id": "029ea48d-3e32-4d19-a097-aecf520e9c32",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Russei Keo (PP)",
+      "toLocation": "D.Angkor Borei (Takeo)",
       "truckType": "Without Crane",
-      "distanceKm": 24,
-      "companyUnitPrice": 10.45,
+      "distanceKm": 70,
+      "companyUnitPrice": 15.96,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "c8217274-b509-48d4-9ad7-9ccc256c3ac3",
+      "id": "dfc4fe05-ad4f-4fd6-a1f3-799ac4209ea1",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "D.Angkor Chey (Kampot)",
       "truckType": "Without Crane",
-      "distanceKm": 24,
-      "companyUnitPrice": 10.45,
+      "distanceKm": 91,
+      "companyUnitPrice": 15.96,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "b7c43c01-39c0-4b8c-9a66-972b9f13f8fc",
+      "id": "ec244c4b-2d6c-432c-bdf5-1cf9dc5632f1",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Tuol Kouk (PP)",
+      "toLocation": "D.Banteay Meas (Kampot)",
       "truckType": "Without Crane",
-      "distanceKm": 18,
-      "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "31a0eb4d-2fba-42b0-903b-9f3f96875492",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Khsach Kandal (Kandal)",
-      "truckType": "Without Crane",
-      "distanceKm": 50,
-      "companyUnitPrice": 13.78,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "1d1b2e15-b5b1-4b41-8824-b8ed604964d6",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kien Svay (Kandal)",
-      "truckType": "Without Crane",
-      "distanceKm": 27,
-      "companyUnitPrice": 10.93,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "96d7dd4d-4c5d-4240-9002-0408e0887a37",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kirirom (K.Speu)",
-      "truckType": "Without Crane",
-      "distanceKm": 99,
-      "companyUnitPrice": 18.15,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "dd9ecb8d-8a77-45a3-8368-42398194ab80",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kirivong (Takeo)",
-      "truckType": "Without Crane",
-      "distanceKm": 97,
-      "companyUnitPrice": 18.05,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "b155fa95-61d6-4a46-add2-8958325ebd66",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Andet (Takeo)",
-      "truckType": "Without Crane",
-      "distanceKm": 92,
-      "companyUnitPrice": 17.77,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "e0c6d9c9-a73e-40f0-91fc-e18cb6507a08",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Thom (Kandal)",
-      "truckType": "Without Crane",
-      "distanceKm": 54,
-      "companyUnitPrice": 14.16,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "15dff29c-3ef5-460c-8e3a-586cb0ac00e4",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kompong Ro (Svay Rieng)",
-      "truckType": "Without Crane",
-      "distanceKm": 100,
-      "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "3d130c68-a9b3-4bb8-9c6b-b0fe7061f123",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Kong Pisei (K.Speu)",
-      "truckType": "Without Crane",
-      "distanceKm": 43,
-      "companyUnitPrice": 14.16,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "639d79db-266b-4e18-bbf8-bfa094b01aab",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Leukdek (Kandal)",
-      "truckType": "Without Crane",
-      "distanceKm": 79,
+      "distanceKm": 106,
       "companyUnitPrice": 16.53,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "4a5c45aa-185f-4841-9a09-4f2d06c89bb1",
+      "id": "28e049e2-e7f4-4ead-97e1-3597b9945922",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Lvea Em (Kandal)",
+      "toLocation": "D.Baphnom (Prey Veng)",
       "truckType": "Without Crane",
-      "distanceKm": 83,
-      "companyUnitPrice": 16.91,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "e2c521ff-08dc-47e5-84f9-61ec108d5129",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Mesang (Prey Veng)",
-      "truckType": "Without Crane",
-      "distanceKm": 113,
+      "distanceKm": 88,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "66f2e8e0-9e78-4d33-bce7-515ee01cad32",
+      "id": "b7796625-2a00-45ba-a142-b463edaa6d5a",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Muk Kampoul (Kandal)",
+      "toLocation": "D.Baset (K.Speu)",
       "truckType": "Without Crane",
-      "distanceKm": 47,
-      "companyUnitPrice": 13.59,
+      "distanceKm": 62,
+      "companyUnitPrice": 15.3,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "d42876d0-7c49-4550-9617-13d8e9934878",
+      "id": "d2074e51-93af-4d02-82f6-1aecf02cb1af",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Oral (K.Speu)",
+      "toLocation": "D.Batheay (K.Cham)",
       "truckType": "Without Crane",
-      "distanceKm": 102,
-      "companyUnitPrice": 18.34,
+      "distanceKm": 81,
+      "companyUnitPrice": 15.58,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "338bc823-9ec4-42f2-803b-fb7d509268b2",
+      "id": "230fa8cd-b929-4cbb-9c64-f08a3acd7dac",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Oudong (K.Speu)",
+      "toLocation": "D.Bati (Takeo)",
       "truckType": "Without Crane",
-      "distanceKm": 57,
-      "companyUnitPrice": 13.3,
+      "distanceKm": 23,
+      "companyUnitPrice": 10.55,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "74830f7b-538a-46c4-adfc-e2b99557f0ba",
+      "id": "e7830580-f5cd-40f1-aff9-56f1dd018f8c",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Pea Reang (Prey Veng)",
+      "toLocation": "D.Bavet (S.Rieng)",
       "truckType": "Without Crane",
-      "distanceKm": 82,
+      "distanceKm": 169,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "2ab8e64e-05f1-4878-83ce-c554983c314a",
+      "id": "318784a9-0c3c-4346-b388-847a821972ca",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Peam Chor (Prey Veng)",
+      "toLocation": "D.Borei Chulsar (Takeo)",
       "truckType": "Without Crane",
-      "distanceKm": 91,
+      "distanceKm": 96,
+      "companyUnitPrice": 17.96,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "8a5e9e45-589a-463d-9469-299f387b9bd1",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Boribo (K.Chhnang)",
+      "truckType": "Without Crane",
+      "distanceKm": 142,
+      "companyUnitPrice": 17.96,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "b3ccf06c-8802-4702-ac05-43edcf1ea9eb",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Chamkar Leu (K.Cham)",
+      "truckType": "Without Crane",
+      "distanceKm": 156,
+      "companyUnitPrice": 18.53,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "abe698a4-6413-46f5-9907-89fd3dbaac41",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Chantrea (S.Rieng)",
+      "truckType": "Without Crane",
+      "distanceKm": 170,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "3a19105f-11ab-4398-aa35-c1556714cf2c",
+      "id": "c7aa483e-643f-43ba-9166-4be4cf4dffa6",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Peam Ro (Prey Veng)",
+      "toLocation": "D.Chbar Morn (K.Speu)",
       "truckType": "Without Crane",
-      "distanceKm": 79,
+      "distanceKm": 52,
+      "companyUnitPrice": 13.78,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "b9c484c2-9c72-4c77-9fe8-bf11d5df6942",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Cheung Prey (K.Cham)",
+      "truckType": "Without Crane",
+      "distanceKm": 107,
+      "companyUnitPrice": 16.63,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "e14f13c3-ebbd-4c42-8ea5-c9a0d1e92e8f",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Chhouk (Kampot)",
+      "truckType": "Without Crane",
+      "distanceKm": 94,
+      "companyUnitPrice": 16.15,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "e03921a0-52c9-4e9e-bb96-dfa64314bc87",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Chulkiri (K.Chhnang)",
+      "truckType": "Without Crane",
+      "distanceKm": 115,
+      "companyUnitPrice": 16.82,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "872e0786-3ceb-4b16-ab55-f73d6ca34431",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Chumkiri (Kampot)",
+      "truckType": "Without Crane",
+      "distanceKm": 107,
+      "companyUnitPrice": 16.63,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "07ca40e4-cd88-4d39-983e-73c8d6f4b3bb",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Daun Keo (Takeo)",
+      "truckType": "Without Crane",
+      "distanceKm": 56,
+      "companyUnitPrice": 14.06,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "bfb218fb-5433-473e-bd7a-fadecd2b1ed4",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Dong Tung (Kampot)",
+      "truckType": "Without Crane",
+      "distanceKm": 110,
+      "companyUnitPrice": 16.72,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "02325223-4bab-4508-9ef5-f1b39242a91b",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kamchay Mea (Prey Veng)",
+      "truckType": "Without Crane",
+      "distanceKm": 145,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "8d0b2edf-18dc-4c1d-8fac-c312e1a6076d",
+      "id": "ac165962-94d1-4ee2-9add-6ab0f717c559",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Phnom Srouch (K.Speu)",
+      "toLocation": "D.Kampong Chhnang (K.Chhnang)",
       "truckType": "Without Crane",
-      "distanceKm": 70,
-      "companyUnitPrice": 15.01,
+      "distanceKm": 109,
+      "companyUnitPrice": 16.63,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "dd58cd4c-cc47-4285-8093-e82460100524",
+      "id": "943c0e49-e7ac-4216-99be-84c9b2024dc4",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Po Rieng (Prey Veng)",
+      "toLocation": "D.Kampong Leng (K.Chhnang)",
       "truckType": "Without Crane",
-      "distanceKm": 106,
-      "companyUnitPrice": 14.25,
+      "distanceKm": 231,
+      "companyUnitPrice": 21.57,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "a9ac90c3-f657-4d9f-a415-af17e791896a",
+      "id": "a85e28d5-16c1-40c3-b6b1-455a8b0021c2",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Ponhea Leu (Kandal)",
+      "toLocation": "D.Kampong Siem (K.Cham)",
       "truckType": "Without Crane",
-      "distanceKm": 53,
-      "companyUnitPrice": 13.97,
+      "distanceKm": 135,
+      "companyUnitPrice": 16.15,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "4e734d74-b90d-417a-84b9-ceaa4dfd1896",
+      "id": "0a0991bf-3df3-46a8-a505-4484eeb8df02",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Preah Sdach (Prey Veng)",
+      "toLocation": "D.Kampong Trabek (Prey Veng)",
       "truckType": "Without Crane",
       "distanceKm": 96,
       "companyUnitPrice": 14.25,
@@ -1513,9 +1062,306 @@
       "active": true
     },
     {
-      "id": "82925d99-96de-4f79-a05e-b42cdd584951",
+      "id": "0e84b4b4-1dbc-4516-8e1a-69c1787f9f62",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Prey Chhor (K.Cham)",
+      "toLocation": "D.Kampong Trach (Kampot)",
+      "truckType": "Without Crane",
+      "distanceKm": 124,
+      "companyUnitPrice": 17.2,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "3c98d438-aa6f-44c5-87a1-3156554cc4c2",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kampong Tralach (K.Chhnang)",
+      "truckType": "Without Crane",
+      "distanceKm": 89,
+      "companyUnitPrice": 15.96,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "56e51c9e-caab-4762-986e-be567a064d21",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kampot (Kampot)",
+      "truckType": "Without Crane",
+      "distanceKm": 137,
+      "companyUnitPrice": 17.77,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "2b0a4fad-788c-42d2-a15e-90870a50a69e",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kandal Stueng (Kandal)",
+      "truckType": "Without Crane",
+      "distanceKm": 8,
+      "companyUnitPrice": 8.65,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "c5a822fb-8e6f-4d3c-8f16-1612f5cd576d",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kang Meas (K.Cham)",
+      "truckType": "Without Crane",
+      "distanceKm": 160,
+      "companyUnitPrice": 18.72,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "4ffb820e-86d7-4e97-b2d1-9f92c848c80a",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kanh Chreach (Prey Veng)",
+      "truckType": "Without Crane",
+      "distanceKm": 132,
+      "companyUnitPrice": 14.25,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "69376437-bca5-447d-9fc9-6240ee8f714d",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Khsach Kandal (Kandal)",
+      "truckType": "Without Crane",
+      "distanceKm": 50,
+      "companyUnitPrice": 13.78,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "054dd91c-e346-4fd3-aa58-dcba2370cffb",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kien Svay (Kandal)",
+      "truckType": "Without Crane",
+      "distanceKm": 27,
+      "companyUnitPrice": 10.93,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "2da711f5-3ab2-49ae-a34a-0af7f2158221",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kirirom (K.Speu)",
+      "truckType": "Without Crane",
+      "distanceKm": 99,
+      "companyUnitPrice": 18.15,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "3817cd5d-682b-4bda-8b35-25dbc15e0dd1",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kirivong (Takeo)",
+      "truckType": "Without Crane",
+      "distanceKm": 97,
+      "companyUnitPrice": 18.05,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "a57a3ffd-353f-4d2e-9d85-c88739401954",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Koh Andet (Takeo)",
+      "truckType": "Without Crane",
+      "distanceKm": 92,
+      "companyUnitPrice": 17.77,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "f49059e5-6c9e-4b38-8dc2-e0b5723c283f",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Koh Thom (Kandal)",
+      "truckType": "Without Crane",
+      "distanceKm": 54,
+      "companyUnitPrice": 14.16,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "5b078cd1-b4d1-4551-8344-b099870ce590",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kompong Ro (S.Rieng)",
+      "truckType": "Without Crane",
+      "distanceKm": 158,
+      "companyUnitPrice": 14.25,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "dcfe6c7b-17b0-41d8-ba63-47e98557524b",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Kong Pisei (K.Speu)",
+      "truckType": "Without Crane",
+      "distanceKm": 43,
+      "companyUnitPrice": 14.16,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "a85cae64-7ff3-4266-bcf4-62d4a7440236",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Leukdek (Kandal)",
+      "truckType": "Without Crane",
+      "distanceKm": 79,
+      "companyUnitPrice": 16.53,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "fdf53b20-5eb3-4ce8-afea-8acf6f7a3a9c",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Lvea Em (Kandal)",
+      "truckType": "Without Crane",
+      "distanceKm": 83,
+      "companyUnitPrice": 16.91,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "a737192f-9b69-4c8b-be4d-2f6c5cb6ca8c",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Mesang (Prey Veng)",
+      "truckType": "Without Crane",
+      "distanceKm": 113,
+      "companyUnitPrice": 14.25,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "f34cb34d-2ab8-4cf1-866e-492781cb5762",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Muk Kampoul (Kandal)",
+      "truckType": "Without Crane",
+      "distanceKm": 47,
+      "companyUnitPrice": 13.59,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "90b6d570-419d-4122-b340-95c836982920",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Oral (K.Speu)",
+      "truckType": "Without Crane",
+      "distanceKm": 102,
+      "companyUnitPrice": 18.34,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "e404299d-c685-4a7d-9497-0422a5462ea9",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Oudong (K.Speu)",
+      "truckType": "Without Crane",
+      "distanceKm": 57,
+      "companyUnitPrice": 13.3,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "bd65bbf4-cbc7-4e02-9501-8c5aa773ddca",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Pea Reang (Prey Veng)",
+      "truckType": "Without Crane",
+      "distanceKm": 82,
+      "companyUnitPrice": 14.25,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "54236e5f-a683-4f26-9c0c-471a5f6bb97f",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Peam Chor (Prey Veng)",
+      "truckType": "Without Crane",
+      "distanceKm": 91,
+      "companyUnitPrice": 14.25,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "606e70ed-22fc-4656-ba2d-ead507bcc7bf",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Peam Ro (Prey Veng)",
+      "truckType": "Without Crane",
+      "distanceKm": 79,
+      "companyUnitPrice": 14.25,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "32d910e1-1ff0-458f-bdb3-3b96c869af87",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Phnom Srouch (K.Speu)",
+      "truckType": "Without Crane",
+      "distanceKm": 70,
+      "companyUnitPrice": 15.01,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "46078cb1-9040-40ee-b44b-b53da5486ec4",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Po Rieng (Prey Veng)",
+      "truckType": "Without Crane",
+      "distanceKm": 106,
+      "companyUnitPrice": 14.25,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "ffe08442-d93e-4fc5-87fb-aadd5365f3f6",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Ponhea Leu (Kandal)",
+      "truckType": "Without Crane",
+      "distanceKm": 53,
+      "companyUnitPrice": 13.97,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "39400433-270a-4817-8c27-2a71a50fb723",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Preah Sdach (Prey Veng)",
+      "truckType": "Without Crane",
+      "distanceKm": 96,
+      "companyUnitPrice": 14.25,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "cf2d889c-9cd0-424e-bfb0-8a0a05411615",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Prey Chhor (K.Cham)",
       "truckType": "Without Crane",
       "distanceKm": 114,
       "companyUnitPrice": 16.91,
@@ -1524,9 +1370,9 @@
       "active": true
     },
     {
-      "id": "9896a172-fc18-4b51-8352-e504dca35207",
+      "id": "8784f669-e8d7-4885-a12e-35d26a96d0c8",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Prey Kabas (Takeo)",
+      "toLocation": "D.Prey Kabas (Takeo)",
       "truckType": "Without Crane",
       "distanceKm": 52,
       "companyUnitPrice": 12.35,
@@ -1535,9 +1381,9 @@
       "active": true
     },
     {
-      "id": "6afb2113-cfc0-4826-a4f6-33e039597575",
+      "id": "ac91c6fb-d4c1-4459-bdf0-639fb55e2cef",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Prey Veng (Prey Veng)",
+      "toLocation": "D.Prey Veng (Prey Veng)",
       "truckType": "Without Crane",
       "distanceKm": 102,
       "companyUnitPrice": 14.25,
@@ -1546,9 +1392,9 @@
       "active": true
     },
     {
-      "id": "314ad793-1f16-4854-9731-8ac502634753",
+      "id": "3c468788-e9ea-4b87-a222-b9c24b60f5a6",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Rolear Phiear (K.Chhnang)",
+      "toLocation": "D.Rolear Phiear (K.Chhnang)",
       "truckType": "Without Crane",
       "distanceKm": 103,
       "companyUnitPrice": 16.34,
@@ -1557,31 +1403,31 @@
       "active": true
     },
     {
-      "id": "846d9c3a-d2aa-46da-8fee-c8eb873695d7",
+      "id": "ed56760f-cd91-4553-98df-c44c01534f4b",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Romeas Hek (Svay Rieng)",
+      "toLocation": "D.Romeas Hek (S.Rieng)",
       "truckType": "Without Crane",
-      "distanceKm": 100,
+      "distanceKm": 153,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "ab725f7b-41a5-4690-ba43-1c9a3997ec24",
+      "id": "98068204-3555-4cf9-ad07-9e1a69aa2a90",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Rum Duol (Svay Rieng)",
+      "toLocation": "D.Rum Duol (S.Rieng)",
       "truckType": "Without Crane",
-      "distanceKm": 100,
+      "distanceKm": 149,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "d8bff7e1-444b-4ddb-8b17-656b6c486137",
+      "id": "d1d414d5-7892-41cd-908d-b56c4e54be2a",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Saang (Kandal)",
+      "toLocation": "D.Saang (Kandal)",
       "truckType": "Without Crane",
       "distanceKm": 25,
       "companyUnitPrice": 11.31,
@@ -1590,9 +1436,9 @@
       "active": true
     },
     {
-      "id": "c5230531-334d-4628-abd2-ca891a9c7828",
+      "id": "62500330-f3c5-4246-b70f-e7def09de2f4",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Samaki Meanchey (K.Chhnang)",
+      "toLocation": "D.Samaki Meanchey (K.Chhnang)",
       "truckType": "Without Crane",
       "distanceKm": 75,
       "companyUnitPrice": 15.39,
@@ -1601,9 +1447,9 @@
       "active": true
     },
     {
-      "id": "a6aeaddc-5f75-4d4a-8197-ae73c30c114a",
+      "id": "bb530a69-67d7-42f4-bd6c-667caadbc284",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Samrong (Takeo)",
+      "toLocation": "D.Samrong (Takeo)",
       "truckType": "Without Crane",
       "distanceKm": 38,
       "companyUnitPrice": 12.92,
@@ -1612,9 +1458,9 @@
       "active": true
     },
     {
-      "id": "e59250b9-d696-4889-bcf5-26a433793bcf",
+      "id": "21531120-5b24-4839-988a-6d8a770e7ebe",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Samrong Torng (K.Speu)",
+      "toLocation": "D.Samrong Torng (K.Speu)",
       "truckType": "Without Crane",
       "distanceKm": 60,
       "companyUnitPrice": 14.25,
@@ -1623,20 +1469,9 @@
       "active": true
     },
     {
-      "id": "15a7419d-3a8b-42dd-b333-d600bb696e1c",
+      "id": "9b3f7f43-138a-41cd-ab65-aba6ee7b572f",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Santuk (K.Thom)",
-      "truckType": "Without Crane",
-      "distanceKm": 158,
-      "companyUnitPrice": 18.05,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "2b90a1d0-2d93-4a26-9a95-84c228d8b847",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Sithor Kandal (Prey Veng)",
+      "toLocation": "D.Sithor Kandal (Prey Veng)",
       "truckType": "Without Crane",
       "distanceKm": 112,
       "companyUnitPrice": 14.25,
@@ -1645,9 +1480,9 @@
       "active": true
     },
     {
-      "id": "0441aba9-d1b6-42a6-a76b-75443d1f9e9b",
+      "id": "1b2a62d6-342c-47cc-b881-14a9f049b600",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Srey Santhor (K.Cham)",
+      "toLocation": "D.Srey Santhor (K.Cham)",
       "truckType": "Without Crane",
       "distanceKm": 70,
       "companyUnitPrice": 15.11,
@@ -1656,31 +1491,9 @@
       "active": true
     },
     {
-      "id": "eff5bde2-2181-48db-9556-8fdda141ba44",
+      "id": "f8c34c4e-6ffd-4a36-95ec-de5d245bed60",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Staung (K.Thom)",
-      "truckType": "Without Crane",
-      "distanceKm": 238,
-      "companyUnitPrice": 18.91,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "a2bb71f0-6fd0-4654-9672-356ed0529a31",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Stueng Sen (K.Thom)",
-      "truckType": "Without Crane",
-      "distanceKm": 175,
-      "companyUnitPrice": 18.15,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
-      "id": "ec707ce7-7a3a-4c04-866d-3751fa2ca461",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "Svay Antor (Prey Veng)",
+      "toLocation": "D.Svay Antor (Prey Veng)",
       "truckType": "Without Crane",
       "distanceKm": 116,
       "companyUnitPrice": 14.25,
@@ -1689,42 +1502,42 @@
       "active": true
     },
     {
-      "id": "8a2fdc94-58c4-4c12-b767-0459ec94ebcc",
+      "id": "ca91cfef-a076-4bdf-8c02-8dcce4ff2db1",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Svay Chrum (Svay Rieng)",
+      "toLocation": "D.Svay Chrum (S.Rieng)",
       "truckType": "Without Crane",
-      "distanceKm": 100,
+      "distanceKm": 120,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "8b729936-8f28-49ec-b541-780c0c56b84c",
+      "id": "c85dfa3c-d92d-4664-b6c4-cb49972922c3",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Svay Rieng (Svay Rieng)",
+      "toLocation": "D.Svay Rieng (S.Rieng)",
       "truckType": "Without Crane",
-      "distanceKm": 100,
+      "distanceKm": 131,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "c5e513b6-7578-41bd-bd6c-f2c3d64bd49a",
+      "id": "02ed07a9-6779-4f46-81c6-4a832e440159",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Svay Tiep (Svay Rieng)",
+      "toLocation": "D.Svay Tiep (S.Rieng)",
       "truckType": "Without Crane",
-      "distanceKm": 100,
+      "distanceKm": 158,
       "companyUnitPrice": 14.25,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
     },
     {
-      "id": "6336b9ff-0faa-427e-ba23-82d56825e611",
+      "id": "dca53568-7a3c-47af-acf2-951ad9f09242",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Takhmao (Kandal)",
+      "toLocation": "D.Takhmao (Kandal)",
       "truckType": "Without Crane",
       "distanceKm": 11,
       "companyUnitPrice": 8.46,
@@ -1733,9 +1546,9 @@
       "active": true
     },
     {
-      "id": "f1bb0547-fec4-4e53-8d31-a96d2b9c5c93",
+      "id": "f8938ee3-9b94-4774-9253-cc84f356d5a1",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Thpong (K.Speu)",
+      "toLocation": "D.Thpong (K.Speu)",
       "truckType": "Without Crane",
       "distanceKm": 93,
       "companyUnitPrice": 17.29,
@@ -1744,9 +1557,9 @@
       "active": true
     },
     {
-      "id": "9a282517-f276-45af-b816-d0b45bfbb3f2",
+      "id": "a0891d29-ce42-439b-8770-c5efc7377936",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Tram Kak (Takeo)",
+      "toLocation": "D.Tram Kak (Takeo)",
       "truckType": "Without Crane",
       "distanceKm": 77,
       "companyUnitPrice": 15.49,
@@ -1755,9 +1568,9 @@
       "active": true
     },
     {
-      "id": "ac98a4eb-3b85-4eb0-9cd6-c8b458b6b965",
+      "id": "42875da0-2f54-4991-b1c6-71aa6609385c",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Treang (Takeo)",
+      "toLocation": "D.Treang (Takeo)",
       "truckType": "Without Crane",
       "distanceKm": 64,
       "companyUnitPrice": 14.63,
@@ -1766,9 +1579,9 @@
       "active": true
     },
     {
-      "id": "9c53e3b5-c311-4e4c-baf6-8d261ee3eccb",
+      "id": "97a606a8-381c-4e98-af8e-82aee6675637",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Tuek Chhu (Kampot)",
+      "toLocation": "D.Tuek Chhu (Kampot)",
       "truckType": "Without Crane",
       "distanceKm": 139,
       "companyUnitPrice": 17.86,
@@ -1777,12 +1590,166 @@
       "active": true
     },
     {
-      "id": "9cda6556-34d5-4e66-a389-020c7bc532b6",
+      "id": "31723842-2242-4b7e-939b-af0c7965b775",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Tuek Phos (K.Chhnang)",
+      "toLocation": "D.Tuek Phos (K.Chhnang)",
       "truckType": "Without Crane",
       "distanceKm": 116,
       "companyUnitPrice": 16.91,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "987a251e-e7a3-4f38-8bc0-8a1a77d4ea15",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH. Boeng Keng Kong (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 18,
+      "companyUnitPrice": 10.17,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "7ca82965-8763-487b-8008-5922c3ba5ce6",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.7 Makara (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 21,
+      "companyUnitPrice": 10.17,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "b7f4923f-33f3-4388-86a3-473c6a1955fa",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Chamkar Morn (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 18,
+      "companyUnitPrice": 10.17,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "4ec8ba03-542f-418b-a3e2-b425de2d6ec2",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Chba Ampeou (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 20,
+      "companyUnitPrice": 9.31,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "a22fc892-5829-4ab9-9763-30847011a1c1",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Chroy Changvar (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 49,
+      "companyUnitPrice": 13.97,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "09ddf573-51cc-459a-a262-0a17fd1ba627",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Dangkao (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 9,
+      "companyUnitPrice": 8.46,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "f86e05ad-017e-4ae9-baa6-9578019f577a",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Doun Penh (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 21,
+      "companyUnitPrice": 10.17,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "3f0779fe-6c9f-41be-8d67-9bbce69606f3",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Kambol (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 19,
+      "companyUnitPrice": 10.64,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "af559c7d-648e-4fba-93fd-0271f8de12f0",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Mean Chey (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 14,
+      "companyUnitPrice": 8.84,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "9b8b388d-fd50-4a54-b357-8f6a4dbb7cbd",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Posenchey (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 29,
+      "companyUnitPrice": 10.74,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "4f16ff12-e4fd-44c3-a0f1-de08b1597635",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Prek Phnov (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 30,
+      "companyUnitPrice": 12.73,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "d69c0013-3645-4de6-8781-f80a56eb804b",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Russei Keo (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 24,
+      "companyUnitPrice": 10.45,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "d8db6c4e-7225-4d67-a3b8-9d57a8091496",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Sen Sok (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 24,
+      "companyUnitPrice": 10.45,
+      "truckSalaryUnitPrice": 0,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "e69cd801-918c-480a-a20e-25f352e84b73",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "KH.Tuol Kouk (PP)",
+      "truckType": "Without Crane",
+      "distanceKm": 18,
+      "companyUnitPrice": 10.17,
       "truckSalaryUnitPrice": 0,
       "effectiveDate": "2026-05-11",
       "active": true
@@ -1840,16 +1807,16 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Tuol Kouk (PP)",
+      "toLocation": "KH.Tuol Kouk (PP)",
       "distanceKm": 18,
       "qtyTon": 16.5739,
-      "companyUnitPrice": 9.22,
-      "companyTotalAmount": 152.81,
+      "companyUnitPrice": 9.215,
+      "companyTotalAmount": 152.73,
       "truckSalaryUnitPrice": 8.8,
       "truckSalaryAmount": 145.85,
       "status": "Draft",
       "createdAt": "2026-05-17T08:29:23.151Z",
-      "updatedAt": "2026-05-17T08:29:23.151Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "2d5c3c19-9765-4277-aeb6-a47caed8aefb",
@@ -1860,7 +1827,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Kambol (PP)",
+      "toLocation": "KH.Kambol (PP)",
       "distanceKm": 19,
       "qtyTon": 5.14525,
       "companyUnitPrice": 9.69,
@@ -1869,7 +1836,7 @@
       "truckSalaryAmount": 47.75,
       "status": "Draft",
       "createdAt": "2026-05-17T08:29:58.103Z",
-      "updatedAt": "2026-05-17T08:29:58.103Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "50d11b1f-0ef3-4e9f-a2e3-b56cfd318162",
@@ -1880,7 +1847,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
+      "toLocation": "KH.Posenchey (PP)",
       "distanceKm": 29,
       "qtyTon": 5.661,
       "companyUnitPrice": 9.79,
@@ -1889,7 +1856,7 @@
       "truckSalaryAmount": 53.55,
       "status": "Draft",
       "createdAt": "2026-05-17T08:30:27.939Z",
-      "updatedAt": "2026-05-17T08:30:27.939Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "f41f416d-5481-4b96-8b7e-dbab7f770b4d",
@@ -1900,16 +1867,16 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Tuol Kouk (PP)",
+      "toLocation": "KH.Tuol Kouk (PP)",
       "distanceKm": 18,
       "qtyTon": 6.9495,
-      "companyUnitPrice": 9.22,
-      "companyTotalAmount": 64.07,
+      "companyUnitPrice": 9.215,
+      "companyTotalAmount": 64.04,
       "truckSalaryUnitPrice": 8.8,
       "truckSalaryAmount": 61.16,
       "status": "Draft",
       "createdAt": "2026-05-17T08:30:52.832Z",
-      "updatedAt": "2026-05-17T08:30:52.832Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "358493de-23fe-4200-aaaa-279471eacadc",
@@ -1920,16 +1887,16 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Tuol Kouk (PP)",
+      "toLocation": "KH.Tuol Kouk (PP)",
       "distanceKm": 18,
       "qtyTon": 4.2102,
-      "companyUnitPrice": 9.22,
-      "companyTotalAmount": 38.82,
+      "companyUnitPrice": 9.215,
+      "companyTotalAmount": 38.8,
       "truckSalaryUnitPrice": 8.8,
       "truckSalaryAmount": 37.05,
       "status": "Draft",
       "createdAt": "2026-05-17T08:31:17.116Z",
-      "updatedAt": "2026-05-17T08:31:17.116Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "a5ba5e9c-2e2e-4a7c-9138-4a18e88539f2",
@@ -1940,7 +1907,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 15.64,
       "companyUnitPrice": 9.5,
@@ -1949,7 +1916,7 @@
       "truckSalaryAmount": 143.58,
       "status": "Draft",
       "createdAt": "2026-05-17T08:31:42.926Z",
-      "updatedAt": "2026-05-17T08:31:42.926Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "a0c94ada-174d-41b3-89a8-05b7766e8b44",
@@ -1960,7 +1927,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
+      "toLocation": "KH.Posenchey (PP)",
       "distanceKm": 29,
       "qtyTon": 12.9875,
       "companyUnitPrice": 9.79,
@@ -1969,7 +1936,7 @@
       "truckSalaryAmount": 122.86,
       "status": "Draft",
       "createdAt": "2026-05-17T08:32:05.717Z",
-      "updatedAt": "2026-05-17T08:32:05.717Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "8cd74ada-263f-492a-8f3d-c2d099de8c26",
@@ -1980,16 +1947,16 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Ang Snuol (Kandal)",
+      "toLocation": "D.Ang Snuol (Kandal)",
       "distanceKm": 32,
       "qtyTon": 3.9715,
-      "companyUnitPrice": 15.7,
-      "companyTotalAmount": 62.35,
+      "companyUnitPrice": 11.4,
+      "companyTotalAmount": 45.28,
       "truckSalaryUnitPrice": 11.07,
       "truckSalaryAmount": 43.96,
       "status": "Draft",
       "createdAt": "2026-05-17T08:32:29.577Z",
-      "updatedAt": "2026-05-17T08:32:29.577Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "4d0b7007-a2f7-4eb9-a377-c712db4c2819",
@@ -2000,7 +1967,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Kambol (PP)",
+      "toLocation": "KH.Kambol (PP)",
       "distanceKm": 19,
       "qtyTon": 5.396,
       "companyUnitPrice": 9.69,
@@ -2009,7 +1976,7 @@
       "truckSalaryAmount": 50.07,
       "status": "Draft",
       "createdAt": "2026-05-17T08:32:53.252Z",
-      "updatedAt": "2026-05-17T08:32:53.252Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "b588ccae-5b0f-434b-98cf-1226c7cd2452",
@@ -2020,16 +1987,16 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Ang Snuol (Kandal)",
+      "toLocation": "D.Ang Snuol (Kandal)",
       "distanceKm": 32,
       "qtyTon": 0.2748,
-      "companyUnitPrice": 15.7,
-      "companyTotalAmount": 4.31,
+      "companyUnitPrice": 11.4,
+      "companyTotalAmount": 3.13,
       "truckSalaryUnitPrice": 11.07,
       "truckSalaryAmount": 3.04,
       "status": "Draft",
       "createdAt": "2026-05-17T08:33:20.881Z",
-      "updatedAt": "2026-05-17T08:33:20.881Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "3b08d079-9945-4937-a656-d27b692d05d6",
@@ -2040,7 +2007,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 5.65589,
       "companyUnitPrice": 9.5,
@@ -2049,7 +2016,7 @@
       "truckSalaryAmount": 51.92,
       "status": "Draft",
       "createdAt": "2026-05-17T08:33:50.632Z",
-      "updatedAt": "2026-05-17T08:33:50.632Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "c1375a79-213b-48fd-93e2-dbb70fb56204",
@@ -2060,7 +2027,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 11.5545,
       "companyUnitPrice": 7.51,
@@ -2069,7 +2036,7 @@
       "truckSalaryAmount": 80.88,
       "status": "Draft",
       "createdAt": "2026-05-17T08:34:16.343Z",
-      "updatedAt": "2026-05-17T08:34:16.343Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "0adfc5fc-4021-4981-af57-d224ad4db3a9",
@@ -2080,7 +2047,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 16.465,
       "companyUnitPrice": 7.89,
@@ -2089,7 +2056,7 @@
       "truckSalaryAmount": 121.51,
       "status": "Draft",
       "createdAt": "2026-05-17T08:34:46.987Z",
-      "updatedAt": "2026-05-17T08:34:46.987Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "714987a5-632b-4d4b-8747-e2be3f67f659",
@@ -2100,7 +2067,7 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 12.936,
       "companyUnitPrice": 7.89,
@@ -2109,7 +2076,7 @@
       "truckSalaryAmount": 95.47,
       "status": "Draft",
       "createdAt": "2026-05-17T08:37:43.924Z",
-      "updatedAt": "2026-05-17T08:37:43.924Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "01347b8a-34a5-4234-a85d-b098aab2042d",
@@ -2120,7 +2087,7 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 8.41562,
       "companyUnitPrice": 7.51,
@@ -2129,7 +2096,7 @@
       "truckSalaryAmount": 58.91,
       "status": "Draft",
       "createdAt": "2026-05-17T08:38:06.727Z",
-      "updatedAt": "2026-05-17T08:38:06.727Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "a779c518-13a4-4be4-81eb-5215f571edbe",
@@ -2140,7 +2107,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 14.952,
       "companyUnitPrice": 7.51,
@@ -2149,7 +2116,7 @@
       "truckSalaryAmount": 104.66,
       "status": "Draft",
       "createdAt": "2026-05-17T08:38:24.402Z",
-      "updatedAt": "2026-05-17T08:38:24.402Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "25b25927-390f-4ba4-9e18-d49bcfb63ed7",
@@ -2160,7 +2127,7 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
+      "toLocation": "KH.Posenchey (PP)",
       "distanceKm": 29,
       "qtyTon": 2.83565,
       "companyUnitPrice": 9.79,
@@ -2169,7 +2136,7 @@
       "truckSalaryAmount": 26.83,
       "status": "Draft",
       "createdAt": "2026-05-17T08:39:16.786Z",
-      "updatedAt": "2026-05-17T08:39:16.786Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "0592aa57-4576-4c8c-a617-9823dce5d3ea",
@@ -2180,7 +2147,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 1.8974,
       "companyUnitPrice": 7.89,
@@ -2189,7 +2156,7 @@
       "truckSalaryAmount": 14,
       "status": "Draft",
       "createdAt": "2026-05-17T08:41:10.434Z",
-      "updatedAt": "2026-05-17T08:41:10.434Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "c46a2fd5-5630-44cd-a409-6c0a80309233",
@@ -2200,16 +2167,16 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Tuol Kouk (PP)",
+      "toLocation": "KH.Tuol Kouk (PP)",
       "distanceKm": 18,
       "qtyTon": 5.365,
-      "companyUnitPrice": 9.22,
-      "companyTotalAmount": 49.47,
+      "companyUnitPrice": 9.215,
+      "companyTotalAmount": 49.44,
       "truckSalaryUnitPrice": 8.8,
       "truckSalaryAmount": 47.21,
       "status": "Draft",
       "createdAt": "2026-05-17T08:41:33.721Z",
-      "updatedAt": "2026-05-17T08:41:33.721Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "4fe89932-0c73-449f-9594-dab27a21393c",
@@ -2220,7 +2187,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Russei Keo (PP)",
+      "toLocation": "KH.Russei Keo (PP)",
       "distanceKm": 24,
       "qtyTon": 1.104,
       "companyUnitPrice": 9.5,
@@ -2229,7 +2196,7 @@
       "truckSalaryAmount": 10.13,
       "status": "Draft",
       "createdAt": "2026-05-17T08:41:59.536Z",
-      "updatedAt": "2026-05-17T08:41:59.536Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "184713d8-7525-43c0-ba13-9889ac2b6781",
@@ -2240,7 +2207,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chamkar Morn (PP)",
+      "toLocation": "KH.Chamkar Morn (PP)",
       "distanceKm": 18,
       "qtyTon": 2.211,
       "companyUnitPrice": 9.12,
@@ -2249,7 +2216,7 @@
       "truckSalaryAmount": 19.26,
       "status": "Draft",
       "createdAt": "2026-05-17T08:42:22.290Z",
-      "updatedAt": "2026-05-17T08:42:22.290Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "f7c1df3a-3158-479f-abdc-c81786acca20",
@@ -2260,7 +2227,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 12.32,
       "companyUnitPrice": 7.89,
@@ -2269,7 +2236,7 @@
       "truckSalaryAmount": 90.92,
       "status": "Draft",
       "createdAt": "2026-05-17T08:42:45.339Z",
-      "updatedAt": "2026-05-17T08:42:45.339Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "66872c5d-c092-4efc-998f-2e8460f757aa",
@@ -2280,7 +2247,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
+      "toLocation": "KH.Posenchey (PP)",
       "distanceKm": 29,
       "qtyTon": 6.2727,
       "companyUnitPrice": 9.79,
@@ -2289,7 +2256,7 @@
       "truckSalaryAmount": 59.34,
       "status": "Draft",
       "createdAt": "2026-05-17T08:43:14.143Z",
-      "updatedAt": "2026-05-17T08:43:14.143Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "eaab2788-cbec-4c9c-864c-934e9c4c8270",
@@ -2300,7 +2267,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Prek Phnov (PP)",
+      "toLocation": "KH.Prek Phnov (PP)",
       "distanceKm": 30,
       "qtyTon": 5.6664,
       "companyUnitPrice": 11.78,
@@ -2309,7 +2276,7 @@
       "truckSalaryAmount": 64.94,
       "status": "Draft",
       "createdAt": "2026-05-17T08:43:38.033Z",
-      "updatedAt": "2026-05-17T08:43:38.033Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "bffb955a-96eb-4094-bee7-392e992d565d",
@@ -2320,7 +2287,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Russei Keo (PP)",
+      "toLocation": "KH.Russei Keo (PP)",
       "distanceKm": 24,
       "qtyTon": 1.195,
       "companyUnitPrice": 9.5,
@@ -2329,7 +2296,7 @@
       "truckSalaryAmount": 10.97,
       "status": "Draft",
       "createdAt": "2026-05-17T08:44:13.780Z",
-      "updatedAt": "2026-05-17T08:44:13.780Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "d79127af-a034-4328-a94f-956571cb4b77",
@@ -2340,7 +2307,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Russei Keo (PP)",
+      "toLocation": "KH.Russei Keo (PP)",
       "distanceKm": 24,
       "qtyTon": 2.18397,
       "companyUnitPrice": 9.5,
@@ -2349,7 +2316,7 @@
       "truckSalaryAmount": 20.05,
       "status": "Draft",
       "createdAt": "2026-05-17T08:44:34.223Z",
-      "updatedAt": "2026-05-17T08:44:34.223Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "601f9b2a-539e-4c99-910b-71ebf3d0a178",
@@ -2360,7 +2327,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 0.97701,
       "companyUnitPrice": 9.5,
@@ -2369,7 +2336,7 @@
       "truckSalaryAmount": 8.97,
       "status": "Draft",
       "createdAt": "2026-05-17T08:46:00.566Z",
-      "updatedAt": "2026-05-17T08:46:00.566Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "e7c1ebfc-2e02-4ed2-a28d-4d7a47516843",
@@ -2380,7 +2347,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 0.6865,
       "companyUnitPrice": 9.5,
@@ -2389,7 +2356,7 @@
       "truckSalaryAmount": 6.3,
       "status": "Draft",
       "createdAt": "2026-05-17T08:46:13.747Z",
-      "updatedAt": "2026-05-17T08:46:13.747Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "2fa7a1e8-df7e-439b-bc93-6517be817a25",
@@ -2400,7 +2367,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 11.635,
       "companyUnitPrice": 7.89,
@@ -2409,7 +2376,7 @@
       "truckSalaryAmount": 85.87,
       "status": "Draft",
       "createdAt": "2026-05-17T08:47:07.870Z",
-      "updatedAt": "2026-05-17T08:47:07.870Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "d10ebc0a-a758-4a02-8120-48500c9ac32d",
@@ -2420,7 +2387,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 6.6317,
       "companyUnitPrice": 9.5,
@@ -2429,7 +2396,7 @@
       "truckSalaryAmount": 60.88,
       "status": "Draft",
       "createdAt": "2026-05-17T08:48:08.798Z",
-      "updatedAt": "2026-05-17T08:48:08.798Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "2aa7a7a6-4647-4601-9bee-9ddb01efc02e",
@@ -2440,7 +2407,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 3.487,
       "companyUnitPrice": 7.89,
@@ -2449,7 +2416,7 @@
       "truckSalaryAmount": 25.73,
       "status": "Draft",
       "createdAt": "2026-05-17T08:52:19.813Z",
-      "updatedAt": "2026-05-17T08:52:19.813Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "92ea9266-43a4-42ab-ab2a-e5bb203c5a9b",
@@ -2460,7 +2427,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Kambol (PP)",
+      "toLocation": "KH.Kambol (PP)",
       "distanceKm": 19,
       "qtyTon": 2.2376,
       "companyUnitPrice": 9.69,
@@ -2469,7 +2436,7 @@
       "truckSalaryAmount": 20.76,
       "status": "Draft",
       "createdAt": "2026-05-17T08:52:44.532Z",
-      "updatedAt": "2026-05-17T08:52:44.532Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "d46b510b-3a4f-46eb-83f4-22a0ec1a864c",
@@ -2480,7 +2447,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Kambol (PP)",
+      "toLocation": "KH.Kambol (PP)",
       "distanceKm": 19,
       "qtyTon": 11.361,
       "companyUnitPrice": 9.69,
@@ -2489,7 +2456,7 @@
       "truckSalaryAmount": 105.43,
       "status": "Draft",
       "createdAt": "2026-05-17T08:53:11.336Z",
-      "updatedAt": "2026-05-17T08:53:11.336Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "7bfb4cf9-1a2f-4121-a5b9-3f491da87e8b",
@@ -2500,7 +2467,7 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 5.868,
       "companyUnitPrice": 9.5,
@@ -2509,7 +2476,7 @@
       "truckSalaryAmount": 53.87,
       "status": "Draft",
       "createdAt": "2026-05-17T08:53:35.938Z",
-      "updatedAt": "2026-05-17T08:53:35.938Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "21851c7e-dcb9-4552-b940-cebd9f4fe169",
@@ -2520,7 +2487,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 4.3822,
       "companyUnitPrice": 9.5,
@@ -2529,7 +2496,7 @@
       "truckSalaryAmount": 40.23,
       "status": "Draft",
       "createdAt": "2026-05-17T08:54:28.816Z",
-      "updatedAt": "2026-05-17T08:54:28.816Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "71bfd007-d104-4855-9d72-7020e1979434",
@@ -2540,7 +2507,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 1.4829,
       "companyUnitPrice": 9.5,
@@ -2549,7 +2516,7 @@
       "truckSalaryAmount": 13.61,
       "status": "Draft",
       "createdAt": "2026-05-17T08:55:41.057Z",
-      "updatedAt": "2026-05-17T08:55:41.057Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "d362b0ff-0340-4f44-ad05-65152654dfe8",
@@ -2560,7 +2527,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chba Ampeou (PP)",
+      "toLocation": "KH.Chba Ampeou (PP)",
       "distanceKm": 20,
       "qtyTon": 14.70096,
       "companyUnitPrice": 8.36,
@@ -2569,7 +2536,7 @@
       "truckSalaryAmount": 116.87,
       "status": "Draft",
       "createdAt": "2026-05-17T08:56:49.789Z",
-      "updatedAt": "2026-05-17T08:56:49.789Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "6c25be79-ee48-4413-879f-49348b919a7a",
@@ -2580,7 +2547,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 1.365,
       "companyUnitPrice": 7.51,
@@ -2589,7 +2556,7 @@
       "truckSalaryAmount": 9.56,
       "status": "Draft",
       "createdAt": "2026-05-17T08:57:22.325Z",
-      "updatedAt": "2026-05-17T08:57:22.325Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "f2d60c48-e94d-4938-986d-38d9bb8ec7e5",
@@ -2600,7 +2567,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
+      "toLocation": "KH.Posenchey (PP)",
       "distanceKm": 29,
       "qtyTon": 12.3552,
       "companyUnitPrice": 9.79,
@@ -2609,7 +2576,7 @@
       "truckSalaryAmount": 116.88,
       "status": "Draft",
       "createdAt": "2026-05-17T08:57:55.916Z",
-      "updatedAt": "2026-05-17T08:57:55.916Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "9010db98-3404-4422-b7a7-e5830b3f7891",
@@ -2620,7 +2587,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 10.59,
       "companyUnitPrice": 7.89,
@@ -2629,7 +2596,7 @@
       "truckSalaryAmount": 78.15,
       "status": "Draft",
       "createdAt": "2026-05-17T08:58:15.876Z",
-      "updatedAt": "2026-05-17T08:58:15.876Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "eba1313b-b440-4d62-aa58-08b3212fc741",
@@ -2640,7 +2607,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 1.4522,
       "companyUnitPrice": 7.51,
@@ -2649,7 +2616,7 @@
       "truckSalaryAmount": 10.17,
       "status": "Draft",
       "createdAt": "2026-05-17T08:58:45.302Z",
-      "updatedAt": "2026-05-17T08:58:45.302Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "36797d26-dfed-4bd9-a86f-c7159b4f5060",
@@ -2660,7 +2627,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 10.9875,
       "companyUnitPrice": 7.51,
@@ -2669,7 +2636,7 @@
       "truckSalaryAmount": 76.91,
       "status": "Draft",
       "createdAt": "2026-05-17T08:59:07.297Z",
-      "updatedAt": "2026-05-17T08:59:07.297Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "eb4fd7da-cec0-42fe-a122-9113420d1de1",
@@ -2680,7 +2647,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 15.38697,
       "companyUnitPrice": 7.89,
@@ -2689,7 +2656,7 @@
       "truckSalaryAmount": 113.56,
       "status": "Draft",
       "createdAt": "2026-05-17T08:59:31.667Z",
-      "updatedAt": "2026-05-17T08:59:31.667Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "fbd75f89-9b28-4d3e-99a5-a6e521aeb089",
@@ -2700,7 +2667,7 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 8.219,
       "companyUnitPrice": 9.5,
@@ -2709,7 +2676,7 @@
       "truckSalaryAmount": 75.45,
       "status": "Draft",
       "createdAt": "2026-05-17T08:59:55.873Z",
-      "updatedAt": "2026-05-17T08:59:55.873Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "3711647c-12cc-453c-babc-62c17594a210",
@@ -2720,7 +2687,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 4.1,
       "companyUnitPrice": 7.89,
@@ -2729,7 +2696,7 @@
       "truckSalaryAmount": 30.26,
       "status": "Draft",
       "createdAt": "2026-05-17T09:00:25.902Z",
-      "updatedAt": "2026-05-17T09:00:25.902Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "fd26508a-4336-47ca-acf0-5943f0dc48c8",
@@ -2740,7 +2707,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 15.64413,
       "companyUnitPrice": 9.5,
@@ -2749,7 +2716,7 @@
       "truckSalaryAmount": 143.61,
       "status": "Draft",
       "createdAt": "2026-05-17T09:01:10.478Z",
-      "updatedAt": "2026-05-17T09:01:10.478Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "e71f1b04-5203-4eb0-b240-f22e5ca67a9c",
@@ -2760,7 +2727,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 3.4195,
       "companyUnitPrice": 7.51,
@@ -2769,7 +2736,7 @@
       "truckSalaryAmount": 23.94,
       "status": "Draft",
       "createdAt": "2026-05-17T09:01:35.050Z",
-      "updatedAt": "2026-05-17T09:01:35.050Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "4c57929f-7dbb-436c-9d5d-876d185522b2",
@@ -2780,7 +2747,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 5.3463,
       "companyUnitPrice": 7.51,
@@ -2789,7 +2756,7 @@
       "truckSalaryAmount": 37.42,
       "status": "Draft",
       "createdAt": "2026-05-17T09:02:18.704Z",
-      "updatedAt": "2026-05-17T09:02:18.704Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "ec5c2c4b-db1d-4fb8-942d-59d714474227",
@@ -2800,7 +2767,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Prek Phnov (PP)",
+      "toLocation": "KH.Prek Phnov (PP)",
       "distanceKm": 30,
       "qtyTon": 3.17925,
       "companyUnitPrice": 11.78,
@@ -2809,7 +2776,7 @@
       "truckSalaryAmount": 36.43,
       "status": "Draft",
       "createdAt": "2026-05-17T09:02:51.077Z",
-      "updatedAt": "2026-05-17T09:02:51.077Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "c1d34620-7040-47d3-bad6-1dc2794710e9",
@@ -2820,7 +2787,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Prek Phnov (PP)",
+      "toLocation": "KH.Prek Phnov (PP)",
       "distanceKm": 30,
       "qtyTon": 13.188,
       "companyUnitPrice": 11.78,
@@ -2829,7 +2796,7 @@
       "truckSalaryAmount": 151.13,
       "status": "Draft",
       "createdAt": "2026-05-17T09:03:16.031Z",
-      "updatedAt": "2026-05-17T09:03:16.031Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "da048efb-b6f3-4a55-bdba-b96bcefb1803",
@@ -2840,7 +2807,7 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Prek Phnov (PP)",
+      "toLocation": "KH.Prek Phnov (PP)",
       "distanceKm": 30,
       "qtyTon": 16.956,
       "companyUnitPrice": 11.78,
@@ -2849,7 +2816,7 @@
       "truckSalaryAmount": 194.32,
       "status": "Draft",
       "createdAt": "2026-05-17T09:03:38.699Z",
-      "updatedAt": "2026-05-17T09:03:38.699Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "bfdbbce8-48ec-41d0-bf05-e4ebdde7e211",
@@ -2860,7 +2827,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kien Svay (Kandal)",
+      "toLocation": "D.Kien Svay (Kandal)",
       "distanceKm": 27,
       "qtyTon": 17.29,
       "companyUnitPrice": 9.69,
@@ -2869,7 +2836,7 @@
       "truckSalaryAmount": 161.83,
       "status": "Draft",
       "createdAt": "2026-05-17T09:04:02.366Z",
-      "updatedAt": "2026-05-17T09:04:02.366Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "7595792f-8c8e-4996-8b84-27a0a2ec0bda",
@@ -2880,7 +2847,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 0.5148,
       "companyUnitPrice": 7.51,
@@ -2889,7 +2856,7 @@
       "truckSalaryAmount": 3.6,
       "status": "Draft",
       "createdAt": "2026-05-17T09:04:24.539Z",
-      "updatedAt": "2026-05-17T09:04:24.539Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "a6bc307f-4c41-45f2-82cb-1557abf265cd",
@@ -2900,7 +2867,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Takhmao (Kandal)",
+      "toLocation": "D.Takhmao (Kandal)",
       "distanceKm": 11,
       "qtyTon": 9.85182,
       "companyUnitPrice": 7.41,
@@ -2909,7 +2876,7 @@
       "truckSalaryAmount": 68.96,
       "status": "Draft",
       "createdAt": "2026-05-17T09:04:45.944Z",
-      "updatedAt": "2026-05-17T09:04:45.944Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "09a8f3e6-2419-4c2f-82b7-1e7c2465c612",
@@ -2920,7 +2887,7 @@
       "truckType": "With Crane",
       "driverName": "Preak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Dangkao (PP)",
+      "toLocation": "KH.Dangkao (PP)",
       "distanceKm": 9,
       "qtyTon": 3.98135,
       "companyUnitPrice": 7.51,
@@ -2929,7 +2896,7 @@
       "truckSalaryAmount": 27.87,
       "status": "Draft",
       "createdAt": "2026-05-17T09:05:09.117Z",
-      "updatedAt": "2026-05-17T09:05:09.117Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "01b57b19-1e06-42f6-81e4-04d8bd505856",
@@ -2940,7 +2907,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Boeng Keng Kong (PP)",
+      "toLocation": "KH. Boeng Keng Kong (PP)",
       "distanceKm": 18,
       "qtyTon": 6.052,
       "companyUnitPrice": 9.12,
@@ -2949,7 +2916,7 @@
       "truckSalaryAmount": 52.71,
       "status": "Draft",
       "createdAt": "2026-05-17T09:05:28.598Z",
-      "updatedAt": "2026-05-17T09:05:28.598Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "4d6535ec-ccd3-41d7-8543-e123718097bc",
@@ -2960,7 +2927,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chamkar Morn (PP)",
+      "toLocation": "KH.Chamkar Morn (PP)",
       "distanceKm": 18,
       "qtyTon": 14.814,
       "companyUnitPrice": 9.12,
@@ -2969,7 +2936,7 @@
       "truckSalaryAmount": 129.03,
       "status": "Draft",
       "createdAt": "2026-05-17T09:05:52.350Z",
-      "updatedAt": "2026-05-17T09:05:52.350Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "c3ea2d27-8870-4e19-b2a4-0300dbbf6235",
@@ -2980,7 +2947,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Mean Chey (PP)",
+      "toLocation": "KH.Mean Chey (PP)",
       "distanceKm": 14,
       "qtyTon": 11.396,
       "companyUnitPrice": 7.89,
@@ -2989,7 +2956,7 @@
       "truckSalaryAmount": 84.1,
       "status": "Draft",
       "createdAt": "2026-05-17T09:06:25.578Z",
-      "updatedAt": "2026-05-17T09:06:25.579Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "9c34e4dd-dc34-43c1-8415-351d0e8345c0",
@@ -3000,7 +2967,7 @@
       "truckType": "With Crane",
       "driverName": "Chantha",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chamkar Morn (PP)",
+      "toLocation": "KH.Chamkar Morn (PP)",
       "distanceKm": 18,
       "qtyTon": 17.7055,
       "companyUnitPrice": 9.12,
@@ -3009,7 +2976,7 @@
       "truckSalaryAmount": 154.21,
       "status": "Draft",
       "createdAt": "2026-05-17T09:06:47.990Z",
-      "updatedAt": "2026-05-17T09:06:47.990Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "6457c751-6cb8-4bc3-870a-247340678b1e",
@@ -3020,7 +2987,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 5.873,
       "companyUnitPrice": 9.5,
@@ -3029,7 +2996,7 @@
       "truckSalaryAmount": 53.91,
       "status": "Draft",
       "createdAt": "2026-05-17T09:07:08.935Z",
-      "updatedAt": "2026-05-17T09:07:08.935Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "066149d4-a0e5-4684-af07-65e8ab6518cf",
@@ -3040,7 +3007,7 @@
       "truckType": "With Crane",
       "driverName": "San Thea",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Russei Keo (PP)",
+      "toLocation": "KH.Russei Keo (PP)",
       "distanceKm": 24,
       "qtyTon": 4.05,
       "companyUnitPrice": 9.5,
@@ -3049,7 +3016,7 @@
       "truckSalaryAmount": 37.18,
       "status": "Draft",
       "createdAt": "2026-05-17T09:08:19.540Z",
-      "updatedAt": "2026-05-17T09:08:19.540Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "a7e836ad-e6d3-4eea-a1cb-13d4e0bfcbc5",
@@ -3060,7 +3027,7 @@
       "truckType": "With Crane",
       "driverName": "Sath Rath",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
+      "toLocation": "KH.Posenchey (PP)",
       "distanceKm": 29,
       "qtyTon": 10.76411,
       "companyUnitPrice": 9.79,
@@ -3069,7 +3036,7 @@
       "truckSalaryAmount": 101.83,
       "status": "Draft",
       "createdAt": "2026-05-17T09:08:41.013Z",
-      "updatedAt": "2026-05-17T09:08:41.013Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "e1d7bee8-781e-41bc-8536-bf4f21c28dfb",
@@ -3080,7 +3047,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Posenchey (PP)",
+      "toLocation": "KH.Posenchey (PP)",
       "distanceKm": 29,
       "qtyTon": 4.402,
       "companyUnitPrice": 9.79,
@@ -3089,7 +3056,7 @@
       "truckSalaryAmount": 41.64,
       "status": "Draft",
       "createdAt": "2026-05-17T09:08:55.916Z",
-      "updatedAt": "2026-05-17T09:08:55.916Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "cd512132-3070-49ba-acea-bae3fd54eb31",
@@ -3100,7 +3067,7 @@
       "truckType": "With Crane",
       "driverName": "San Thoen",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 8.592,
       "companyUnitPrice": 9.5,
@@ -3109,7 +3076,7 @@
       "truckSalaryAmount": 78.87,
       "status": "Draft",
       "createdAt": "2026-05-17T09:09:16.461Z",
-      "updatedAt": "2026-05-17T09:09:16.461Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "b7bd45f0-00c5-4b3a-8802-12e2ae0ca807",
@@ -3120,7 +3087,7 @@
       "truckType": "With Crane",
       "driverName": "San thany",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Sen Sok (PP)",
+      "toLocation": "KH.Sen Sok (PP)",
       "distanceKm": 24,
       "qtyTon": 13.99496,
       "companyUnitPrice": 9.5,
@@ -3129,7 +3096,7 @@
       "truckSalaryAmount": 128.47,
       "status": "Draft",
       "createdAt": "2026-05-17T09:09:53.123Z",
-      "updatedAt": "2026-05-17T09:09:53.123Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "c94fbf1d-4972-474b-916e-f32b2524ba10",
@@ -3140,7 +3107,7 @@
       "truckType": "Without Crane",
       "driverName": "Phern Pheark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Thom (Kandal)",
+      "toLocation": "D.Koh Thom (Kandal)",
       "distanceKm": 54,
       "qtyTon": 3.01488,
       "companyUnitPrice": 14.16,
@@ -3149,7 +3116,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:15:43.422Z",
-      "updatedAt": "2026-05-17T09:15:43.422Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "9f23950c-46cd-46e2-814c-310ee0ea50b0",
@@ -3160,7 +3127,7 @@
       "truckType": "Without Crane",
       "driverName": "Phern Pheark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Thom (Kandal)",
+      "toLocation": "D.Koh Thom (Kandal)",
       "distanceKm": 54,
       "qtyTon": 6.785,
       "companyUnitPrice": 14.16,
@@ -3169,7 +3136,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:16:12.809Z",
-      "updatedAt": "2026-05-17T09:16:12.809Z"
+      "updatedAt": "2026-05-18T03:54:45.826Z"
     },
     {
       "id": "cd071538-2130-4cc9-9935-a6ce9d640893",
@@ -3180,7 +3147,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kong Pisei (K.Speu)",
+      "toLocation": "D.Kong Pisei (K.Speu)",
       "distanceKm": 43,
       "qtyTon": 4.049,
       "companyUnitPrice": 14.16,
@@ -3189,7 +3156,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:16:37.911Z",
-      "updatedAt": "2026-05-17T09:16:37.911Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "e1327b27-7b56-49b8-8ae8-a15cce4783d6",
@@ -3200,7 +3167,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kong Pisei (K.Speu)",
+      "toLocation": "D.Kong Pisei (K.Speu)",
       "distanceKm": 43,
       "qtyTon": 6.114,
       "companyUnitPrice": 14.16,
@@ -3209,7 +3176,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:16:57.514Z",
-      "updatedAt": "2026-05-17T09:16:57.514Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "5fd89e49-687d-4491-8ece-b6e5e224f059",
@@ -3220,7 +3187,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kong Pisei (K.Speu)",
+      "toLocation": "D.Kong Pisei (K.Speu)",
       "distanceKm": 43,
       "qtyTon": 2.71,
       "companyUnitPrice": 14.16,
@@ -3229,7 +3196,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:17:18.998Z",
-      "updatedAt": "2026-05-17T09:17:18.998Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "260c1803-98a9-4d4a-abea-91fe1b05c324",
@@ -3240,7 +3207,7 @@
       "truckType": "Without Crane",
       "driverName": "Phern Pheark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Kambol (PP)",
+      "toLocation": "KH.Kambol (PP)",
       "distanceKm": 19,
       "qtyTon": 9.8545,
       "companyUnitPrice": 10.64,
@@ -3249,7 +3216,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:17:47.524Z",
-      "updatedAt": "2026-05-17T09:17:47.524Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "99bfe805-0c33-4c84-8b6b-2e5e572595db",
@@ -3260,7 +3227,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Oudong (K.Speu)",
+      "toLocation": "D.Oudong (K.Speu)",
       "distanceKm": 57,
       "qtyTon": 3.943,
       "companyUnitPrice": 13.3,
@@ -3269,7 +3236,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:18:08.079Z",
-      "updatedAt": "2026-05-17T09:18:08.079Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "59d2fc11-dbc1-442c-a905-11a015cbed0a",
@@ -3280,7 +3247,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Ang Snuol (Kandal)",
+      "toLocation": "D.Ang Snuol (Kandal)",
       "distanceKm": 32,
       "qtyTon": 4.2084,
       "companyUnitPrice": 12.73,
@@ -3289,7 +3256,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:18:31.823Z",
-      "updatedAt": "2026-05-17T09:18:31.823Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "4c6d4261-c012-45a2-8086-7b6580be2b5e",
@@ -3300,7 +3267,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Samrong Torng (K.Speu)",
+      "toLocation": "D.Samrong Torng (K.Speu)",
       "distanceKm": 60,
       "qtyTon": 4.8695,
       "companyUnitPrice": 14.25,
@@ -3309,7 +3276,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:18:53.633Z",
-      "updatedAt": "2026-05-17T09:18:53.633Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "da32801f-aa16-41cd-af88-c3c27c2102c2",
@@ -3320,7 +3287,7 @@
       "truckType": "Without Crane",
       "driverName": "Phern Pheark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Thom (Kandal)",
+      "toLocation": "D.Koh Thom (Kandal)",
       "distanceKm": 54,
       "qtyTon": 10.2595,
       "companyUnitPrice": 14.16,
@@ -3329,7 +3296,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:19:20.944Z",
-      "updatedAt": "2026-05-17T09:19:20.944Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "0efbeda4-dd3e-4097-9fc3-5124a395fd47",
@@ -3340,7 +3307,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Kandal Stueng (Kandal)",
+      "toLocation": "D.Kandal Stueng (Kandal)",
       "distanceKm": 8,
       "qtyTon": 3.887,
       "companyUnitPrice": 8.65,
@@ -3349,7 +3316,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:19:54.203Z",
-      "updatedAt": "2026-05-17T09:19:54.203Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "f32cdde8-9590-4931-bb40-42d11abeed6a",
@@ -3360,7 +3327,7 @@
       "truckType": "Without Crane",
       "driverName": "Phern Pheark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Lvea Em (Kandal)",
+      "toLocation": "D.Lvea Em (Kandal)",
       "distanceKm": 83,
       "qtyTon": 6.8605,
       "companyUnitPrice": 16.91,
@@ -3369,7 +3336,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:20:22.278Z",
-      "updatedAt": "2026-05-17T09:20:22.278Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "f7a5a032-6e7c-4626-97bd-28470d3fda93",
@@ -3380,7 +3347,7 @@
       "truckType": "Without Crane",
       "driverName": "Phern Pheark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khsach Kandal (Kandal)",
+      "toLocation": "D.Khsach Kandal (Kandal)",
       "distanceKm": 50,
       "qtyTon": 3.417,
       "companyUnitPrice": 13.78,
@@ -3389,7 +3356,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:20:43.822Z",
-      "updatedAt": "2026-05-17T09:20:43.822Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "c42c1122-7dbd-4c6a-93f7-1a733cccde49",
@@ -3400,7 +3367,7 @@
       "truckType": "Without Crane",
       "driverName": "Phern Pheark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khsach Kandal (Kandal)",
+      "toLocation": "D.Khsach Kandal (Kandal)",
       "distanceKm": 50,
       "qtyTon": 1.6985,
       "companyUnitPrice": 13.78,
@@ -3409,7 +3376,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:21:04.723Z",
-      "updatedAt": "2026-05-17T09:21:04.723Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "647bdb65-95c0-46f3-bcf0-cc037489e484",
@@ -3420,7 +3387,7 @@
       "truckType": "Without Crane",
       "driverName": "Phern Pheark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Lvea Em (Kandal)",
+      "toLocation": "D.Lvea Em (Kandal)",
       "distanceKm": 83,
       "qtyTon": 0.206,
       "companyUnitPrice": 16.91,
@@ -3429,7 +3396,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:21:30.093Z",
-      "updatedAt": "2026-05-17T09:21:30.093Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "70ec4ffb-5b50-44e8-82c1-6e8fef525605",
@@ -3440,7 +3407,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Thom (Kandal)",
+      "toLocation": "D.Koh Thom (Kandal)",
       "distanceKm": 54,
       "qtyTon": 4.7007,
       "companyUnitPrice": 14.16,
@@ -3449,7 +3416,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:21:56.329Z",
-      "updatedAt": "2026-05-17T09:21:56.329Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "e4d4fd73-2c71-40a8-8ccb-1f6009d01cf1",
@@ -3460,7 +3427,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Koh Thom (Kandal)",
+      "toLocation": "D.Koh Thom (Kandal)",
       "distanceKm": 54,
       "qtyTon": 4.125,
       "companyUnitPrice": 14.16,
@@ -3469,7 +3436,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:22:24.768Z",
-      "updatedAt": "2026-05-17T09:22:24.768Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "d77eafe5-ba0a-4d9f-9b84-50d24d3c5719",
@@ -3480,7 +3447,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chba Ampeou (PP)",
+      "toLocation": "KH.Chba Ampeou (PP)",
       "distanceKm": 20,
       "qtyTon": 1,
       "companyUnitPrice": 9.31,
@@ -3489,7 +3456,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:22:51.232Z",
-      "updatedAt": "2026-05-17T09:22:51.232Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "f0df1e56-a941-4609-9fa3-6060005765cd",
@@ -3500,7 +3467,7 @@
       "truckType": "Without Crane",
       "driverName": "Poy Polleark",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Khan Chba Ampeou (PP)",
+      "toLocation": "KH.Chba Ampeou (PP)",
       "distanceKm": 20,
       "qtyTon": 10,
       "companyUnitPrice": 9.31,
@@ -3509,7 +3476,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T09:23:18.739Z",
-      "updatedAt": "2026-05-17T09:23:18.739Z"
+      "updatedAt": "2026-05-18T03:54:45.827Z"
     },
     {
       "id": "b50acf49-9648-4534-a732-ad93266e2109",
@@ -3520,7 +3487,7 @@
       "truckType": "Without Crane",
       "driverName": "Kut Channak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Chbar Morn (K.Speu)",
+      "toLocation": "D.Chbar Morn (K.Speu)",
       "distanceKm": 52,
       "qtyTon": 4.9459,
       "companyUnitPrice": 13.78,
@@ -3529,7 +3496,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T11:55:34.550Z",
-      "updatedAt": "2026-05-17T11:55:34.550Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "dedde9e3-d3c0-4b04-ab9f-f197b10e7ad0",
@@ -3540,7 +3507,7 @@
       "truckType": "Without Crane",
       "driverName": "Kut Channak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Chbar Morn (K.Speu)",
+      "toLocation": "D.Chbar Morn (K.Speu)",
       "distanceKm": 52,
       "qtyTon": 2.7565,
       "companyUnitPrice": 13.78,
@@ -3549,7 +3516,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T11:55:58.207Z",
-      "updatedAt": "2026-05-17T11:55:58.207Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "0d9a02b1-c4fa-493d-9110-ea3d257ef539",
@@ -3560,7 +3527,7 @@
       "truckType": "Without Crane",
       "driverName": "Kut Channak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Chbar Morn (K.Speu)",
+      "toLocation": "D.Chbar Morn (K.Speu)",
       "distanceKm": 52,
       "qtyTon": 2.226,
       "companyUnitPrice": 13.78,
@@ -3569,7 +3536,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T11:56:32.036Z",
-      "updatedAt": "2026-05-17T11:56:32.036Z"
+      "updatedAt": "2026-05-18T03:54:45.828Z"
     },
     {
       "id": "f6f69792-f83e-453e-bd82-6cd89704b574",
@@ -3580,7 +3547,7 @@
       "truckType": "Without Crane",
       "driverName": "Kut Channak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Treang (Takeo)",
+      "toLocation": "D.Treang (Takeo)",
       "distanceKm": 64,
       "qtyTon": 7.674,
       "companyUnitPrice": 14.63,
@@ -3589,7 +3556,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T11:57:14.273Z",
-      "updatedAt": "2026-05-17T11:57:14.273Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "c494dcdc-f988-4b97-a850-8deb63df4abe",
@@ -3600,7 +3567,7 @@
       "truckType": "Without Crane",
       "driverName": "Kut Channak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Treang (Takeo)",
+      "toLocation": "D.Treang (Takeo)",
       "distanceKm": 64,
       "qtyTon": 0.5,
       "companyUnitPrice": 14.63,
@@ -3609,7 +3576,7 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T11:57:38.771Z",
-      "updatedAt": "2026-05-17T11:57:38.771Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     },
     {
       "id": "b5f372d7-9de3-4329-a132-9b578e5bc2de",
@@ -3620,7 +3587,7 @@
       "truckType": "Without Crane",
       "driverName": "Kut Channak",
       "fromLocation": "Warehouse-09",
-      "toLocation": "Treang (Takeo)",
+      "toLocation": "D.Treang (Takeo)",
       "distanceKm": 64,
       "qtyTon": 0.726,
       "companyUnitPrice": 14.63,
@@ -3629,10 +3596,34 @@
       "truckSalaryAmount": 0,
       "status": "Draft",
       "createdAt": "2026-05-17T11:58:19.047Z",
-      "updatedAt": "2026-05-17T11:58:19.047Z"
+      "updatedAt": "2026-05-18T03:54:45.829Z"
     }
   ],
   "activity": [
+    {
+      "id": "23d53c6e-d03d-4c9f-a04e-35a49c3d2d69",
+      "message": "Applied official company price list effective 11/05/2026. Replaced old price master and updated 90 delivery rows.",
+      "type": "success",
+      "createdAt": "2026-05-18T03:54:45.829Z"
+    },
+    {
+      "id": "97c9c57f-784d-4524-b0c8-69376b01736b",
+      "message": "Applied official company price list effective 11/05/2026. Replaced old price master and updated 90 delivery rows.",
+      "type": "success",
+      "createdAt": "2026-05-18T02:34:58.735Z"
+    },
+    {
+      "id": "d8314a5a-360b-4ed8-8220-0cd0df816798",
+      "message": "Applied official company price list effective 11/05/2026. Replaced old price master and updated 88 delivery rows.",
+      "type": "success",
+      "createdAt": "2026-05-18T02:32:00.509Z"
+    },
+    {
+      "id": "9ae51a11-3af9-40a6-aa2e-aba58e20c6ff",
+      "message": "Applied official company price list effective 11/05/2026. Replaced old price master and updated 24 delivery rows.",
+      "type": "success",
+      "createdAt": "2026-05-18T02:30:21.538Z"
+    },
     {
       "id": "e94f11b9-059c-4dbc-a21e-dc4b21d62af4",
       "message": "Updated truck 3B-9369 (Without Crane).",
@@ -3908,30 +3899,6 @@
       "message": "Added With Crane price for Svay Tiep (S.Rieng), effective 2026-05-11.",
       "type": "price",
       "createdAt": "2026-05-17T06:40:43.236Z"
-    },
-    {
-      "id": "742c2a69-cc61-4128-b969-82d7e59801a4",
-      "message": "Added With Crane price for Kompong Ro (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:40:04.012Z"
-    },
-    {
-      "id": "2229ab1e-a8d2-406b-a5d9-3a65aaf98f6b",
-      "message": "Bulk updated 3 Without Crane company price rows, effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:18:21.820Z"
-    },
-    {
-      "id": "4005cd45-df90-4024-a733-a5a78832c0cb",
-      "message": "Bulk updated 6 Without Crane company price rows, effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:18:04.398Z"
-    },
-    {
-      "id": "d2751ec5-32fd-430f-ae52-b4e01d25c29a",
-      "message": "Bulk updated 8 Without Crane company price rows, effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:17:36.065Z"
     }
   ]
 }
