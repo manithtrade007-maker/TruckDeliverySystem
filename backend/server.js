@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
+import ExcelJS from "exceljs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -846,11 +847,29 @@ function formatShortDate(value) {
   return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
+function currentLocalDate() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Phnom_Penh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function slug(value) {
   return String(value || "all")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+function numericMonthFilePart(value) {
+  const text = normalizeText(value);
+  const match = text.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return slug(text || "all-months");
+  return `${match[2]}-${match[1]}`;
 }
 
 function monthLabel(value) {
@@ -875,13 +894,20 @@ function monthLabel(value) {
 }
 
 function truckTypeFileLabel(truckType) {
-  return truckType === "With Crane" ? "car-with-crane" : "car-no-crane";
+  return truckType === "With Crane" ? "car-crane" : "car-no-crane";
 }
 
 function truckTypeLabel(truckType) {
   if (truckType === "With Crane") return "Crane";
   if (truckType === "Without Crane") return "No Crane";
   return truckType || "";
+}
+
+function statementExportFileName(statement, fallbackRows = []) {
+  if (!statement) {
+    return `accounting-${slug(fallbackRows[0]?.truckType || "all")}`;
+  }
+  return `statement-${statement.statementNumber}-${numericMonthFilePart(statement.month)}-${truckTypeFileLabel(statement.truckType)}`;
 }
 
 function rowsByPage(rows, pageSize = 30) {
@@ -1097,6 +1123,194 @@ function accountingExport(data, rows) {
     ["qtyTon", "companyTotalAmount"],
     { headerHtml, signatureHtml, mergedTotal: true }
   );
+}
+
+async function accountingWorkbook(data, rows) {
+  const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = data.settings.companyName || "N&M LOGISTIC";
+  workbook.created = new Date();
+  workbook.modified = new Date();
+
+  const worksheet = workbook.addWorksheet("N&M LOGISTIC", {
+    pageSetup: {
+      paperSize: 9,
+      orientation: "portrait",
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 1,
+      horizontalCentered: false,
+      verticalCentered: false,
+      margins: {
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        header: 0,
+        footer: 0
+      }
+    },
+    views: [{ showGridLines: true }]
+  });
+
+  worksheet.properties.defaultRowHeight = 22;
+  worksheet.columns = [
+    { key: "rowNo", width: 4 },
+    { key: "deliveryDate", width: 13 },
+    { key: "invoiceNo", width: 13 },
+    { key: "truckNo", width: 10 },
+    { key: "truckType", width: 13 },
+    { key: "fromLocation", width: 14 },
+    { key: "toLocation", width: 24 },
+    { key: "qtyTon", width: 12 },
+    { key: "companyUnitPrice", width: 11 },
+    { key: "companyTotalAmount", width: 14 }
+  ];
+
+  const thinBorder = {
+    top: { style: "thin", color: { argb: "FF333333" } },
+    left: { style: "thin", color: { argb: "FF333333" } },
+    bottom: { style: "thin", color: { argb: "FF333333" } },
+    right: { style: "thin", color: { argb: "FF333333" } }
+  };
+  const baseFont = { name: "Arial", size: 10 };
+  const titleFont = { name: "Arial", size: 14, bold: true };
+  const boldFont = { name: "Arial", size: 10, bold: true };
+
+  const merge = (range, value, options = {}) => {
+    worksheet.mergeCells(range);
+    const cell = worksheet.getCell(range.split(":")[0]);
+    cell.value = value;
+    cell.font = options.font || baseFont;
+    cell.alignment = options.alignment || { vertical: "middle" };
+    cell.border = thinBorder;
+    return cell;
+  };
+
+  const styleRange = (startRow, endRow, startCol = 1, endCol = 10, options = {}) => {
+    for (let rowNumber = startRow; rowNumber <= endRow; rowNumber += 1) {
+      for (let colNumber = startCol; colNumber <= endCol; colNumber += 1) {
+        const cell = worksheet.getCell(rowNumber, colNumber);
+        cell.font = options.font || cell.font || baseFont;
+        cell.alignment = options.alignment || cell.alignment || { vertical: "middle" };
+        cell.border = options.border || thinBorder;
+        if (options.fill) cell.fill = options.fill;
+      }
+    }
+  };
+
+  merge("A1:F1", data.settings.companyName || "N&M LOGISTIC", {
+    font: titleFont,
+    alignment: { horizontal: "center", vertical: "middle" }
+  });
+  merge("G1:H1", "Invoice No:", { font: boldFont });
+  merge("I1:J1", statement?.statementNumber || "", {
+    font: boldFont,
+    alignment: { horizontal: "right", vertical: "middle" }
+  });
+  merge("A2:F2", `From: ${data.settings.fromName || "Nhep Manith"}`, { font: boldFont });
+  merge("G2:H2", "Statement Date:", { font: boldFont });
+  merge("I2:J2", formatShortDate(statement?.statementDate || ""), {
+    font: boldFont,
+    alignment: { horizontal: "right", vertical: "middle" }
+  });
+  merge("A3:F3", `To: ${data.settings.toName || "SLP"}`, { font: boldFont });
+  merge("G3:J3", "Page 1 of 1", {
+    font: baseFont,
+    alignment: { horizontal: "right", vertical: "middle" }
+  });
+
+  [1, 2, 3].forEach((rowNumber) => {
+    worksheet.getRow(rowNumber).height = rowNumber === 1 ? 18 : 16;
+  });
+  styleRange(1, 3);
+
+  const headers = ["No", "Delivery Date", "Invoice No", "Truck No", "Type of Truck", "From", "To", "QTY(T)", "Unit Price", "Total Amount"];
+  worksheet.getRow(4).values = headers;
+  worksheet.getRow(4).height = 20;
+  styleRange(4, 4, 1, 10, {
+    font: boldFont,
+    alignment: { horizontal: "center", vertical: "middle", wrapText: true },
+    fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } }
+  });
+
+  rows.forEach((row, index) => {
+    const rowNumber = index + 5;
+    worksheet.getRow(rowNumber).height = 22;
+    worksheet.getRow(rowNumber).values = [
+      index + 1,
+      formatShortDate(row.deliveryDate),
+      String(row.invoiceNo || ""),
+      row.truckNo || "",
+      truckTypeLabel(row.truckType),
+      row.fromLocation || "",
+      row.toLocation || "",
+      `${Number(row.qtyTon || 0).toFixed(5)}T`,
+      `$${unitMoney(row.companyUnitPrice)}`,
+      `$${money(row.companyTotalAmount)}`
+    ];
+    styleRange(rowNumber, rowNumber, 1, 10, {
+      font: baseFont,
+      alignment: { horizontal: "center", vertical: "middle", wrapText: false }
+    });
+    worksheet.getCell(rowNumber, 7).alignment = { horizontal: "left", vertical: "middle", wrapText: false };
+  });
+
+  const totalRowNumber = rows.length + 5;
+  worksheet.getRow(totalRowNumber).height = 20;
+  worksheet.mergeCells(totalRowNumber, 1, totalRowNumber, 7);
+  worksheet.getCell(totalRowNumber, 1).value = "Total";
+  worksheet.getCell(totalRowNumber, 8).value = `${rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0).toFixed(5)}T`;
+  worksheet.getCell(totalRowNumber, 10).value = `$${money(rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0))}`;
+  styleRange(totalRowNumber, totalRowNumber, 1, 10, {
+    font: boldFont,
+    alignment: { horizontal: "center", vertical: "middle" }
+  });
+  worksheet.getCell(totalRowNumber, 10).alignment = { horizontal: "right", vertical: "middle" };
+
+  const signatureHeaderRow = totalRowNumber + 1;
+  const signatureBlankRow = totalRowNumber + 2;
+  const nameRow = totalRowNumber + 3;
+  const dateRow = totalRowNumber + 4;
+  worksheet.getRow(signatureHeaderRow).height = 20;
+  worksheet.getRow(signatureBlankRow).height = 36;
+  worksheet.getRow(nameRow).height = 18;
+  worksheet.getRow(dateRow).height = 18;
+  worksheet.mergeCells(signatureHeaderRow, 1, signatureHeaderRow, 3);
+  worksheet.mergeCells(signatureHeaderRow, 4, signatureHeaderRow, 7);
+  worksheet.mergeCells(signatureHeaderRow, 8, signatureHeaderRow, 10);
+  worksheet.getCell(signatureHeaderRow, 1).value = "Prepared By";
+  worksheet.getCell(signatureHeaderRow, 4).value = "Checked By";
+  worksheet.getCell(signatureHeaderRow, 8).value = "Approved By";
+  worksheet.mergeCells(signatureBlankRow, 1, signatureBlankRow, 3);
+  worksheet.mergeCells(signatureBlankRow, 4, signatureBlankRow, 7);
+  worksheet.mergeCells(signatureBlankRow, 8, signatureBlankRow, 10);
+  worksheet.mergeCells(nameRow, 1, nameRow, 3);
+  worksheet.mergeCells(nameRow, 4, nameRow, 7);
+  worksheet.mergeCells(nameRow, 8, nameRow, 10);
+  worksheet.getCell(nameRow, 1).value = "Name: Nhep Manith";
+  worksheet.getCell(nameRow, 4).value = "Name:";
+  worksheet.getCell(nameRow, 8).value = "Name:";
+  worksheet.mergeCells(dateRow, 1, dateRow, 3);
+  worksheet.mergeCells(dateRow, 4, dateRow, 7);
+  worksheet.mergeCells(dateRow, 8, dateRow, 10);
+  worksheet.getCell(dateRow, 1).value = `Date: ${formatShortDate(currentLocalDate())}`;
+  worksheet.getCell(dateRow, 4).value = "Date:";
+  worksheet.getCell(dateRow, 8).value = "Date:";
+  styleRange(signatureHeaderRow, dateRow, 1, 10, {
+    font: baseFont,
+    alignment: { horizontal: "center", vertical: "middle" }
+  });
+  [nameRow, dateRow].forEach((rowNumber) => {
+    [1, 4, 8].forEach((colNumber) => {
+      worksheet.getCell(rowNumber, colNumber).alignment = { horizontal: "left", vertical: "middle" };
+    });
+  });
+
+  worksheet.pageSetup.printArea = `A1:J${dateRow}`;
+  worksheet.views = [{ showGridLines: true }];
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
 }
 
 function salaryExport(data, rows, query = {}) {
@@ -1766,8 +1980,49 @@ async function api(req, res, url) {
         saved.push(price);
       }
       if (saved.length < 1) throw new Error("No valid price rows found.");
-      addActivity(data, `Bulk updated ${saved.length} ${truckTypeLabel(truckType)} ${priceType} price row${saved.length > 1 ? "s" : ""}, effective ${effectiveDate}.`, "price");
-      return { added, updated, total: saved.length };
+
+      let recalculatedDeliveries = 0;
+      if (priceType === "driver" || priceType === "both") {
+        const savedRouteKeys = new Set(saved.map((price) => [
+          price.fromLocation,
+          price.truckType,
+          locationBaseKey(price.toLocation)
+        ].join("||")));
+
+        for (const delivery of data.deliveries) {
+          const routeKey = [
+            delivery.fromLocation,
+            delivery.truckType,
+            locationBaseKey(delivery.toLocation)
+          ].join("||");
+          if (!savedRouteKeys.has(routeKey)) continue;
+          const effectivePrice = findEffectivePrice(data, {
+            fromLocation: delivery.fromLocation,
+            toLocation: delivery.toLocation,
+            truckType: delivery.truckType,
+            deliveryDate: delivery.deliveryDate
+          });
+          if (!effectivePrice) continue;
+          const nextDriverPrice = toNumber(effectivePrice.truckSalaryUnitPrice);
+          const nextDriverAmount = roundMoney(toNumber(delivery.qtyTon) * nextDriverPrice);
+          if (
+            nextDriverPrice !== toNumber(delivery.truckSalaryUnitPrice) ||
+            nextDriverAmount !== toNumber(delivery.truckSalaryAmount)
+          ) {
+            delivery.truckSalaryUnitPrice = nextDriverPrice;
+            delivery.truckSalaryAmount = nextDriverAmount;
+            delivery.updatedAt = new Date().toISOString();
+            recalculatedDeliveries += 1;
+          }
+        }
+      }
+
+      addActivity(
+        data,
+        `Bulk updated ${saved.length} ${truckTypeLabel(truckType)} ${priceType} price row${saved.length > 1 ? "s" : ""}, effective ${effectiveDate}${recalculatedDeliveries ? `, recalculated ${recalculatedDeliveries} delivery row${recalculatedDeliveries > 1 ? "s" : ""}` : ""}.`,
+        "price"
+      );
+      return { added, updated, total: saved.length, recalculatedDeliveries };
     });
     return sendJson(res, 200, result);
   }
@@ -1855,9 +2110,7 @@ async function api(req, res, url) {
     const statement = query.statementId
       ? data.statements.find((item) => item.id === query.statementId)
       : null;
-    const fileName = statement
-      ? `statement-${statement.statementNumber}-${monthLabel(statement.month)}-${truckTypeFileLabel(statement.truckType)}`
-      : `accounting-${slug(query.truckType || rows[0]?.truckType || "all")}`;
+    const fileName = statementExportFileName(statement, rows);
     if (format === "pdf") {
       res.writeHead(200, {
         "Content-Type": "application/pdf",
@@ -1865,11 +2118,12 @@ async function api(req, res, url) {
       });
       return res.end(statementPdf(data, rows));
     }
+    const workbookBuffer = await accountingWorkbook(data, rows);
     res.writeHead(200, {
-      "Content-Type": "application/vnd.ms-excel; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${slug(fileName)}.xls"`
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${slug(fileName)}.xlsx"`
     });
-    return res.end(accountingExport(data, rows));
+    return res.end(workbookBuffer);
   }
 
   if (req.method === "GET" && url.pathname === "/api/export/salary") {

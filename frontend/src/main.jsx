@@ -919,7 +919,7 @@ function App() {
       });
       await loadData();
       setBulkPriceForm((current) => ({ ...current, locationsText: "", pricesText: "", driverPricesText: "", rowsText: "" }));
-      flash(`Bulk price update saved: ${result.added} added, ${result.updated} updated.`);
+      flash(`Bulk price update saved: ${result.added} added, ${result.updated} updated${result.recalculatedDeliveries ? `, ${result.recalculatedDeliveries} delivery rows recalculated` : ""}.`);
     } catch (err) {
       flash(err.message, "error");
     }

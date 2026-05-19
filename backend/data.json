@@ -78,7 +78,7 @@
       "truckType": "With Crane",
       "distanceKm": 32,
       "companyUnitPrice": 11.4,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 10.7,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -89,7 +89,7 @@
       "truckType": "With Crane",
       "distanceKm": 70,
       "companyUnitPrice": 14.35,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.35,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -100,7 +100,7 @@
       "truckType": "With Crane",
       "distanceKm": 88,
       "companyUnitPrice": 14.44,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.44,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -111,7 +111,7 @@
       "truckType": "With Crane",
       "distanceKm": 62,
       "companyUnitPrice": 13.78,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.78,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -122,7 +122,7 @@
       "truckType": "With Crane",
       "distanceKm": 81,
       "companyUnitPrice": 14.73,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.73,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -133,7 +133,7 @@
       "truckType": "With Crane",
       "distanceKm": 23,
       "companyUnitPrice": 9.41,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.71,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -144,7 +144,7 @@
       "truckType": "With Crane",
       "distanceKm": 96,
       "companyUnitPrice": 17.1,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.1,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -155,7 +155,7 @@
       "truckType": "With Crane",
       "distanceKm": 52,
       "companyUnitPrice": 12.35,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.35,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -166,7 +166,7 @@
       "truckType": "With Crane",
       "distanceKm": 56,
       "companyUnitPrice": 12.64,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.64,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -177,7 +177,7 @@
       "truckType": "With Crane",
       "distanceKm": 145,
       "companyUnitPrice": 16.53,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.53,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -188,7 +188,7 @@
       "truckType": "With Crane",
       "distanceKm": 135,
       "companyUnitPrice": 17.67,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.67,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -199,7 +199,7 @@
       "truckType": "With Crane",
       "distanceKm": 96,
       "companyUnitPrice": 14.82,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.82,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -210,7 +210,7 @@
       "truckType": "With Crane",
       "distanceKm": 89,
       "companyUnitPrice": 16.15,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.15,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -221,7 +221,7 @@
       "truckType": "With Crane",
       "distanceKm": 8,
       "companyUnitPrice": 7.6,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 6.9,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -232,7 +232,7 @@
       "truckType": "With Crane",
       "distanceKm": 132,
       "companyUnitPrice": 16.15,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.15,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -243,7 +243,7 @@
       "truckType": "With Crane",
       "distanceKm": 50,
       "companyUnitPrice": 12.26,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.06,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -254,7 +254,7 @@
       "truckType": "With Crane",
       "distanceKm": 27,
       "companyUnitPrice": 9.69,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.99,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -265,7 +265,7 @@
       "truckType": "With Crane",
       "distanceKm": 97,
       "companyUnitPrice": 17.01,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.01,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -276,7 +276,7 @@
       "truckType": "With Crane",
       "distanceKm": 92,
       "companyUnitPrice": 16.91,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.91,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -287,7 +287,7 @@
       "truckType": "With Crane",
       "distanceKm": 54,
       "companyUnitPrice": 12.73,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.53,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -298,7 +298,7 @@
       "truckType": "With Crane",
       "distanceKm": 158,
       "companyUnitPrice": 17.1,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.1,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -309,7 +309,7 @@
       "truckType": "With Crane",
       "distanceKm": 43,
       "companyUnitPrice": 12.83,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.83,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -320,7 +320,7 @@
       "truckType": "With Crane",
       "distanceKm": 79,
       "companyUnitPrice": 14.82,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.62,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -331,7 +331,7 @@
       "truckType": "With Crane",
       "distanceKm": 83,
       "companyUnitPrice": 15.11,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.91,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -342,7 +342,7 @@
       "truckType": "With Crane",
       "distanceKm": 113,
       "companyUnitPrice": 15.49,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.49,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -353,7 +353,7 @@
       "truckType": "With Crane",
       "distanceKm": 47,
       "companyUnitPrice": 12.16,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 10.96,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -364,7 +364,7 @@
       "truckType": "With Crane",
       "distanceKm": 57,
       "companyUnitPrice": 12.83,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.83,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -375,7 +375,7 @@
       "truckType": "With Crane",
       "distanceKm": 82,
       "companyUnitPrice": 14.92,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.92,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -386,7 +386,7 @@
       "truckType": "With Crane",
       "distanceKm": 91,
       "companyUnitPrice": 14.73,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.73,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -397,7 +397,7 @@
       "truckType": "With Crane",
       "distanceKm": 79,
       "companyUnitPrice": 14.16,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.16,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -408,7 +408,7 @@
       "truckType": "With Crane",
       "distanceKm": 106,
       "companyUnitPrice": 15.11,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.11,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -419,7 +419,7 @@
       "truckType": "With Crane",
       "distanceKm": 53,
       "companyUnitPrice": 12.64,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.44,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -430,7 +430,7 @@
       "truckType": "With Crane",
       "distanceKm": 96,
       "companyUnitPrice": 14.82,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.82,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -441,7 +441,7 @@
       "truckType": "With Crane",
       "distanceKm": 52,
       "companyUnitPrice": 10.93,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 10.23,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -452,7 +452,7 @@
       "truckType": "With Crane",
       "distanceKm": 102,
       "companyUnitPrice": 17.67,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.67,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -463,7 +463,7 @@
       "truckType": "With Crane",
       "distanceKm": 153,
       "companyUnitPrice": 16.82,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.82,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -474,7 +474,7 @@
       "truckType": "With Crane",
       "distanceKm": 149,
       "companyUnitPrice": 16.72,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.72,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -485,7 +485,7 @@
       "truckType": "With Crane",
       "distanceKm": 25,
       "companyUnitPrice": 10.07,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.37,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -496,7 +496,7 @@
       "truckType": "With Crane",
       "distanceKm": 38,
       "companyUnitPrice": 11.59,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 10.59,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -507,7 +507,7 @@
       "truckType": "With Crane",
       "distanceKm": 60,
       "companyUnitPrice": 12.73,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.73,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -518,7 +518,7 @@
       "truckType": "With Crane",
       "distanceKm": 112,
       "companyUnitPrice": 15.49,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.49,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -529,7 +529,7 @@
       "truckType": "With Crane",
       "distanceKm": 116,
       "companyUnitPrice": 15.87,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.87,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -540,7 +540,7 @@
       "truckType": "With Crane",
       "distanceKm": 120,
       "companyUnitPrice": 15.77,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.77,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -551,7 +551,7 @@
       "truckType": "With Crane",
       "distanceKm": 131,
       "companyUnitPrice": 16.06,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.06,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -562,7 +562,7 @@
       "truckType": "With Crane",
       "distanceKm": 158,
       "companyUnitPrice": 17.1,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.1,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -573,7 +573,7 @@
       "truckType": "With Crane",
       "distanceKm": 11,
       "companyUnitPrice": 7.41,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 6.71,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -584,7 +584,7 @@
       "truckType": "With Crane",
       "distanceKm": 93,
       "companyUnitPrice": 15.49,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.49,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -595,7 +595,7 @@
       "truckType": "With Crane",
       "distanceKm": 77,
       "companyUnitPrice": 13.87,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.87,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -606,7 +606,7 @@
       "truckType": "With Crane",
       "distanceKm": 64,
       "companyUnitPrice": 13.02,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.02,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -617,7 +617,7 @@
       "truckType": "With Crane",
       "distanceKm": 18,
       "companyUnitPrice": 9.12,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.42,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -628,7 +628,7 @@
       "truckType": "With Crane",
       "distanceKm": 21,
       "companyUnitPrice": 9.22,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.52,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -639,7 +639,7 @@
       "truckType": "With Crane",
       "distanceKm": 18,
       "companyUnitPrice": 9.12,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.42,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -650,7 +650,7 @@
       "truckType": "With Crane",
       "distanceKm": 20,
       "companyUnitPrice": 8.36,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 7.66,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -661,7 +661,7 @@
       "truckType": "With Crane",
       "distanceKm": 49,
       "companyUnitPrice": 13.02,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.02,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -672,7 +672,7 @@
       "truckType": "With Crane",
       "distanceKm": 9,
       "companyUnitPrice": 7.51,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 6.81,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -683,7 +683,7 @@
       "truckType": "With Crane",
       "distanceKm": 21,
       "companyUnitPrice": 9.22,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.52,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -694,7 +694,7 @@
       "truckType": "With Crane",
       "distanceKm": 19,
       "companyUnitPrice": 9.69,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.99,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -705,7 +705,7 @@
       "truckType": "With Crane",
       "distanceKm": 14,
       "companyUnitPrice": 7.89,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 7.19,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -716,7 +716,7 @@
       "truckType": "With Crane",
       "distanceKm": 29,
       "companyUnitPrice": 9.79,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.09,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -727,7 +727,7 @@
       "truckType": "With Crane",
       "distanceKm": 30,
       "companyUnitPrice": 11.78,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 10.78,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -738,7 +738,7 @@
       "truckType": "With Crane",
       "distanceKm": 24,
       "companyUnitPrice": 9.5,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.8,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -749,7 +749,7 @@
       "truckType": "With Crane",
       "distanceKm": 24,
       "companyUnitPrice": 9.5,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.8,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -760,7 +760,7 @@
       "truckType": "With Crane",
       "distanceKm": 18,
       "companyUnitPrice": 9.22,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.52,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -771,7 +771,7 @@
       "truckType": "Without Crane",
       "distanceKm": 137,
       "companyUnitPrice": 17.77,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.77,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -782,7 +782,7 @@
       "truckType": "Without Crane",
       "distanceKm": 151,
       "companyUnitPrice": 18.34,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.34,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -793,7 +793,7 @@
       "truckType": "Without Crane",
       "distanceKm": 32,
       "companyUnitPrice": 12.73,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.03,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -804,7 +804,7 @@
       "truckType": "Without Crane",
       "distanceKm": 70,
       "companyUnitPrice": 15.96,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.96,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -815,7 +815,7 @@
       "truckType": "Without Crane",
       "distanceKm": 91,
       "companyUnitPrice": 15.96,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.96,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -826,7 +826,7 @@
       "truckType": "Without Crane",
       "distanceKm": 106,
       "companyUnitPrice": 16.53,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.53,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -837,7 +837,7 @@
       "truckType": "Without Crane",
       "distanceKm": 88,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -848,7 +848,7 @@
       "truckType": "Without Crane",
       "distanceKm": 62,
       "companyUnitPrice": 15.3,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.3,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -859,7 +859,7 @@
       "truckType": "Without Crane",
       "distanceKm": 81,
       "companyUnitPrice": 15.58,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.58,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -870,7 +870,7 @@
       "truckType": "Without Crane",
       "distanceKm": 23,
       "companyUnitPrice": 10.55,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.85,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -881,7 +881,7 @@
       "truckType": "Without Crane",
       "distanceKm": 169,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -892,7 +892,7 @@
       "truckType": "Without Crane",
       "distanceKm": 96,
       "companyUnitPrice": 17.96,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.96,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -903,7 +903,7 @@
       "truckType": "Without Crane",
       "distanceKm": 142,
       "companyUnitPrice": 17.96,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.96,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -914,7 +914,7 @@
       "truckType": "Without Crane",
       "distanceKm": 156,
       "companyUnitPrice": 18.53,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.53,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -925,7 +925,7 @@
       "truckType": "Without Crane",
       "distanceKm": 170,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -936,7 +936,7 @@
       "truckType": "Without Crane",
       "distanceKm": 52,
       "companyUnitPrice": 13.78,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.78,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -958,7 +958,7 @@
       "truckType": "Without Crane",
       "distanceKm": 94,
       "companyUnitPrice": 16.15,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.15,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -969,7 +969,7 @@
       "truckType": "Without Crane",
       "distanceKm": 115,
       "companyUnitPrice": 16.82,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.82,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -980,7 +980,7 @@
       "truckType": "Without Crane",
       "distanceKm": 107,
       "companyUnitPrice": 16.63,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.63,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -991,7 +991,7 @@
       "truckType": "Without Crane",
       "distanceKm": 56,
       "companyUnitPrice": 14.06,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.06,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1002,7 +1002,7 @@
       "truckType": "Without Crane",
       "distanceKm": 110,
       "companyUnitPrice": 16.72,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.72,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1013,7 +1013,7 @@
       "truckType": "Without Crane",
       "distanceKm": 145,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1024,7 +1024,7 @@
       "truckType": "Without Crane",
       "distanceKm": 109,
       "companyUnitPrice": 16.63,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.63,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1035,7 +1035,7 @@
       "truckType": "Without Crane",
       "distanceKm": 231,
       "companyUnitPrice": 21.57,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 20.57,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1046,7 +1046,7 @@
       "truckType": "Without Crane",
       "distanceKm": 135,
       "companyUnitPrice": 16.15,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.15,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1057,7 +1057,7 @@
       "truckType": "Without Crane",
       "distanceKm": 96,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1068,7 +1068,7 @@
       "truckType": "Without Crane",
       "distanceKm": 124,
       "companyUnitPrice": 17.2,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.2,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1079,7 +1079,7 @@
       "truckType": "Without Crane",
       "distanceKm": 89,
       "companyUnitPrice": 15.96,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.96,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1090,7 +1090,7 @@
       "truckType": "Without Crane",
       "distanceKm": 137,
       "companyUnitPrice": 17.77,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.77,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1101,7 +1101,7 @@
       "truckType": "Without Crane",
       "distanceKm": 8,
       "companyUnitPrice": 8.65,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 7.95,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1112,7 +1112,7 @@
       "truckType": "Without Crane",
       "distanceKm": 160,
       "companyUnitPrice": 18.72,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.72,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1123,7 +1123,7 @@
       "truckType": "Without Crane",
       "distanceKm": 132,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1134,7 +1134,7 @@
       "truckType": "Without Crane",
       "distanceKm": 50,
       "companyUnitPrice": 13.78,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.78,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1145,7 +1145,7 @@
       "truckType": "Without Crane",
       "distanceKm": 27,
       "companyUnitPrice": 10.93,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 10.23,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1156,7 +1156,7 @@
       "truckType": "Without Crane",
       "distanceKm": 99,
       "companyUnitPrice": 18.15,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.15,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1167,7 +1167,7 @@
       "truckType": "Without Crane",
       "distanceKm": 97,
       "companyUnitPrice": 18.05,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.05,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1178,7 +1178,7 @@
       "truckType": "Without Crane",
       "distanceKm": 92,
       "companyUnitPrice": 17.77,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.77,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1189,7 +1189,7 @@
       "truckType": "Without Crane",
       "distanceKm": 54,
       "companyUnitPrice": 14.16,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.16,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1200,7 +1200,7 @@
       "truckType": "Without Crane",
       "distanceKm": 158,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1211,7 +1211,7 @@
       "truckType": "Without Crane",
       "distanceKm": 43,
       "companyUnitPrice": 14.16,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.16,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1222,7 +1222,7 @@
       "truckType": "Without Crane",
       "distanceKm": 79,
       "companyUnitPrice": 16.53,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.53,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1233,7 +1233,7 @@
       "truckType": "Without Crane",
       "distanceKm": 83,
       "companyUnitPrice": 16.91,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.91,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1244,7 +1244,7 @@
       "truckType": "Without Crane",
       "distanceKm": 113,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1255,7 +1255,7 @@
       "truckType": "Without Crane",
       "distanceKm": 47,
       "companyUnitPrice": 13.59,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.59,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1266,7 +1266,7 @@
       "truckType": "Without Crane",
       "distanceKm": 102,
       "companyUnitPrice": 18.34,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.34,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1277,7 +1277,7 @@
       "truckType": "Without Crane",
       "distanceKm": 57,
       "companyUnitPrice": 13.3,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.3,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1288,7 +1288,7 @@
       "truckType": "Without Crane",
       "distanceKm": 82,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1299,7 +1299,7 @@
       "truckType": "Without Crane",
       "distanceKm": 91,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1310,7 +1310,7 @@
       "truckType": "Without Crane",
       "distanceKm": 79,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1321,7 +1321,7 @@
       "truckType": "Without Crane",
       "distanceKm": 70,
       "companyUnitPrice": 15.01,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.01,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1332,7 +1332,7 @@
       "truckType": "Without Crane",
       "distanceKm": 106,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1343,7 +1343,7 @@
       "truckType": "Without Crane",
       "distanceKm": 53,
       "companyUnitPrice": 13.97,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.97,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1354,7 +1354,7 @@
       "truckType": "Without Crane",
       "distanceKm": 96,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1365,7 +1365,7 @@
       "truckType": "Without Crane",
       "distanceKm": 114,
       "companyUnitPrice": 16.91,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.91,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1376,7 +1376,7 @@
       "truckType": "Without Crane",
       "distanceKm": 52,
       "companyUnitPrice": 12.35,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.65,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1387,7 +1387,7 @@
       "truckType": "Without Crane",
       "distanceKm": 102,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1398,7 +1398,7 @@
       "truckType": "Without Crane",
       "distanceKm": 103,
       "companyUnitPrice": 16.34,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.34,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1409,7 +1409,7 @@
       "truckType": "Without Crane",
       "distanceKm": 153,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1420,7 +1420,7 @@
       "truckType": "Without Crane",
       "distanceKm": 149,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1431,7 +1431,7 @@
       "truckType": "Without Crane",
       "distanceKm": 25,
       "companyUnitPrice": 11.31,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 10.61,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1442,7 +1442,7 @@
       "truckType": "Without Crane",
       "distanceKm": 75,
       "companyUnitPrice": 15.39,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.39,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1453,7 +1453,7 @@
       "truckType": "Without Crane",
       "distanceKm": 38,
       "companyUnitPrice": 12.92,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.92,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1464,7 +1464,18 @@
       "truckType": "Without Crane",
       "distanceKm": 60,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "8851c7ff-f21c-4030-83b7-ec5193f4043f",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Santuk (K.Thom)",
+      "truckType": "Without Crane",
+      "distanceKm": 100,
+      "companyUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.05,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1475,7 +1486,7 @@
       "truckType": "Without Crane",
       "distanceKm": 112,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1486,7 +1497,18 @@
       "truckType": "Without Crane",
       "distanceKm": 70,
       "companyUnitPrice": 15.11,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.11,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "40545f09-889c-46bf-af61-9c98926cc766",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Stueng Sen (K.Thom)",
+      "truckType": "Without Crane",
+      "distanceKm": 100,
+      "companyUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.15,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1497,7 +1519,7 @@
       "truckType": "Without Crane",
       "distanceKm": 116,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1508,7 +1530,7 @@
       "truckType": "Without Crane",
       "distanceKm": 120,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1519,7 +1541,7 @@
       "truckType": "Without Crane",
       "distanceKm": 131,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1530,7 +1552,7 @@
       "truckType": "Without Crane",
       "distanceKm": 158,
       "companyUnitPrice": 14.25,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 13.25,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1541,7 +1563,7 @@
       "truckType": "Without Crane",
       "distanceKm": 11,
       "companyUnitPrice": 8.46,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 7.76,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1552,7 +1574,7 @@
       "truckType": "Without Crane",
       "distanceKm": 93,
       "companyUnitPrice": 17.29,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.29,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1563,7 +1585,7 @@
       "truckType": "Without Crane",
       "distanceKm": 77,
       "companyUnitPrice": 15.49,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.49,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1574,7 +1596,7 @@
       "truckType": "Without Crane",
       "distanceKm": 64,
       "companyUnitPrice": 14.63,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 14.53,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1585,7 +1607,7 @@
       "truckType": "Without Crane",
       "distanceKm": 139,
       "companyUnitPrice": 17.86,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 16.86,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1596,7 +1618,7 @@
       "truckType": "Without Crane",
       "distanceKm": 116,
       "companyUnitPrice": 16.91,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 15.91,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1607,7 +1629,7 @@
       "truckType": "Without Crane",
       "distanceKm": 18,
       "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.47,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1618,7 +1640,7 @@
       "truckType": "Without Crane",
       "distanceKm": 21,
       "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.47,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1629,7 +1651,7 @@
       "truckType": "Without Crane",
       "distanceKm": 18,
       "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.47,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1640,7 +1662,7 @@
       "truckType": "Without Crane",
       "distanceKm": 20,
       "companyUnitPrice": 9.31,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.61,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1651,7 +1673,7 @@
       "truckType": "Without Crane",
       "distanceKm": 49,
       "companyUnitPrice": 13.97,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 12.97,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1662,7 +1684,7 @@
       "truckType": "Without Crane",
       "distanceKm": 9,
       "companyUnitPrice": 8.46,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 7.76,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1673,7 +1695,7 @@
       "truckType": "Without Crane",
       "distanceKm": 21,
       "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.47,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1684,7 +1706,7 @@
       "truckType": "Without Crane",
       "distanceKm": 19,
       "companyUnitPrice": 10.64,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.94,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1695,7 +1717,7 @@
       "truckType": "Without Crane",
       "distanceKm": 14,
       "companyUnitPrice": 8.84,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 8.14,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1706,7 +1728,7 @@
       "truckType": "Without Crane",
       "distanceKm": 29,
       "companyUnitPrice": 10.74,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 10.04,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1717,7 +1739,7 @@
       "truckType": "Without Crane",
       "distanceKm": 30,
       "companyUnitPrice": 12.73,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 11.73,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1728,7 +1750,7 @@
       "truckType": "Without Crane",
       "distanceKm": 24,
       "companyUnitPrice": 10.45,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.75,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1739,7 +1761,7 @@
       "truckType": "Without Crane",
       "distanceKm": 24,
       "companyUnitPrice": 10.45,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.75,
       "effectiveDate": "2026-05-11",
       "active": true
     },
@@ -1750,7 +1772,18 @@
       "truckType": "Without Crane",
       "distanceKm": 18,
       "companyUnitPrice": 10.17,
-      "truckSalaryUnitPrice": 0,
+      "truckSalaryUnitPrice": 9.47,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
+      "id": "51500021-b3c2-4b94-a994-9cdd8065a090",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Staung (K.Thom)",
+      "truckType": "Without Crane",
+      "distanceKm": 100,
+      "companyUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.91,
       "effectiveDate": "2026-05-11",
       "active": true
     }
@@ -3601,6 +3634,144 @@
   ],
   "activity": [
     {
+      "id": "88f587c1-43a9-4ace-930a-402d391b6213",
+      "message": "Added No Crane price for D.Staung (K.Thom), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:42:59.828Z"
+    },
+    {
+      "id": "a463ca8a-5b9f-4a6f-afbd-e30d93263bdd",
+      "message": "Added No Crane price for D.Stueng Sen (K.Thom), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:42:30.670Z"
+    },
+    {
+      "id": "4f92d265-0d69-43db-83d5-3ea39542726e",
+      "message": "Added No Crane price for D.Santuk (K.Thom), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:41:29.852Z"
+    },
+    {
+      "id": "dedf3336-0c58-44d6-81e8-f6deb0eb6007",
+      "message": "Bulk updated 6 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:39:00.675Z"
+    },
+    {
+      "id": "378a187e-87cf-4dc2-ac26-bc97c33fe095",
+      "message": "Bulk updated 2 Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:38:31.047Z"
+    },
+    {
+      "id": "c7eab552-1d47-410c-8a44-5262d88bebc3",
+      "message": "Bulk updated 8 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:35:55.925Z"
+    },
+    {
+      "id": "c52333f3-6eee-43cb-be77-3b2483c38dc8",
+      "message": "Bulk updated 1 Crane driver price row, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:35:01.340Z"
+    },
+    {
+      "id": "893135dc-c997-4822-9791-249a81f1205b",
+      "message": "Bulk updated 2 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:33:46.190Z"
+    },
+    {
+      "id": "c9b264eb-4a32-42d7-84b1-edfd2bf4c3b9",
+      "message": "Bulk updated 8 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:33:02.960Z"
+    },
+    {
+      "id": "f60d02a2-1d00-4fd0-8a1e-82be5883cfa7",
+      "message": "Bulk updated 8 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:31:51.497Z"
+    },
+    {
+      "id": "abf28458-8101-4802-a2d6-ae6cad10124d",
+      "message": "Bulk updated 6 Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:31:14.758Z"
+    },
+    {
+      "id": "1d29f3c5-1269-4771-8508-0a323fbf318a",
+      "message": "Bulk updated 13 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:29:55.196Z"
+    },
+    {
+      "id": "b85c703d-1f7c-472e-bcab-63cf2a8ea71a",
+      "message": "Bulk updated 13 Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:29:18.647Z"
+    },
+    {
+      "id": "745c0239-0f38-4a07-96d3-0035a6b3694a",
+      "message": "Bulk updated 9 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:27:55.357Z"
+    },
+    {
+      "id": "a929078f-a76f-4ae6-9f75-7b24a04f0084",
+      "message": "Bulk updated 6 Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:27:15.784Z"
+    },
+    {
+      "id": "7c3b2d8d-7eb7-4eb4-b459-fe924076eb86",
+      "message": "Bulk updated 10 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:21:47.501Z"
+    },
+    {
+      "id": "5fea3852-9625-47d0-9b94-998a42650fb1",
+      "message": "Bulk updated 10 Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:20:58.215Z"
+    },
+    {
+      "id": "8aa79354-4e3c-4294-87f4-dcc89827fdd3",
+      "message": "Bulk updated 11 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:18:46.487Z"
+    },
+    {
+      "id": "35785d03-bb48-4e5b-817c-8519735515f3",
+      "message": "Bulk updated 11 Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:17:12.113Z"
+    },
+    {
+      "id": "5d38ea0e-81bc-449a-9229-c353bf65a930",
+      "message": "Bulk updated 14 No Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:15:37.508Z"
+    },
+    {
+      "id": "fe4c7d09-36d2-482b-b9d7-b80b937f961e",
+      "message": "Bulk updated 14 Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:14:41.340Z"
+    },
+    {
+      "id": "c4207a09-742c-4692-9f96-895022af0b65",
+      "message": "Bulk updated 14 Crane driver price rows, effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-19T16:01:37.609Z"
+    },
+    {
+      "id": "f776da83725dfb14e88d206981274c12",
+      "message": "Cleared all old driver prices.",
+      "type": "setup",
+      "createdAt": "2026-05-19 16:10:16"
+    },
+    {
       "id": "23d53c6e-d03d-4c9f-a04e-35a49c3d2d69",
       "message": "Applied official company price list effective 11/05/2026. Replaced old price master and updated 90 delivery rows.",
       "type": "success",
@@ -3761,144 +3932,6 @@
       "message": "Updated Without Crane price for Chantrea (Svay Rieng), effective 2026-05-11.",
       "type": "price",
       "createdAt": "2026-05-17T07:48:52.524Z"
-    },
-    {
-      "id": "50575692-2529-48c1-8170-47682bdde72a",
-      "message": "Updated Without Crane price for Bavet (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:41:42.111Z"
-    },
-    {
-      "id": "584912f1-d280-4a5e-9474-67fd44cef1b1",
-      "message": "Updated Without Crane price for Bavet (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:40:55.383Z"
-    },
-    {
-      "id": "6c8fffef-a264-48e7-a874-6e5ab5e5518c",
-      "message": "Updated With Crane price for Svay Tiep (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:40:13.097Z"
-    },
-    {
-      "id": "c2b8f7de-b438-4020-b3b6-a3390b338812",
-      "message": "Updated With Crane price for Svay Chrum (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:40:00.231Z"
-    },
-    {
-      "id": "f6020669-fc4a-4ef7-bb4d-602a741136d5",
-      "message": "Updated With Crane price for Kompong Ro (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:39:48.054Z"
-    },
-    {
-      "id": "d69a840b-00db-4ef0-9ef8-0a6fb36d3bab",
-      "message": "Updated With Crane price for Kompong Ro (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:39:36.287Z"
-    },
-    {
-      "id": "330bfffe-6712-46cb-be6f-9944ea044ac9",
-      "message": "Updated With Crane price for Svay Rieng (S.Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:36:19.887Z"
-    },
-    {
-      "id": "4a91d716-f8bf-492f-bbd9-42c877f754dd",
-      "message": "Updated With Crane price for Romeas Hek (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:26:14.643Z"
-    },
-    {
-      "id": "66807ea0-013d-4cff-9511-2831af20401b",
-      "message": "Created manual data backup.",
-      "type": "backup",
-      "createdAt": "2026-05-17T07:03:28.868Z"
-    },
-    {
-      "id": "06066be5-77ea-4fb6-9a96-b14dedaca51c",
-      "message": "Deleted unused With Crane price for Svay Rieng (S.Rieng), effective 2026-01-01.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:02:16.646Z"
-    },
-    {
-      "id": "b793eac4-cf17-49a2-b343-259bc9b411f0",
-      "message": "Deleted unused With Crane price for Svay Rieng (S.Rieng), effective 2026-01-01.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:02:09.490Z"
-    },
-    {
-      "id": "a3009084-4068-40b4-aa27-5e1af24a2183",
-      "message": "Deleted unused With Crane price for Svay Rieng (S.Rieng), effective 2026-01-01.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:01:59.072Z"
-    },
-    {
-      "id": "7effa265-27eb-45e2-85ac-010db029d646",
-      "message": "Deleted unused With Crane price for Svay Rieng (Svay Rieng), effective 2026-05-17.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:01:56.432Z"
-    },
-    {
-      "id": "5c6fd238-5bfb-413e-8bcc-fbb118db2ed7",
-      "message": "Deleted unused With Crane price for Ang Snuol (Kandal), effective 2026-05-17.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:00:29.941Z"
-    },
-    {
-      "id": "c1bf65ca-0477-4785-a521-b8ff404bad65",
-      "message": "Updated With Crane price for Ang Snuol (Kandal), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:00:09.991Z"
-    },
-    {
-      "id": "8154ed72-0d18-4e04-8148-f7ad90ed0911",
-      "message": "Updated With Crane price for Ang Snuol (Kandal), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:59:03.695Z"
-    },
-    {
-      "id": "24602854-7e0d-486a-9e21-31be9a3c4476",
-      "message": "Updated With Crane price for Ang Snuol (Kandal), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:58:33.214Z"
-    },
-    {
-      "id": "c7803f1a-58c8-4087-8c2a-ba0b5cac8fc8",
-      "message": "Deleted unused With Crane price for Svay Tiep (S.Rieng), effective 2026-01-01.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:42:44.105Z"
-    },
-    {
-      "id": "f4b1a6b0-482d-4ce0-8bbb-4c8590b49824",
-      "message": "Updated With Crane price for Svay Tiep (S.Rieng), effective 2026-01-01.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:42:41.799Z"
-    },
-    {
-      "id": "30d17736-0046-4205-8a24-04bd5913fb4e",
-      "message": "Deleted unused With Crane price for Svay Tiep (S.Rieng), effective 2026-01-01.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:42:23.256Z"
-    },
-    {
-      "id": "56d2bfa9-26cc-4bd1-b862-4d3954d495da",
-      "message": "Deleted unused With Crane price for Svay Tiep (S.Rieng), effective 2026-01-01.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:42:20.290Z"
-    },
-    {
-      "id": "763cbcac-0a70-4909-9f65-eca83fef41e4",
-      "message": "Deleted unused With Crane price for Svay Tiep (S.Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:42:15.079Z"
-    },
-    {
-      "id": "bea5dde6-9028-4037-911f-fb9b622b4ef3",
-      "message": "Added With Crane price for Svay Tiep (S.Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T06:40:43.236Z"
     }
   ]
 }
