@@ -1772,9 +1772,9 @@
       "statementNumber": 1545,
       "statementDate": "2026-05-17",
       "truckType": "With Crane",
-      "status": "Finished",
+      "status": "Exported",
       "createdAt": "2026-05-17T08:51:54.759Z",
-      "updatedAt": "2026-05-17T09:07:33.027Z"
+      "updatedAt": "2026-05-19T05:43:56.945Z"
     },
     {
       "id": "ba4b7eb0-383c-450c-8d50-74ac502b0707",

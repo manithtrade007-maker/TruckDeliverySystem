@@ -21,6 +21,9 @@ const appUsername = process.env.APP_USERNAME || "";
 const appPassword = process.env.APP_PASSWORD || "";
 let saveQueue = Promise.resolve();
 let mutationQueue = Promise.resolve();
+const PDF_PAGE_WIDTH = 595; // A4 portrait width in points
+const PDF_PAGE_HEIGHT = 842; // A4 portrait height in points
+const PDF_PAGE_MARGIN = 0;
 
 const craneCompanyPrices = [
   { toLocation: "Khan Kambol (PP)", distanceKm: 19, companyUnitPrice: 9.98 },
@@ -913,22 +916,29 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
   const headerHtml = options.headerHtml || ((pageIndex, pages) => `
     <tr><td class="title" colspan="${columns.length}">${htmlEscape(title)}</td></tr>
     <tr><td class="subtitle" colspan="${columns.length}">Page ${pageIndex + 1} of ${pages.length}</td></tr>`);
+  const colgroup = `<colgroup>${columns
+    .map((column) => {
+      const width = column.excelWidth || `${100 / columns.length}%`;
+      return `<col style="width:${htmlEscape(width)}; mso-width-source:userset;">`;
+    })
+    .join("")}</colgroup>`;
   const pages = rowsByPage(rows, 30);
   const tablePages = pages
     .map((pageRows, pageIndex) => {
       const isLastPage = pageIndex === pages.length - 1;
       return `<table class="page">
+    ${colgroup}
     ${headerHtml(pageIndex, pages)}
-    <tr>${columns.map((column) => `<th>${htmlEscape(column.label)}</th>`).join("")}</tr>
+    <tr class="column-header" style="height:18pt; mso-height-source:userset;">${columns.map((column) => `<th style="height:18pt; mso-height-source:userset;">${htmlEscape(column.label)}</th>`).join("")}</tr>
     ${pageRows
       .map(
         (row, index) =>
-          `<tr>${columns
+          `<tr class="data-row" style="height:20pt; mso-height-source:userset;">${columns
             .map((column) => {
               const value = column.key === "rowNo" ? pageIndex * 30 + index + 1 : row[column.key];
               const formatted = formatExcelValue(value, column);
               const className = cellClass(column) ? ` class="${cellClass(column)}"` : "";
-              return `<td${className}>${htmlEscape(formatted)}</td>`;
+              return `<td${className} style="height:20pt; mso-height-source:userset;">${htmlEscape(formatted)}</td>`;
             })
             .join("")}</tr>`
       )
@@ -936,22 +946,22 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
     ${
       isLastPage
         ? options.mergedTotal
-          ? `<tr>
-      <td class="center" colspan="7"><strong>Total</strong></td>
-      <td class="right"><strong>${htmlEscape(`${Number(totals.qtyTon || 0).toFixed(5)}T`)}</strong></td>
-      <td></td>
-      <td class="right"><strong>${htmlEscape(`$ ${money(totals.companyTotalAmount || totals.truckSalaryAmount || 0)}`)}</strong></td>
+          ? `<tr class="total-row" style="height:18pt; mso-height-source:userset;">
+      <td class="center" colspan="7" style="height:18pt; mso-height-source:userset;"><strong>Total</strong></td>
+      <td class="right" style="height:18pt; mso-height-source:userset;"><strong>${htmlEscape(`${Number(totals.qtyTon || 0).toFixed(5)}T`)}</strong></td>
+      <td style="height:18pt; mso-height-source:userset;"></td>
+      <td class="right" style="height:18pt; mso-height-source:userset;"><strong>${htmlEscape(`$ ${money(totals.companyTotalAmount || totals.truckSalaryAmount || 0)}`)}</strong></td>
     </tr>
     ${options.signatureHtml || ""}`
-          : `<tr>
+          : `<tr class="total-row" style="height:18pt; mso-height-source:userset;">
       ${columns
         .map((column, index) => {
-          if (index === 0) return `<td><strong>Total</strong></td>`;
+          if (index === 0) return `<td style="height:18pt; mso-height-source:userset;"><strong>Total</strong></td>`;
           if (summaryColumns.includes(column.key)) {
             const formatted = formatExcelValue(totals[column.key], column);
-            return `<td class="right"><strong>${htmlEscape(formatted)}</strong></td>`;
+            return `<td class="right" style="height:18pt; mso-height-source:userset;"><strong>${htmlEscape(formatted)}</strong></td>`;
           }
-          return "<td></td>";
+          return `<td style="height:18pt; mso-height-source:userset;"></td>`;
         })
         .join("")}
     </tr>`
@@ -962,23 +972,59 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
     .join("");
 
   return `<!doctype html>
-<html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
 <head>
   <meta charset="utf-8">
+  <!--[if gte mso 9]>
+  <xml>
+    <x:ExcelWorkbook>
+      <x:ExcelWorksheets>
+        <x:ExcelWorksheet>
+          <x:Name>${htmlEscape(title).slice(0, 31)}</x:Name>
+          <x:WorksheetOptions>
+            <x:PageSetup>
+              <x:Layout x:Orientation="Portrait"/>
+              <x:PageMargins x:Bottom="0" x:Left="0" x:Right="0" x:Top="0"/>
+            </x:PageSetup>
+            <x:FitToPage/>
+            <x:Print>
+              <x:FitWidth>1</x:FitWidth>
+              <x:FitHeight>1</x:FitHeight>
+              <x:PaperSizeIndex>9</x:PaperSizeIndex>
+              <x:ValidPrinterInfo/>
+            </x:Print>
+          </x:WorksheetOptions>
+        </x:ExcelWorksheet>
+      </x:ExcelWorksheets>
+    </x:ExcelWorkbook>
+  </xml>
+  <![endif]-->
   <style>
-    table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; margin-bottom: 18px; }
-    th, td { border: 1px solid #333; padding: 5px; }
+    @page {
+      size: A4 portrait;
+      margin: 0;
+      mso-header-margin: 0;
+      mso-footer-margin: 0;
+      mso-page-orientation: portrait;
+      mso-fit-to-page: yes;
+      mso-fit-to-height: 1;
+      mso-fit-to-width: 1;
+    }
+    html, body { margin: 0; padding: 0; }
+    table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 9px; margin: 0; table-layout: fixed; width: 760pt; mso-width-source: userset; }
+    th, td { border: 1px solid #333; height: 20pt; line-height: 1.25; mso-height-source: userset; overflow: hidden; padding: 3px 4px; text-overflow: clip; vertical-align: middle; }
     th { background: #fff200; font-weight: bold; }
-    .title { font-size: 18px; font-weight: bold; text-align: center; }
-    .meta { font-size: 12px; font-weight: bold; }
-    .subtitle { font-size: 11px; text-align: right; border-top: 0; }
+    .title { font-size: 14px; font-weight: bold; text-align: center; }
+    .meta { font-size: 9px; font-weight: bold; }
+    .subtitle { font-size: 9px; text-align: right; border-top: 0; }
     .right { text-align: right; }
     .center { text-align: center; }
     .date { text-align: center; mso-number-format:"\\@"; }
     .text { mso-number-format:"\\@"; }
-    .signature td { height: 24px; }
+    .signature td { height: 18pt; }
+    .signature-blank td { height: 30pt; }
     .line { border-bottom: 1px dotted #333; }
-    .page { page-break-after: always; }
+    .page { page-break-after: always; mso-page-orientation: portrait; }
     .page:last-child { page-break-after: auto; }
   </style>
 </head>
@@ -991,61 +1037,59 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
 function accountingExport(data, rows) {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const displayRows = rows.map((row) => ({ ...row, truckType: truckTypeLabel(row.truckType) }));
+  const signatureHeaderStyle = "height:18pt; mso-height-source:userset; text-align:center; vertical-align:middle;";
+  const signatureBlankStyle = "height:30pt; mso-height-source:userset; vertical-align:middle;";
+  const signatureLabelStyle = "height:18pt; mso-height-source:userset; vertical-align:middle;";
   const signatureHtml = `
-    <tr class="signature">
-      <td class="center" colspan="3">Prepared By</td>
-      <td class="center" colspan="4">Checked By</td>
-      <td class="center" colspan="3">Approved By</td>
+    <tr class="signature" style="height:18pt; mso-height-source:userset;">
+      <td class="center" colspan="3" style="${signatureHeaderStyle}">Prepared By</td>
+      <td class="center" colspan="4" style="${signatureHeaderStyle}">Checked By</td>
+      <td class="center" colspan="3" style="${signatureHeaderStyle}">Approved By</td>
     </tr>
-    <tr class="signature">
-      <td colspan="3"></td>
-      <td colspan="4"></td>
-      <td colspan="3"></td>
+    <tr class="signature signature-blank" style="height:30pt; mso-height-source:userset;">
+      <td colspan="3" style="${signatureBlankStyle}"></td>
+      <td colspan="4" style="${signatureBlankStyle}"></td>
+      <td colspan="3" style="${signatureBlankStyle}"></td>
     </tr>
-    <tr class="signature">
-      <td colspan="3"></td>
-      <td colspan="4"></td>
-      <td colspan="3"></td>
+    <tr class="signature" style="height:18pt; mso-height-source:userset;">
+      <td colspan="3" style="${signatureLabelStyle}">Name:</td>
+      <td colspan="4" style="${signatureLabelStyle}">Name:</td>
+      <td colspan="3" style="${signatureLabelStyle}">Name:</td>
     </tr>
-    <tr class="signature">
-      <td colspan="3">Name:</td>
-      <td colspan="4">Name:</td>
-      <td colspan="3">Name:</td>
-    </tr>
-    <tr class="signature">
-      <td colspan="3">Date:</td>
-      <td colspan="4">Date:</td>
-      <td colspan="3">Date:</td>
+    <tr class="signature" style="height:18pt; mso-height-source:userset;">
+      <td colspan="3" style="${signatureLabelStyle}">Date:</td>
+      <td colspan="4" style="${signatureLabelStyle}">Date:</td>
+      <td colspan="3" style="${signatureLabelStyle}">Date:</td>
     </tr>`;
   const headerHtml = (pageIndex, pages) => `
-    <tr>
-      <td class="title" colspan="6">${htmlEscape(data.settings.companyName)}</td>
-      <td class="meta" colspan="2">Invoice No:</td>
-      <td class="meta" colspan="2">${htmlEscape(statement?.statementNumber || "")}</td>
+    <tr style="height:17pt; mso-height-source:userset;">
+      <td class="title" colspan="6" style="height:17pt; mso-height-source:userset;">${htmlEscape(data.settings.companyName)}</td>
+      <td class="meta" colspan="2" style="height:17pt; mso-height-source:userset;">Invoice No:</td>
+      <td class="meta right" colspan="2" align="right" style="height:17pt; mso-height-source:userset; text-align:right; mso-number-format:'\\@';">${htmlEscape(statement?.statementNumber || "")}</td>
     </tr>
-    <tr>
-      <td class="meta" colspan="6">From: ${htmlEscape(data.settings.fromName || "Nhep Manith")}</td>
-      <td class="meta" colspan="2">Statement Date:</td>
-      <td class="meta" colspan="2">${htmlEscape(formatShortDate(statement?.statementDate || ""))}</td>
+    <tr style="height:16pt; mso-height-source:userset;">
+      <td class="meta" colspan="6" style="height:16pt; mso-height-source:userset;">From: ${htmlEscape(data.settings.fromName || "Nhep Manith")}</td>
+      <td class="meta" colspan="2" style="height:16pt; mso-height-source:userset;">Statement Date:</td>
+      <td class="meta right" colspan="2" align="right" style="height:16pt; mso-height-source:userset; text-align:right; mso-number-format:'\\@';">${htmlEscape(formatShortDate(statement?.statementDate || ""))}</td>
     </tr>
-    <tr>
-      <td class="meta" colspan="6">To: ${htmlEscape(data.settings.toName || "SLP")}</td>
-      <td class="subtitle" colspan="4">Page ${pageIndex + 1} of ${pages.length}</td>
+    <tr style="height:16pt; mso-height-source:userset;">
+      <td class="meta" colspan="6" style="height:16pt; mso-height-source:userset;">To: ${htmlEscape(data.settings.toName || "SLP")}</td>
+      <td class="subtitle" colspan="4" align="right" style="height:16pt; mso-height-source:userset; text-align:right;">Page ${pageIndex + 1} of ${pages.length}</td>
     </tr>`;
   return excelTable(
     data.settings.companyName,
     displayRows,
     [
-      { key: "rowNo", label: "No", align: "center" },
-      { key: "deliveryDate", label: "Delivery Date", type: "date" },
-      { key: "invoiceNo", label: "Invoice No", type: "text" },
-      { key: "truckNo", label: "Truck No", type: "text" },
-      { key: "truckType", label: "Type of Truck" },
-      { key: "fromLocation", label: "From" },
-      { key: "toLocation", label: "To" },
-      { key: "qtyTon", label: "QTY(T)", type: "qty", align: "right" },
-      { key: "companyUnitPrice", label: "Unit Price", type: "unitCurrency", align: "right" },
-      { key: "companyTotalAmount", label: "Total Amount", type: "currency", align: "right" }
+      { key: "rowNo", label: "No", align: "center", excelWidth: "3.72%" },
+      { key: "deliveryDate", label: "Delivery Date", type: "date", excelWidth: "9.07%" },
+      { key: "invoiceNo", label: "Invoice No", type: "text", excelWidth: "11.40%" },
+      { key: "truckNo", label: "Truck No", type: "text", excelWidth: "9.77%" },
+      { key: "truckType", label: "Type of Truck", excelWidth: "11.16%" },
+      { key: "fromLocation", label: "From", excelWidth: "11.16%" },
+      { key: "toLocation", label: "To", excelWidth: "17.44%" },
+      { key: "qtyTon", label: "QTY(T)", type: "qty", align: "right", excelWidth: "8.37%" },
+      { key: "companyUnitPrice", label: "Unit Price", type: "unitCurrency", align: "right", excelWidth: "7.44%" },
+      { key: "companyTotalAmount", label: "Total Amount", type: "currency", align: "right", excelWidth: "10.47%" }
     ],
     ["qtyTon", "companyTotalAmount"],
     { headerHtml, signatureHtml, mergedTotal: true }
@@ -1199,7 +1243,9 @@ function buildPdf(pages) {
     const pageObject = objectNumber;
     const contentObject = objectNumber + 1;
     kids.push(`${pageObject} 0 R`);
-    pageObjects.push(`${pageObject} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObject} 0 R >> endobj`);
+    const pageWidth = page.width || PDF_PAGE_WIDTH;
+    const pageHeight = page.height || PDF_PAGE_HEIGHT;
+    pageObjects.push(`${pageObject} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObject} 0 R >> endobj`);
     pageObjects.push(`${contentObject} 0 obj << /Length ${Buffer.byteLength(content)} >> stream\n${content}\nendstream endobj`);
     objectNumber += 2;
   }
@@ -1225,24 +1271,26 @@ function buildPdf(pages) {
   return Buffer.from(pdf);
 }
 
-function tablePdf({ title, subtitle, columns, rows, totals, footer }) {
-  const pageWidth = 842;
-  const pageHeight = 595;
-  const margin = 24;
+function tablePdf({ title, subtitle, columns, rows, totals, footer, header }) {
+  const pageWidth = PDF_PAGE_WIDTH;
+  const pageHeight = PDF_PAGE_HEIGHT;
+  const margin = PDF_PAGE_MARGIN;
   const tableX = margin;
   const tableWidth = pageWidth - margin * 2;
+  const hasCustomHeader = typeof header === "function";
   const requestedWidth = columns.reduce((sum, column) => sum + column.width, 0);
   const widthScale = requestedWidth > tableWidth ? tableWidth / requestedWidth : 1;
   const tableColumns = columns.map((column) => ({ ...column, width: Math.floor(column.width * widthScale) }));
   const widthDifference = tableWidth - tableColumns.reduce((sum, column) => sum + column.width, 0);
   tableColumns[tableColumns.length - 1].width += widthDifference;
-  const headerHeight = 30;
-  const rowHeight = 28;
-  const titleY = 558;
-  const subtitleY = 537;
-  const tableTop = 508;
-  const bottomY = 54;
-  const rowsPerPage = Math.max(1, Math.floor((tableTop - bottomY - headerHeight - rowHeight) / rowHeight));
+  const headerHeight = 22;
+  const rowHeight = rows.length <= 30 ? 17 : 20;
+  const titleY = pageHeight - 20;
+  const subtitleY = pageHeight - 36;
+  const tableTop = hasCustomHeader ? pageHeight - 66 : pageHeight - 56;
+  const bottomY = footer ? 78 : 18;
+  const calculatedRowsPerPage = Math.max(1, Math.floor((tableTop - bottomY - headerHeight - rowHeight) / rowHeight));
+  const rowsPerPage = rows.length <= 30 ? 30 : calculatedRowsPerPage;
   const pages = [];
   const chunks = [];
   for (let index = 0; index < rows.length; index += rowsPerPage) {
@@ -1251,16 +1299,20 @@ function tablePdf({ title, subtitle, columns, rows, totals, footer }) {
   if (!chunks.length) chunks.push([]);
   chunks.forEach((chunk, pageIndex) => {
     const commands = [];
-    commands.push(drawText(title, margin, titleY, { size: 16, bold: true, width: tableWidth }));
-    if (subtitle) commands.push(drawText(subtitle, margin, subtitleY, { size: 10, bold: true, color: [0.39, 0.46, 0.56], width: tableWidth }));
+    if (hasCustomHeader) {
+      commands.push(...header({ pageIndex, pages: chunks, pageWidth, pageHeight, tableWidth, margin }));
+    } else {
+      commands.push(drawText(title, margin, titleY, { size: 12, bold: true, width: tableWidth }));
+      if (subtitle) commands.push(drawText(subtitle, margin, subtitleY, { size: 7.5, bold: true, color: [0.39, 0.46, 0.56], width: tableWidth }));
+    }
     commands.push(drawRect(tableX, tableTop - headerHeight, tableWidth, headerHeight, [0.06, 0.09, 0.16], [0.06, 0.09, 0.16]));
     let x = tableX;
     for (const column of tableColumns) {
-      commands.push(drawText(column.label, x + 8, tableTop - 19, {
-        size: 9,
+      commands.push(drawText(column.label, x + 3, tableTop - 14, {
+        size: 6.8,
         bold: true,
         color: [1, 1, 1],
-        width: column.width - 16,
+        width: column.width - 6,
         align: column.align || "left"
       }));
       x += column.width;
@@ -1273,10 +1325,10 @@ function tablePdf({ title, subtitle, columns, rows, totals, footer }) {
       let cellX = tableX;
       tableColumns.forEach((column) => {
         const value = row[column.key];
-        commands.push(drawText(value, cellX + 8, y + 10, {
-          size: 9,
+        commands.push(drawText(value, cellX + 3, y + 6, {
+          size: 6.8,
           bold: column.bold || column.key === "truckNo" || column.key === "qty" || column.key === "amount" || column.key === "driverAmount",
-          width: column.width - 16,
+          width: column.width - 6,
           align: column.align || "left"
         }));
         cellX += column.width;
@@ -1288,29 +1340,30 @@ function tablePdf({ title, subtitle, columns, rows, totals, footer }) {
       commands.push(drawRect(tableX, y, tableWidth, rowHeight, [1, 0.98, 0.89], [0.89, 0.92, 0.96]));
       let cellX = tableX;
       tableColumns.forEach((column) => {
-        commands.push(drawText(totals[column.key] || "", cellX + 8, y + 10, {
-          size: 9,
+        commands.push(drawText(totals[column.key] || "", cellX + 3, y + 6, {
+          size: 6.8,
           bold: true,
-          width: column.width - 16,
+          width: column.width - 6,
           align: column.align || "left"
         }));
         cellX += column.width;
       });
     }
     if (isLastPage && footer) {
-      const footerTop = Math.max(28, y - 54);
-      commands.push(drawText("Prepared By", tableX, footerTop, { size: 9, bold: true, width: 220, align: "center" }));
-      commands.push(drawText("Checked By", tableX + 285, footerTop, { size: 9, bold: true, width: 220, align: "center" }));
-      commands.push(drawText("Approved By", tableX + 570, footerTop, { size: 9, bold: true, width: 220, align: "center" }));
-      commands.push(drawText("Name:", tableX, footerTop - 32, { size: 8, width: 220 }));
-      commands.push(drawText("Name:", tableX + 285, footerTop - 32, { size: 8, width: 220 }));
-      commands.push(drawText("Name:", tableX + 570, footerTop - 32, { size: 8, width: 220 }));
-      commands.push(drawText("Date:", tableX, footerTop - 48, { size: 8, width: 220 }));
-      commands.push(drawText("Date:", tableX + 285, footerTop - 48, { size: 8, width: 220 }));
-      commands.push(drawText("Date:", tableX + 570, footerTop - 48, { size: 8, width: 220 }));
+      const footerTop = Math.max(42, y - 28);
+      const footerColumnWidth = tableWidth / 3;
+      commands.push(drawText("Prepared By", tableX, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
+      commands.push(drawText("Checked By", tableX + footerColumnWidth, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
+      commands.push(drawText("Approved By", tableX + footerColumnWidth * 2, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
+      commands.push(drawText("Name:", tableX + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Name:", tableX + footerColumnWidth + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Name:", tableX + footerColumnWidth * 2 + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Date:", tableX + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Date:", tableX + footerColumnWidth + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Date:", tableX + footerColumnWidth * 2 + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
     }
-    commands.push(drawText(`Page ${pageIndex + 1} of ${chunks.length}`, pageWidth - 124, 24, { size: 8, color: [0.39, 0.46, 0.56], width: 100, align: "right" }));
-    pages.push({ commands });
+    commands.push(drawText(`Page ${pageIndex + 1} of ${chunks.length}`, pageWidth - 108, 14, { size: 8, color: [0.39, 0.46, 0.56], width: 100, align: "right" }));
+    pages.push({ commands, width: pageWidth, height: pageHeight });
   });
   return buildPdf(pages);
 }
@@ -1319,6 +1372,29 @@ function statementPdf(data, rows) {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const totalQty = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
   const totalAmount = rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0);
+  const statementHeader = ({ pageIndex, pages, pageWidth, pageHeight }) => {
+    const rowHeight = 15;
+    const top = pageHeight - 8;
+    const leftWidth = pageWidth * 0.58;
+    const labelWidth = pageWidth * 0.18;
+    const valueWidth = pageWidth - leftWidth - labelWidth;
+    const rowsY = [top - rowHeight, top - rowHeight * 2, top - rowHeight * 3];
+    const commands = [];
+    for (const y of rowsY) {
+      commands.push(drawRect(0, y, leftWidth, rowHeight, null, [0.06, 0.09, 0.16]));
+      commands.push(drawRect(leftWidth, y, labelWidth, rowHeight, null, [0.06, 0.09, 0.16]));
+      commands.push(drawRect(leftWidth + labelWidth, y, valueWidth, rowHeight, null, [0.06, 0.09, 0.16]));
+    }
+    commands.push(drawText(data.settings.companyName || "N&M LOGISTIC", 0, rowsY[0] + 4, { size: 11, bold: true, width: leftWidth, align: "center" }));
+    commands.push(drawText("Invoice No:", leftWidth + 3, rowsY[0] + 4, { size: 7, bold: true, width: labelWidth - 6 }));
+    commands.push(drawText(statement?.statementNumber || "", leftWidth + labelWidth + 3, rowsY[0] + 4, { size: 7, bold: true, width: valueWidth - 6, align: "right" }));
+    commands.push(drawText(`From: ${data.settings.fromName || "Nhep Manith"}`, 3, rowsY[1] + 4, { size: 7, bold: true, width: leftWidth - 6 }));
+    commands.push(drawText("Statement Date:", leftWidth + 3, rowsY[1] + 4, { size: 7, bold: true, width: labelWidth - 6 }));
+    commands.push(drawText(formatShortDate(statement?.statementDate || ""), leftWidth + labelWidth + 3, rowsY[1] + 4, { size: 7, bold: true, width: valueWidth - 6, align: "right" }));
+    commands.push(drawText(`To: ${data.settings.toName || "SLP"}`, 3, rowsY[2] + 4, { size: 7, bold: true, width: leftWidth - 6 }));
+    commands.push(drawText(`Page ${pageIndex + 1} of ${pages.length}`, leftWidth + labelWidth + 3, rowsY[2] + 4, { size: 7, width: valueWidth - 6, align: "right" }));
+    return commands;
+  };
   const columns = [
     { key: "no", label: "No", width: 32, align: "center" },
     { key: "date", label: "Delivery Date", width: 78 },
@@ -1335,6 +1411,7 @@ function statementPdf(data, rows) {
     title: `Statement ${statement?.statementNumber || ""} - ${monthLabel(statement?.month)}`,
     subtitle: `${truckTypeLabel(statement?.truckType) || ""} | ${statement?.status || ""} | ${rows.length}/30 rows | From: ${data.settings.fromName || "Nhep Manith"} | To: ${data.settings.toName || "SLP"} | Date: ${formatShortDate(statement?.statementDate || "")}`,
     columns,
+    header: statementHeader,
     rows: rows.map((row, index) => ({
       no: index + 1,
       date: formatShortDate(row.deliveryDate),
