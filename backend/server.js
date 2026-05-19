@@ -910,6 +910,9 @@ function cellClass(column) {
 }
 
 function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
+  const columnHeaderHeight = "18pt";
+  const dataRowHeight = "22pt";
+  const totalRowHeight = "18pt";
   const totals = Object.fromEntries(
     summaryColumns.map((key) => [key, rows.reduce((sum, row) => sum + toNumber(row[key]), 0)])
   );
@@ -929,16 +932,16 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
       return `<table class="page">
     ${colgroup}
     ${headerHtml(pageIndex, pages)}
-    <tr class="column-header" style="height:18pt; mso-height-source:userset;">${columns.map((column) => `<th style="height:18pt; mso-height-source:userset;">${htmlEscape(column.label)}</th>`).join("")}</tr>
+    <tr class="column-header" style="height:${columnHeaderHeight}; mso-height-source:userset;">${columns.map((column) => `<th style="height:${columnHeaderHeight}; mso-height-source:userset;">${htmlEscape(column.label)}</th>`).join("")}</tr>
     ${pageRows
       .map(
         (row, index) =>
-          `<tr class="data-row" style="height:20pt; mso-height-source:userset;">${columns
+          `<tr class="data-row" style="height:${dataRowHeight}; mso-height-source:userset;">${columns
             .map((column) => {
               const value = column.key === "rowNo" ? pageIndex * 30 + index + 1 : row[column.key];
               const formatted = formatExcelValue(value, column);
               const className = cellClass(column) ? ` class="${cellClass(column)}"` : "";
-              return `<td${className} style="height:20pt; mso-height-source:userset;">${htmlEscape(formatted)}</td>`;
+              return `<td${className} style="height:${dataRowHeight}; mso-height-source:userset;">${htmlEscape(formatted)}</td>`;
             })
             .join("")}</tr>`
       )
@@ -946,22 +949,22 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
     ${
       isLastPage
         ? options.mergedTotal
-          ? `<tr class="total-row" style="height:18pt; mso-height-source:userset;">
-      <td class="center" colspan="7" style="height:18pt; mso-height-source:userset;"><strong>Total</strong></td>
-      <td class="right" style="height:18pt; mso-height-source:userset;"><strong>${htmlEscape(`${Number(totals.qtyTon || 0).toFixed(5)}T`)}</strong></td>
-      <td style="height:18pt; mso-height-source:userset;"></td>
-      <td class="right" style="height:18pt; mso-height-source:userset;"><strong>${htmlEscape(`$ ${money(totals.companyTotalAmount || totals.truckSalaryAmount || 0)}`)}</strong></td>
+          ? `<tr class="total-row" style="height:${totalRowHeight}; mso-height-source:userset;">
+      <td class="center" colspan="7" style="height:${totalRowHeight}; mso-height-source:userset;"><strong>Total</strong></td>
+      <td class="right" style="height:${totalRowHeight}; mso-height-source:userset;"><strong>${htmlEscape(`${Number(totals.qtyTon || 0).toFixed(5)}T`)}</strong></td>
+      <td style="height:${totalRowHeight}; mso-height-source:userset;"></td>
+      <td class="right" style="height:${totalRowHeight}; mso-height-source:userset;"><strong>${htmlEscape(`$ ${money(totals.companyTotalAmount || totals.truckSalaryAmount || 0)}`)}</strong></td>
     </tr>
     ${options.signatureHtml || ""}`
-          : `<tr class="total-row" style="height:18pt; mso-height-source:userset;">
+          : `<tr class="total-row" style="height:${totalRowHeight}; mso-height-source:userset;">
       ${columns
         .map((column, index) => {
-          if (index === 0) return `<td style="height:18pt; mso-height-source:userset;"><strong>Total</strong></td>`;
+          if (index === 0) return `<td style="height:${totalRowHeight}; mso-height-source:userset;"><strong>Total</strong></td>`;
           if (summaryColumns.includes(column.key)) {
             const formatted = formatExcelValue(totals[column.key], column);
-            return `<td class="right" style="height:18pt; mso-height-source:userset;"><strong>${htmlEscape(formatted)}</strong></td>`;
+            return `<td class="right" style="height:${totalRowHeight}; mso-height-source:userset;"><strong>${htmlEscape(formatted)}</strong></td>`;
           }
-          return `<td style="height:18pt; mso-height-source:userset;"></td>`;
+          return `<td style="height:${totalRowHeight}; mso-height-source:userset;"></td>`;
         })
         .join("")}
     </tr>`
@@ -1012,7 +1015,7 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
     }
     html, body { margin: 0; padding: 0; }
     table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 9px; margin: 0; table-layout: fixed; width: 760pt; mso-width-source: userset; }
-    th, td { border: 1px solid #333; height: 20pt; line-height: 1.25; mso-height-source: userset; overflow: hidden; padding: 3px 4px; text-overflow: clip; vertical-align: middle; }
+    th, td { border: 1px solid #333; height: 22pt; line-height: 1.25; mso-height-source: userset; overflow: hidden; padding: 3px 4px; text-overflow: clip; vertical-align: middle; }
     th { background: #fff200; font-weight: bold; }
     .title { font-size: 14px; font-weight: bold; text-align: center; }
     .meta { font-size: 9px; font-weight: bold; }
@@ -1022,7 +1025,7 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
     .date { text-align: center; mso-number-format:"\\@"; }
     .text { mso-number-format:"\\@"; }
     .signature td { height: 18pt; }
-    .signature-blank td { height: 30pt; }
+    .signature-blank td { height: 34pt; }
     .line { border-bottom: 1px dotted #333; }
     .page { page-break-after: always; mso-page-orientation: portrait; }
     .page:last-child { page-break-after: auto; }
@@ -1038,15 +1041,15 @@ function accountingExport(data, rows) {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const displayRows = rows.map((row) => ({ ...row, truckType: truckTypeLabel(row.truckType) }));
   const signatureHeaderStyle = "height:18pt; mso-height-source:userset; text-align:center; vertical-align:middle;";
-  const signatureBlankStyle = "height:30pt; mso-height-source:userset; vertical-align:middle;";
+  const signatureBlankStyle = "height:34pt; mso-height-source:userset; vertical-align:middle;";
   const signatureLabelStyle = "height:18pt; mso-height-source:userset; vertical-align:middle;";
   const signatureHtml = `
     <tr class="signature" style="height:18pt; mso-height-source:userset;">
-      <td class="center" colspan="3" style="${signatureHeaderStyle}">Prepared By</td>
-      <td class="center" colspan="4" style="${signatureHeaderStyle}">Checked By</td>
-      <td class="center" colspan="3" style="${signatureHeaderStyle}">Approved By</td>
+      <td class="center" colspan="3" align="center" style="${signatureHeaderStyle}">Prepared By</td>
+      <td class="center" colspan="4" align="center" style="${signatureHeaderStyle}">Checked By</td>
+      <td class="center" colspan="3" align="center" style="${signatureHeaderStyle}">Approved By</td>
     </tr>
-    <tr class="signature signature-blank" style="height:30pt; mso-height-source:userset;">
+    <tr class="signature signature-blank" style="height:34pt; mso-height-source:userset;">
       <td colspan="3" style="${signatureBlankStyle}"></td>
       <td colspan="4" style="${signatureBlankStyle}"></td>
       <td colspan="3" style="${signatureBlankStyle}"></td>
@@ -1065,12 +1068,12 @@ function accountingExport(data, rows) {
     <tr style="height:17pt; mso-height-source:userset;">
       <td class="title" colspan="6" style="height:17pt; mso-height-source:userset;">${htmlEscape(data.settings.companyName)}</td>
       <td class="meta" colspan="2" style="height:17pt; mso-height-source:userset;">Invoice No:</td>
-      <td class="meta right" colspan="2" align="right" style="height:17pt; mso-height-source:userset; text-align:right; mso-number-format:'\\@';">${htmlEscape(statement?.statementNumber || "")}</td>
+      <td class="meta right" colspan="2" align="right" x:str style="height:17pt; mso-height-source:userset; text-align:right; mso-number-format:'\\@';"><div style="text-align:right;">${htmlEscape(statement?.statementNumber || "")}</div></td>
     </tr>
     <tr style="height:16pt; mso-height-source:userset;">
       <td class="meta" colspan="6" style="height:16pt; mso-height-source:userset;">From: ${htmlEscape(data.settings.fromName || "Nhep Manith")}</td>
       <td class="meta" colspan="2" style="height:16pt; mso-height-source:userset;">Statement Date:</td>
-      <td class="meta right" colspan="2" align="right" style="height:16pt; mso-height-source:userset; text-align:right; mso-number-format:'\\@';">${htmlEscape(formatShortDate(statement?.statementDate || ""))}</td>
+      <td class="meta right" colspan="2" align="right" x:str style="height:16pt; mso-height-source:userset; text-align:right; mso-number-format:'\\@';"><div style="text-align:right;">${htmlEscape(formatShortDate(statement?.statementDate || ""))}</div></td>
     </tr>
     <tr style="height:16pt; mso-height-source:userset;">
       <td class="meta" colspan="6" style="height:16pt; mso-height-source:userset;">To: ${htmlEscape(data.settings.toName || "SLP")}</td>
