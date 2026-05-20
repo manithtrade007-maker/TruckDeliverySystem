@@ -980,6 +980,21 @@ function App() {
     }
   }
 
+  async function cleanupZeroDriverPrices() {
+    const ok = window.confirm("Delete old Without Crane price entries that have $0 driver price and a newer entry exists? This cleans up duplicate entries.");
+    if (!ok) return;
+    try {
+      const result = await api("/api/prices/cleanup-zero-driver", { method: "POST" });
+      await loadData();
+      const msg = result.stillMissing.length
+        ? `Deleted ${result.deleted} old entr${result.deleted !== 1 ? "ies" : "y"}. ${result.stillMissing.length} location${result.stillMissing.length !== 1 ? "s" : ""} still missing driver price: ${result.stillMissing.join(", ")}`
+        : `Deleted ${result.deleted} old entr${result.deleted !== 1 ? "ies" : "y"}. All locations have driver prices.`;
+      flash(msg, result.stillMissing.length ? "error" : "success");
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   function restoreBackup() {
     const ok = window.confirm("Restore from a backup file? This will replace the current system data. A safety backup will be created first.");
     if (!ok) return;
@@ -2116,6 +2131,18 @@ function App() {
                 </p>
               </div>
               <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
+            </div>
+          </Panel>
+
+          <Panel>
+            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <h2 className="text-lg font-bold">Clean Up Old Without Crane Prices</h2>
+                <p className="mt-1 text-sm font-bold text-slate-500">
+                  Remove old $0 driver price entries for Without Crane routes that now have a newer price set. Also shows which locations are still missing a driver price.
+                </p>
+              </div>
+              <Button type="button" variant="secondary" onClick={cleanupZeroDriverPrices}>Clean Up Old Prices</Button>
             </div>
           </Panel>
 

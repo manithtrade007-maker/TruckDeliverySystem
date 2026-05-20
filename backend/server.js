@@ -1993,6 +1993,66 @@ async function api(req, res, url) {
     return sendJson(res, 200, result);
   }
 
+  if (req.method === "POST" && url.pathname === "/api/prices/cleanup-zero-driver") {
+    const result = await updateData((data) => {
+      // Group Without Crane prices by route
+      const routes = new Map();
+      for (const price of data.prices) {
+        if (price.truckType !== "Without Crane") continue;
+        const key = `${price.fromLocation}||${locationBaseKey(price.toLocation)}`;
+        if (!routes.has(key)) routes.set(key, []);
+        routes.get(key).push(price);
+      }
+
+      let deleted = 0;
+      const stillMissing = [];
+      const idsToDelete = new Set();
+
+      for (const entries of routes.values()) {
+        entries.sort((a, b) => effectiveDateOf(b).localeCompare(effectiveDateOf(a)));
+        const newest = entries[0];
+
+        if (toNumber(newest.truckSalaryUnitPrice) === 0) {
+          stillMissing.push(newest.toLocation);
+          continue;
+        }
+
+        // Delete older entries that have $0 driver price
+        for (let i = 1; i < entries.length; i++) {
+          const old = entries[i];
+          if (toNumber(old.truckSalaryUnitPrice) !== 0) continue;
+          // Only delete if no deliveries fall before the newer entry's effective date
+          const hasOldDeliveries = data.deliveries.some(
+            (d) =>
+              d.fromLocation === old.fromLocation &&
+              locationBaseKey(d.toLocation) === locationBaseKey(old.toLocation) &&
+              d.truckType === old.truckType &&
+              d.deliveryDate < effectiveDateOf(newest)
+          );
+          if (!hasOldDeliveries) {
+            idsToDelete.add(old.id);
+            deleted += 1;
+          }
+        }
+      }
+
+      if (idsToDelete.size > 0) {
+        data.prices = data.prices.filter((p) => !idsToDelete.has(p.id));
+      }
+
+      if (deleted > 0 || stillMissing.length > 0) {
+        addActivity(
+          data,
+          `Cleaned up ${deleted} old Without Crane $0-driver price entr${deleted !== 1 ? "ies" : "y"}.${stillMissing.length ? ` ${stillMissing.length} location${stillMissing.length !== 1 ? "s" : ""} still missing driver price.` : ""}`,
+          "price"
+        );
+      }
+
+      return { deleted, stillMissing };
+    });
+    return sendJson(res, 200, result);
+  }
+
   if (req.method === "POST" && url.pathname === "/api/prices/bulk") {
     const body = await readBody(req);
     const result = await updateData((data) => {
