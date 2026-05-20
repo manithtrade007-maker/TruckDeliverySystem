@@ -1993,6 +1993,34 @@ async function api(req, res, url) {
     return sendJson(res, 200, result);
   }
 
+  if (req.method === "POST" && url.pathname === "/api/fix-location-names") {
+    const result = await updateData((data) => {
+      let fixed = 0;
+      for (const delivery of data.deliveries) {
+        const deliveryKey = locationBaseKey(delivery.toLocation);
+        // Find the canonical price list name for this route
+        const matchedPrice = data.prices.find(
+          (p) =>
+            p.fromLocation === delivery.fromLocation &&
+            p.truckType === delivery.truckType &&
+            locationBaseKey(p.toLocation) === deliveryKey
+        );
+        if (matchedPrice && matchedPrice.toLocation !== delivery.toLocation) {
+          delivery.toLocation = matchedPrice.toLocation;
+          delivery.updatedAt = new Date().toISOString();
+          fixed += 1;
+        }
+      }
+      // Recalculate driver prices now that location names are corrected
+      const recalculated = recalculateAllDeliveries(data);
+      if (fixed > 0 || recalculated > 0) {
+        addActivity(data, `Fixed ${fixed} delivery location name${fixed !== 1 ? "s" : ""} to match price list, recalculated ${recalculated} driver price${recalculated !== 1 ? "s" : ""}.`, "price");
+      }
+      return { fixed, recalculated };
+    });
+    return sendJson(res, 200, result);
+  }
+
   if (req.method === "GET" && url.pathname === "/api/diagnose-driver") {
     const data = await readData();
     const problems = [];

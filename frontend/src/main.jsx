@@ -980,6 +980,18 @@ function App() {
     }
   }
 
+  async function fixLocationNames() {
+    const ok = window.confirm("Fix delivery location names that don't match the price list, then recalculate driver prices? This corrects name mismatches (e.g. 'Khan Kambol' → 'KH.Kambol').");
+    if (!ok) return;
+    try {
+      const result = await api("/api/fix-location-names", { method: "POST" });
+      await loadData();
+      flash(`Fixed ${result.fixed} location name${result.fixed !== 1 ? "s" : ""}, recalculated ${result.recalculated} driver price${result.recalculated !== 1 ? "s" : ""}.`);
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function diagnoseDriverPrices() {
     try {
       const result = await api("/api/diagnose-driver");
@@ -2159,8 +2171,9 @@ function App() {
                   Re-apply current driver prices to all existing delivery rows. Use this if driver payment amounts appear as $0 after a price update.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap justify-end">
                 <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Prices</Button>
+                <Button type="button" variant="secondary" onClick={fixLocationNames}>Fix Location Names</Button>
                 <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
               </div>
             </div>
