@@ -635,8 +635,8 @@ function locationBaseKey(value) {
   return normalizeText(value)
     .replace(/\([^)]*\)/g, "")
     .toLowerCase()
-    .replace(/^\s*(kh|khan)\s*[.]?\s*/i, "")
     .replace(/^\s*d\s*\.\s*/i, "")
+    .replace(/^\s*(khan|kh)\s*[.]?\s*/i, "")
     .replace(/[^a-z0-9]+/g, "");
 }
 
