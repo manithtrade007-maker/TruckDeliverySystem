@@ -968,6 +968,18 @@ function App() {
     window.location.href = "/api/backup/download";
   }
 
+  async function recalculateAllPrices() {
+    const ok = window.confirm("Recalculate driver prices for all delivery rows? This updates driver payment amounts based on the current price list.");
+    if (!ok) return;
+    try {
+      const result = await api("/api/recalculate", { method: "POST" });
+      await loadData();
+      flash(`Recalculated ${result.recalculatedDeliveries} delivery row${result.recalculatedDeliveries !== 1 ? "s" : ""}.`);
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   function restoreBackup() {
     const ok = window.confirm("Restore from a backup file? This will replace the current system data. A safety backup will be created first.");
     if (!ok) return;
@@ -2092,6 +2104,18 @@ function App() {
                 <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
                 <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
               </div>
+            </div>
+          </Panel>
+
+          <Panel>
+            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <h2 className="text-lg font-bold">Recalculate Driver Prices</h2>
+                <p className="mt-1 text-sm font-bold text-slate-500">
+                  Re-apply current driver prices to all existing delivery rows. Use this if driver payment amounts appear as $0 after a price update.
+                </p>
+              </div>
+              <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
             </div>
           </Panel>
 

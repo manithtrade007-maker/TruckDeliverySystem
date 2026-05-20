@@ -1977,10 +1977,20 @@ async function api(req, res, url) {
       );
       if (index >= 0) data.prices[index] = price;
       else data.prices.push(price);
-      addActivity(data, `${index >= 0 ? "Updated" : "Added"} ${truckTypeLabel(price.truckType)} price for ${price.toLocation}, effective ${price.effectiveDate}.`, "price");
+      const recalcCount = recalculateDeliveriesForPriceRoutes(data, [price]);
+      addActivity(data, `${index >= 0 ? "Updated" : "Added"} ${truckTypeLabel(price.truckType)} price for ${price.toLocation}, effective ${price.effectiveDate}${recalcCount ? `, recalculated ${recalcCount} delivery row${recalcCount > 1 ? "s" : ""}` : ""}.`, "price");
       return price;
     });
     return sendJson(res, 200, price);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/recalculate") {
+    const result = await updateData((data) => {
+      const count = recalculateAllDeliveries(data);
+      addActivity(data, `Force-recalculated ${count} delivery row${count !== 1 ? "s" : ""} against current prices.`, "price");
+      return { recalculatedDeliveries: count };
+    });
+    return sendJson(res, 200, result);
   }
 
   if (req.method === "POST" && url.pathname === "/api/prices/bulk") {

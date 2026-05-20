@@ -1502,6 +1502,17 @@
       "active": true
     },
     {
+      "id": "51500021-b3c2-4b94-a994-9cdd8065a090",
+      "fromLocation": "Warehouse-09",
+      "toLocation": "D.Staung (K.Thom)",
+      "truckType": "Without Crane",
+      "distanceKm": 100,
+      "companyUnitPrice": 0,
+      "truckSalaryUnitPrice": 17.91,
+      "effectiveDate": "2026-05-11",
+      "active": true
+    },
+    {
       "id": "40545f09-889c-46bf-af61-9c98926cc766",
       "fromLocation": "Warehouse-09",
       "toLocation": "D.Stueng Sen (K.Thom)",
@@ -1775,17 +1786,6 @@
       "truckSalaryUnitPrice": 9.47,
       "effectiveDate": "2026-05-11",
       "active": true
-    },
-    {
-      "id": "51500021-b3c2-4b94-a994-9cdd8065a090",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "D.Staung (K.Thom)",
-      "truckType": "Without Crane",
-      "distanceKm": 100,
-      "companyUnitPrice": 0,
-      "truckSalaryUnitPrice": 17.91,
-      "effectiveDate": "2026-05-11",
-      "active": true
     }
   ],
   "statements": [
@@ -1845,11 +1845,11 @@
       "qtyTon": 16.5739,
       "companyUnitPrice": 9.215,
       "companyTotalAmount": 152.73,
-      "truckSalaryUnitPrice": 8.8,
-      "truckSalaryAmount": 145.85,
+      "truckSalaryUnitPrice": 8.52,
+      "truckSalaryAmount": 141.21,
       "status": "Draft",
       "createdAt": "2026-05-17T08:29:23.151Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "2d5c3c19-9765-4277-aeb6-a47caed8aefb",
@@ -1865,11 +1865,11 @@
       "qtyTon": 5.14525,
       "companyUnitPrice": 9.69,
       "companyTotalAmount": 49.86,
-      "truckSalaryUnitPrice": 9.28,
-      "truckSalaryAmount": 47.75,
+      "truckSalaryUnitPrice": 8.99,
+      "truckSalaryAmount": 46.26,
       "status": "Draft",
       "createdAt": "2026-05-17T08:29:58.103Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "50d11b1f-0ef3-4e9f-a2e3-b56cfd318162",
@@ -1885,11 +1885,11 @@
       "qtyTon": 5.661,
       "companyUnitPrice": 9.79,
       "companyTotalAmount": 55.42,
-      "truckSalaryUnitPrice": 9.46,
-      "truckSalaryAmount": 53.55,
+      "truckSalaryUnitPrice": 9.09,
+      "truckSalaryAmount": 51.46,
       "status": "Draft",
       "createdAt": "2026-05-17T08:30:27.939Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "f41f416d-5481-4b96-8b7e-dbab7f770b4d",
@@ -1905,11 +1905,11 @@
       "qtyTon": 6.9495,
       "companyUnitPrice": 9.215,
       "companyTotalAmount": 64.04,
-      "truckSalaryUnitPrice": 8.8,
-      "truckSalaryAmount": 61.16,
+      "truckSalaryUnitPrice": 8.52,
+      "truckSalaryAmount": 59.21,
       "status": "Draft",
       "createdAt": "2026-05-17T08:30:52.832Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "358493de-23fe-4200-aaaa-279471eacadc",
@@ -1925,11 +1925,11 @@
       "qtyTon": 4.2102,
       "companyUnitPrice": 9.215,
       "companyTotalAmount": 38.8,
-      "truckSalaryUnitPrice": 8.8,
-      "truckSalaryAmount": 37.05,
+      "truckSalaryUnitPrice": 8.52,
+      "truckSalaryAmount": 35.87,
       "status": "Draft",
       "createdAt": "2026-05-17T08:31:17.116Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "a5ba5e9c-2e2e-4a7c-9138-4a18e88539f2",
@@ -1945,11 +1945,11 @@
       "qtyTon": 15.64,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 148.58,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 143.58,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 137.63,
       "status": "Draft",
       "createdAt": "2026-05-17T08:31:42.926Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "a0c94ada-174d-41b3-89a8-05b7766e8b44",
@@ -1965,11 +1965,11 @@
       "qtyTon": 12.9875,
       "companyUnitPrice": 9.79,
       "companyTotalAmount": 127.15,
-      "truckSalaryUnitPrice": 9.46,
-      "truckSalaryAmount": 122.86,
+      "truckSalaryUnitPrice": 9.09,
+      "truckSalaryAmount": 118.06,
       "status": "Draft",
       "createdAt": "2026-05-17T08:32:05.717Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "8cd74ada-263f-492a-8f3d-c2d099de8c26",
@@ -1985,11 +1985,11 @@
       "qtyTon": 3.9715,
       "companyUnitPrice": 11.4,
       "companyTotalAmount": 45.28,
-      "truckSalaryUnitPrice": 11.07,
-      "truckSalaryAmount": 43.96,
+      "truckSalaryUnitPrice": 10.7,
+      "truckSalaryAmount": 42.5,
       "status": "Draft",
       "createdAt": "2026-05-17T08:32:29.577Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "4d0b7007-a2f7-4eb9-a377-c712db4c2819",
@@ -2005,11 +2005,11 @@
       "qtyTon": 5.396,
       "companyUnitPrice": 9.69,
       "companyTotalAmount": 52.29,
-      "truckSalaryUnitPrice": 9.28,
-      "truckSalaryAmount": 50.07,
+      "truckSalaryUnitPrice": 8.99,
+      "truckSalaryAmount": 48.51,
       "status": "Draft",
       "createdAt": "2026-05-17T08:32:53.252Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "b588ccae-5b0f-434b-98cf-1226c7cd2452",
@@ -2025,11 +2025,11 @@
       "qtyTon": 0.2748,
       "companyUnitPrice": 11.4,
       "companyTotalAmount": 3.13,
-      "truckSalaryUnitPrice": 11.07,
-      "truckSalaryAmount": 3.04,
+      "truckSalaryUnitPrice": 10.7,
+      "truckSalaryAmount": 2.94,
       "status": "Draft",
       "createdAt": "2026-05-17T08:33:20.881Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "3b08d079-9945-4937-a656-d27b692d05d6",
@@ -2045,11 +2045,11 @@
       "qtyTon": 5.65589,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 53.73,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 51.92,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 49.77,
       "status": "Draft",
       "createdAt": "2026-05-17T08:33:50.632Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "c1375a79-213b-48fd-93e2-dbb70fb56204",
@@ -2065,11 +2065,11 @@
       "qtyTon": 11.5545,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 86.77,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 80.88,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 78.69,
       "status": "Draft",
       "createdAt": "2026-05-17T08:34:16.343Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "0adfc5fc-4021-4981-af57-d224ad4db3a9",
@@ -2085,11 +2085,11 @@
       "qtyTon": 16.465,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 129.91,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 121.51,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 118.38,
       "status": "Draft",
       "createdAt": "2026-05-17T08:34:46.987Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "714987a5-632b-4d4b-8747-e2be3f67f659",
@@ -2105,11 +2105,11 @@
       "qtyTon": 12.936,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 102.07,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 95.47,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 93.01,
       "status": "Draft",
       "createdAt": "2026-05-17T08:37:43.924Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "01347b8a-34a5-4234-a85d-b098aab2042d",
@@ -2125,11 +2125,11 @@
       "qtyTon": 8.41562,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 63.2,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 58.91,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 57.31,
       "status": "Draft",
       "createdAt": "2026-05-17T08:38:06.727Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "a779c518-13a4-4be4-81eb-5215f571edbe",
@@ -2145,11 +2145,11 @@
       "qtyTon": 14.952,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 112.29,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 104.66,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 101.82,
       "status": "Draft",
       "createdAt": "2026-05-17T08:38:24.402Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "25b25927-390f-4ba4-9e18-d49bcfb63ed7",
@@ -2165,11 +2165,11 @@
       "qtyTon": 2.83565,
       "companyUnitPrice": 9.79,
       "companyTotalAmount": 27.76,
-      "truckSalaryUnitPrice": 9.46,
-      "truckSalaryAmount": 26.83,
+      "truckSalaryUnitPrice": 9.09,
+      "truckSalaryAmount": 25.78,
       "status": "Draft",
       "createdAt": "2026-05-17T08:39:16.786Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "0592aa57-4576-4c8c-a617-9823dce5d3ea",
@@ -2185,11 +2185,11 @@
       "qtyTon": 1.8974,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 14.97,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 14,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 13.64,
       "status": "Draft",
       "createdAt": "2026-05-17T08:41:10.434Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "c46a2fd5-5630-44cd-a409-6c0a80309233",
@@ -2205,11 +2205,11 @@
       "qtyTon": 5.365,
       "companyUnitPrice": 9.215,
       "companyTotalAmount": 49.44,
-      "truckSalaryUnitPrice": 8.8,
-      "truckSalaryAmount": 47.21,
+      "truckSalaryUnitPrice": 8.52,
+      "truckSalaryAmount": 45.71,
       "status": "Draft",
       "createdAt": "2026-05-17T08:41:33.721Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "4fe89932-0c73-449f-9594-dab27a21393c",
@@ -2225,11 +2225,11 @@
       "qtyTon": 1.104,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 10.49,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 10.13,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 9.72,
       "status": "Draft",
       "createdAt": "2026-05-17T08:41:59.536Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "184713d8-7525-43c0-ba13-9889ac2b6781",
@@ -2245,11 +2245,11 @@
       "qtyTon": 2.211,
       "companyUnitPrice": 9.12,
       "companyTotalAmount": 20.16,
-      "truckSalaryUnitPrice": 8.71,
-      "truckSalaryAmount": 19.26,
+      "truckSalaryUnitPrice": 8.42,
+      "truckSalaryAmount": 18.62,
       "status": "Draft",
       "createdAt": "2026-05-17T08:42:22.290Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "f7c1df3a-3158-479f-abdc-c81786acca20",
@@ -2265,11 +2265,11 @@
       "qtyTon": 12.32,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 97.2,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 90.92,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 88.58,
       "status": "Draft",
       "createdAt": "2026-05-17T08:42:45.339Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "66872c5d-c092-4efc-998f-2e8460f757aa",
@@ -2285,11 +2285,11 @@
       "qtyTon": 6.2727,
       "companyUnitPrice": 9.79,
       "companyTotalAmount": 61.41,
-      "truckSalaryUnitPrice": 9.46,
-      "truckSalaryAmount": 59.34,
+      "truckSalaryUnitPrice": 9.09,
+      "truckSalaryAmount": 57.02,
       "status": "Draft",
       "createdAt": "2026-05-17T08:43:14.143Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "eaab2788-cbec-4c9c-864c-934e9c4c8270",
@@ -2305,11 +2305,11 @@
       "qtyTon": 5.6664,
       "companyUnitPrice": 11.78,
       "companyTotalAmount": 66.75,
-      "truckSalaryUnitPrice": 11.46,
-      "truckSalaryAmount": 64.94,
+      "truckSalaryUnitPrice": 10.78,
+      "truckSalaryAmount": 61.08,
       "status": "Draft",
       "createdAt": "2026-05-17T08:43:38.033Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "bffb955a-96eb-4094-bee7-392e992d565d",
@@ -2325,11 +2325,11 @@
       "qtyTon": 1.195,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 11.35,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 10.97,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 10.52,
       "status": "Draft",
       "createdAt": "2026-05-17T08:44:13.780Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "d79127af-a034-4328-a94f-956571cb4b77",
@@ -2345,11 +2345,11 @@
       "qtyTon": 2.18397,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 20.75,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 20.05,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 19.22,
       "status": "Draft",
       "createdAt": "2026-05-17T08:44:34.223Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "601f9b2a-539e-4c99-910b-71ebf3d0a178",
@@ -2365,11 +2365,11 @@
       "qtyTon": 0.97701,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 9.28,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 8.97,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 8.6,
       "status": "Draft",
       "createdAt": "2026-05-17T08:46:00.566Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "e7c1ebfc-2e02-4ed2-a28d-4d7a47516843",
@@ -2385,11 +2385,11 @@
       "qtyTon": 0.6865,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 6.52,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 6.3,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 6.04,
       "status": "Draft",
       "createdAt": "2026-05-17T08:46:13.747Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "2fa7a1e8-df7e-439b-bc93-6517be817a25",
@@ -2405,11 +2405,11 @@
       "qtyTon": 11.635,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 91.8,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 85.87,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 83.66,
       "status": "Draft",
       "createdAt": "2026-05-17T08:47:07.870Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "d10ebc0a-a758-4a02-8120-48500c9ac32d",
@@ -2425,11 +2425,11 @@
       "qtyTon": 6.6317,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 63,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 60.88,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 58.36,
       "status": "Draft",
       "createdAt": "2026-05-17T08:48:08.798Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "2aa7a7a6-4647-4601-9bee-9ddb01efc02e",
@@ -2445,11 +2445,11 @@
       "qtyTon": 3.487,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 27.51,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 25.73,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 25.07,
       "status": "Draft",
       "createdAt": "2026-05-17T08:52:19.813Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "92ea9266-43a4-42ab-ab2a-e5bb203c5a9b",
@@ -2465,11 +2465,11 @@
       "qtyTon": 2.2376,
       "companyUnitPrice": 9.69,
       "companyTotalAmount": 21.68,
-      "truckSalaryUnitPrice": 9.28,
-      "truckSalaryAmount": 20.76,
+      "truckSalaryUnitPrice": 8.99,
+      "truckSalaryAmount": 20.12,
       "status": "Draft",
       "createdAt": "2026-05-17T08:52:44.532Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "d46b510b-3a4f-46eb-83f4-22a0ec1a864c",
@@ -2485,11 +2485,11 @@
       "qtyTon": 11.361,
       "companyUnitPrice": 9.69,
       "companyTotalAmount": 110.09,
-      "truckSalaryUnitPrice": 9.28,
-      "truckSalaryAmount": 105.43,
+      "truckSalaryUnitPrice": 8.99,
+      "truckSalaryAmount": 102.14,
       "status": "Draft",
       "createdAt": "2026-05-17T08:53:11.336Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "7bfb4cf9-1a2f-4121-a5b9-3f491da87e8b",
@@ -2505,11 +2505,11 @@
       "qtyTon": 5.868,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 55.75,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 53.87,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 51.64,
       "status": "Draft",
       "createdAt": "2026-05-17T08:53:35.938Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "21851c7e-dcb9-4552-b940-cebd9f4fe169",
@@ -2525,11 +2525,11 @@
       "qtyTon": 4.3822,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 41.63,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 40.23,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 38.56,
       "status": "Draft",
       "createdAt": "2026-05-17T08:54:28.816Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "71bfd007-d104-4855-9d72-7020e1979434",
@@ -2545,11 +2545,11 @@
       "qtyTon": 1.4829,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 14.09,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 13.61,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 13.05,
       "status": "Draft",
       "createdAt": "2026-05-17T08:55:41.057Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "d362b0ff-0340-4f44-ad05-65152654dfe8",
@@ -2565,11 +2565,11 @@
       "qtyTon": 14.70096,
       "companyUnitPrice": 8.36,
       "companyTotalAmount": 122.9,
-      "truckSalaryUnitPrice": 7.95,
-      "truckSalaryAmount": 116.87,
+      "truckSalaryUnitPrice": 7.66,
+      "truckSalaryAmount": 112.61,
       "status": "Draft",
       "createdAt": "2026-05-17T08:56:49.789Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "6c25be79-ee48-4413-879f-49348b919a7a",
@@ -2585,11 +2585,11 @@
       "qtyTon": 1.365,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 10.25,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 9.56,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 9.3,
       "status": "Draft",
       "createdAt": "2026-05-17T08:57:22.325Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "f2d60c48-e94d-4938-986d-38d9bb8ec7e5",
@@ -2605,11 +2605,11 @@
       "qtyTon": 12.3552,
       "companyUnitPrice": 9.79,
       "companyTotalAmount": 120.96,
-      "truckSalaryUnitPrice": 9.46,
-      "truckSalaryAmount": 116.88,
+      "truckSalaryUnitPrice": 9.09,
+      "truckSalaryAmount": 112.31,
       "status": "Draft",
       "createdAt": "2026-05-17T08:57:55.916Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "9010db98-3404-4422-b7a7-e5830b3f7891",
@@ -2625,11 +2625,11 @@
       "qtyTon": 10.59,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 83.56,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 78.15,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 76.14,
       "status": "Draft",
       "createdAt": "2026-05-17T08:58:15.876Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "eba1313b-b440-4d62-aa58-08b3212fc741",
@@ -2645,11 +2645,11 @@
       "qtyTon": 1.4522,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 10.91,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 10.17,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 9.89,
       "status": "Draft",
       "createdAt": "2026-05-17T08:58:45.302Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "36797d26-dfed-4bd9-a86f-c7159b4f5060",
@@ -2665,11 +2665,11 @@
       "qtyTon": 10.9875,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 82.52,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 76.91,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 74.82,
       "status": "Draft",
       "createdAt": "2026-05-17T08:59:07.297Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "eb4fd7da-cec0-42fe-a122-9113420d1de1",
@@ -2685,11 +2685,11 @@
       "qtyTon": 15.38697,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 121.4,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 113.56,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 110.63,
       "status": "Draft",
       "createdAt": "2026-05-17T08:59:31.667Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "fbd75f89-9b28-4d3e-99a5-a6e521aeb089",
@@ -2705,11 +2705,11 @@
       "qtyTon": 8.219,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 78.08,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 75.45,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 72.33,
       "status": "Draft",
       "createdAt": "2026-05-17T08:59:55.873Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "3711647c-12cc-453c-babc-62c17594a210",
@@ -2725,11 +2725,11 @@
       "qtyTon": 4.1,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 32.35,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 30.26,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 29.48,
       "status": "Draft",
       "createdAt": "2026-05-17T09:00:25.902Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "fd26508a-4336-47ca-acf0-5943f0dc48c8",
@@ -2745,11 +2745,11 @@
       "qtyTon": 15.64413,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 148.62,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 143.61,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 137.67,
       "status": "Draft",
       "createdAt": "2026-05-17T09:01:10.478Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "e71f1b04-5203-4eb0-b240-f22e5ca67a9c",
@@ -2765,11 +2765,11 @@
       "qtyTon": 3.4195,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 25.68,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 23.94,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 23.29,
       "status": "Draft",
       "createdAt": "2026-05-17T09:01:35.050Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "4c57929f-7dbb-436c-9d5d-876d185522b2",
@@ -2785,11 +2785,11 @@
       "qtyTon": 5.3463,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 40.15,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 37.42,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 36.41,
       "status": "Draft",
       "createdAt": "2026-05-17T09:02:18.704Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "ec5c2c4b-db1d-4fb8-942d-59d714474227",
@@ -2805,11 +2805,11 @@
       "qtyTon": 3.17925,
       "companyUnitPrice": 11.78,
       "companyTotalAmount": 37.45,
-      "truckSalaryUnitPrice": 11.46,
-      "truckSalaryAmount": 36.43,
+      "truckSalaryUnitPrice": 10.78,
+      "truckSalaryAmount": 34.27,
       "status": "Draft",
       "createdAt": "2026-05-17T09:02:51.077Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "c1d34620-7040-47d3-bad6-1dc2794710e9",
@@ -2825,11 +2825,11 @@
       "qtyTon": 13.188,
       "companyUnitPrice": 11.78,
       "companyTotalAmount": 155.35,
-      "truckSalaryUnitPrice": 11.46,
-      "truckSalaryAmount": 151.13,
+      "truckSalaryUnitPrice": 10.78,
+      "truckSalaryAmount": 142.17,
       "status": "Draft",
       "createdAt": "2026-05-17T09:03:16.031Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "da048efb-b6f3-4a55-bdba-b96bcefb1803",
@@ -2845,11 +2845,11 @@
       "qtyTon": 16.956,
       "companyUnitPrice": 11.78,
       "companyTotalAmount": 199.74,
-      "truckSalaryUnitPrice": 11.46,
-      "truckSalaryAmount": 194.32,
+      "truckSalaryUnitPrice": 10.78,
+      "truckSalaryAmount": 182.79,
       "status": "Draft",
       "createdAt": "2026-05-17T09:03:38.699Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "bfdbbce8-48ec-41d0-bf05-e4ebdde7e211",
@@ -2865,11 +2865,11 @@
       "qtyTon": 17.29,
       "companyUnitPrice": 9.69,
       "companyTotalAmount": 167.54,
-      "truckSalaryUnitPrice": 9.36,
-      "truckSalaryAmount": 161.83,
+      "truckSalaryUnitPrice": 8.99,
+      "truckSalaryAmount": 155.44,
       "status": "Draft",
       "createdAt": "2026-05-17T09:04:02.366Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "7595792f-8c8e-4996-8b84-27a0a2ec0bda",
@@ -2885,11 +2885,11 @@
       "qtyTon": 0.5148,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 3.87,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 3.6,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 3.51,
       "status": "Draft",
       "createdAt": "2026-05-17T09:04:24.539Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "a6bc307f-4c41-45f2-82cb-1557abf265cd",
@@ -2905,11 +2905,11 @@
       "qtyTon": 9.85182,
       "companyUnitPrice": 7.41,
       "companyTotalAmount": 73,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 68.96,
+      "truckSalaryUnitPrice": 6.71,
+      "truckSalaryAmount": 66.11,
       "status": "Draft",
       "createdAt": "2026-05-17T09:04:45.944Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "09a8f3e6-2419-4c2f-82b7-1e7c2465c612",
@@ -2925,11 +2925,11 @@
       "qtyTon": 3.98135,
       "companyUnitPrice": 7.51,
       "companyTotalAmount": 29.9,
-      "truckSalaryUnitPrice": 7,
-      "truckSalaryAmount": 27.87,
+      "truckSalaryUnitPrice": 6.81,
+      "truckSalaryAmount": 27.11,
       "status": "Draft",
       "createdAt": "2026-05-17T09:05:09.117Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "01b57b19-1e06-42f6-81e4-04d8bd505856",
@@ -2945,11 +2945,11 @@
       "qtyTon": 6.052,
       "companyUnitPrice": 9.12,
       "companyTotalAmount": 55.19,
-      "truckSalaryUnitPrice": 8.71,
-      "truckSalaryAmount": 52.71,
+      "truckSalaryUnitPrice": 8.42,
+      "truckSalaryAmount": 50.96,
       "status": "Draft",
       "createdAt": "2026-05-17T09:05:28.598Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "4d6535ec-ccd3-41d7-8543-e123718097bc",
@@ -2965,11 +2965,11 @@
       "qtyTon": 14.814,
       "companyUnitPrice": 9.12,
       "companyTotalAmount": 135.1,
-      "truckSalaryUnitPrice": 8.71,
-      "truckSalaryAmount": 129.03,
+      "truckSalaryUnitPrice": 8.42,
+      "truckSalaryAmount": 124.73,
       "status": "Draft",
       "createdAt": "2026-05-17T09:05:52.350Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "c3ea2d27-8870-4e19-b2a4-0300dbbf6235",
@@ -2985,11 +2985,11 @@
       "qtyTon": 11.396,
       "companyUnitPrice": 7.89,
       "companyTotalAmount": 89.91,
-      "truckSalaryUnitPrice": 7.38,
-      "truckSalaryAmount": 84.1,
+      "truckSalaryUnitPrice": 7.19,
+      "truckSalaryAmount": 81.94,
       "status": "Draft",
       "createdAt": "2026-05-17T09:06:25.578Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "9c34e4dd-dc34-43c1-8415-351d0e8345c0",
@@ -3005,11 +3005,11 @@
       "qtyTon": 17.7055,
       "companyUnitPrice": 9.12,
       "companyTotalAmount": 161.47,
-      "truckSalaryUnitPrice": 8.71,
-      "truckSalaryAmount": 154.21,
+      "truckSalaryUnitPrice": 8.42,
+      "truckSalaryAmount": 149.08,
       "status": "Draft",
       "createdAt": "2026-05-17T09:06:47.990Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "6457c751-6cb8-4bc3-870a-247340678b1e",
@@ -3025,11 +3025,11 @@
       "qtyTon": 5.873,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 55.79,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 53.91,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 51.68,
       "status": "Draft",
       "createdAt": "2026-05-17T09:07:08.935Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "066149d4-a0e5-4684-af07-65e8ab6518cf",
@@ -3045,11 +3045,11 @@
       "qtyTon": 4.05,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 38.48,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 37.18,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 35.64,
       "status": "Draft",
       "createdAt": "2026-05-17T09:08:19.540Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "a7e836ad-e6d3-4eea-a1cb-13d4e0bfcbc5",
@@ -3065,11 +3065,11 @@
       "qtyTon": 10.76411,
       "companyUnitPrice": 9.79,
       "companyTotalAmount": 105.38,
-      "truckSalaryUnitPrice": 9.46,
-      "truckSalaryAmount": 101.83,
+      "truckSalaryUnitPrice": 9.09,
+      "truckSalaryAmount": 97.85,
       "status": "Draft",
       "createdAt": "2026-05-17T09:08:41.013Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "e1d7bee8-781e-41bc-8536-bf4f21c28dfb",
@@ -3085,11 +3085,11 @@
       "qtyTon": 4.402,
       "companyUnitPrice": 9.79,
       "companyTotalAmount": 43.1,
-      "truckSalaryUnitPrice": 9.46,
-      "truckSalaryAmount": 41.64,
+      "truckSalaryUnitPrice": 9.09,
+      "truckSalaryAmount": 40.01,
       "status": "Draft",
       "createdAt": "2026-05-17T09:08:55.916Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "cd512132-3070-49ba-acea-bae3fd54eb31",
@@ -3105,11 +3105,11 @@
       "qtyTon": 8.592,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 81.62,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 78.87,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 75.61,
       "status": "Draft",
       "createdAt": "2026-05-17T09:09:16.461Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "b7bd45f0-00c5-4b3a-8802-12e2ae0ca807",
@@ -3125,11 +3125,11 @@
       "qtyTon": 13.99496,
       "companyUnitPrice": 9.5,
       "companyTotalAmount": 132.95,
-      "truckSalaryUnitPrice": 9.18,
-      "truckSalaryAmount": 128.47,
+      "truckSalaryUnitPrice": 8.8,
+      "truckSalaryAmount": 123.16,
       "status": "Draft",
       "createdAt": "2026-05-17T09:09:53.123Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "c94fbf1d-4972-474b-916e-f32b2524ba10",
@@ -3145,11 +3145,11 @@
       "qtyTon": 3.01488,
       "companyUnitPrice": 14.16,
       "companyTotalAmount": 42.69,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.16,
+      "truckSalaryAmount": 39.68,
       "status": "Draft",
       "createdAt": "2026-05-17T09:15:43.422Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "9f23950c-46cd-46e2-814c-310ee0ea50b0",
@@ -3165,11 +3165,11 @@
       "qtyTon": 6.785,
       "companyUnitPrice": 14.16,
       "companyTotalAmount": 96.08,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.16,
+      "truckSalaryAmount": 89.29,
       "status": "Draft",
       "createdAt": "2026-05-17T09:16:12.809Z",
-      "updatedAt": "2026-05-18T03:54:45.826Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "cd071538-2130-4cc9-9935-a6ce9d640893",
@@ -3185,11 +3185,11 @@
       "qtyTon": 4.049,
       "companyUnitPrice": 14.16,
       "companyTotalAmount": 57.33,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.16,
+      "truckSalaryAmount": 53.28,
       "status": "Draft",
       "createdAt": "2026-05-17T09:16:37.911Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "e1327b27-7b56-49b8-8ae8-a15cce4783d6",
@@ -3205,11 +3205,11 @@
       "qtyTon": 6.114,
       "companyUnitPrice": 14.16,
       "companyTotalAmount": 86.57,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.16,
+      "truckSalaryAmount": 80.46,
       "status": "Draft",
       "createdAt": "2026-05-17T09:16:57.514Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "5fd89e49-687d-4491-8ece-b6e5e224f059",
@@ -3225,11 +3225,11 @@
       "qtyTon": 2.71,
       "companyUnitPrice": 14.16,
       "companyTotalAmount": 38.37,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.16,
+      "truckSalaryAmount": 35.66,
       "status": "Draft",
       "createdAt": "2026-05-17T09:17:18.998Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "260c1803-98a9-4d4a-abea-91fe1b05c324",
@@ -3245,11 +3245,11 @@
       "qtyTon": 9.8545,
       "companyUnitPrice": 10.64,
       "companyTotalAmount": 104.85,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 9.94,
+      "truckSalaryAmount": 97.95,
       "status": "Draft",
       "createdAt": "2026-05-17T09:17:47.524Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "99bfe805-0c33-4c84-8b6b-2e5e572595db",
@@ -3265,11 +3265,11 @@
       "qtyTon": 3.943,
       "companyUnitPrice": 13.3,
       "companyTotalAmount": 52.44,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 12.3,
+      "truckSalaryAmount": 48.5,
       "status": "Draft",
       "createdAt": "2026-05-17T09:18:08.079Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "59d2fc11-dbc1-442c-a905-11a015cbed0a",
@@ -3285,11 +3285,11 @@
       "qtyTon": 4.2084,
       "companyUnitPrice": 12.73,
       "companyTotalAmount": 53.57,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 12.03,
+      "truckSalaryAmount": 50.63,
       "status": "Draft",
       "createdAt": "2026-05-17T09:18:31.823Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "4c6d4261-c012-45a2-8086-7b6580be2b5e",
@@ -3305,11 +3305,11 @@
       "qtyTon": 4.8695,
       "companyUnitPrice": 14.25,
       "companyTotalAmount": 69.39,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.25,
+      "truckSalaryAmount": 64.52,
       "status": "Draft",
       "createdAt": "2026-05-17T09:18:53.633Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "da32801f-aa16-41cd-af88-c3c27c2102c2",
@@ -3325,11 +3325,11 @@
       "qtyTon": 10.2595,
       "companyUnitPrice": 14.16,
       "companyTotalAmount": 145.27,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.16,
+      "truckSalaryAmount": 135.02,
       "status": "Draft",
       "createdAt": "2026-05-17T09:19:20.944Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "0efbeda4-dd3e-4097-9fc3-5124a395fd47",
@@ -3345,11 +3345,11 @@
       "qtyTon": 3.887,
       "companyUnitPrice": 8.65,
       "companyTotalAmount": 33.62,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 7.95,
+      "truckSalaryAmount": 30.9,
       "status": "Draft",
       "createdAt": "2026-05-17T09:19:54.203Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "f32cdde8-9590-4931-bb40-42d11abeed6a",
@@ -3365,11 +3365,11 @@
       "qtyTon": 6.8605,
       "companyUnitPrice": 16.91,
       "companyTotalAmount": 116.01,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 15.91,
+      "truckSalaryAmount": 109.15,
       "status": "Draft",
       "createdAt": "2026-05-17T09:20:22.278Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "f7a5a032-6e7c-4626-97bd-28470d3fda93",
@@ -3385,11 +3385,11 @@
       "qtyTon": 3.417,
       "companyUnitPrice": 13.78,
       "companyTotalAmount": 47.09,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 12.78,
+      "truckSalaryAmount": 43.67,
       "status": "Draft",
       "createdAt": "2026-05-17T09:20:43.822Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "c42c1122-7dbd-4c6a-93f7-1a733cccde49",
@@ -3405,11 +3405,11 @@
       "qtyTon": 1.6985,
       "companyUnitPrice": 13.78,
       "companyTotalAmount": 23.41,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 12.78,
+      "truckSalaryAmount": 21.71,
       "status": "Draft",
       "createdAt": "2026-05-17T09:21:04.723Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "647bdb65-95c0-46f3-bcf0-cc037489e484",
@@ -3425,11 +3425,11 @@
       "qtyTon": 0.206,
       "companyUnitPrice": 16.91,
       "companyTotalAmount": 3.48,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 15.91,
+      "truckSalaryAmount": 3.28,
       "status": "Draft",
       "createdAt": "2026-05-17T09:21:30.093Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "70ec4ffb-5b50-44e8-82c1-6e8fef525605",
@@ -3445,11 +3445,11 @@
       "qtyTon": 4.7007,
       "companyUnitPrice": 14.16,
       "companyTotalAmount": 66.56,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.16,
+      "truckSalaryAmount": 61.86,
       "status": "Draft",
       "createdAt": "2026-05-17T09:21:56.329Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "e4d4fd73-2c71-40a8-8ccb-1f6009d01cf1",
@@ -3465,11 +3465,11 @@
       "qtyTon": 4.125,
       "companyUnitPrice": 14.16,
       "companyTotalAmount": 58.41,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 13.16,
+      "truckSalaryAmount": 54.29,
       "status": "Draft",
       "createdAt": "2026-05-17T09:22:24.768Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "d77eafe5-ba0a-4d9f-9b84-50d24d3c5719",
@@ -3485,11 +3485,11 @@
       "qtyTon": 1,
       "companyUnitPrice": 9.31,
       "companyTotalAmount": 9.31,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 8.61,
+      "truckSalaryAmount": 8.61,
       "status": "Draft",
       "createdAt": "2026-05-17T09:22:51.232Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "f0df1e56-a941-4609-9fa3-6060005765cd",
@@ -3505,11 +3505,11 @@
       "qtyTon": 10,
       "companyUnitPrice": 9.31,
       "companyTotalAmount": 93.1,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 8.61,
+      "truckSalaryAmount": 86.1,
       "status": "Draft",
       "createdAt": "2026-05-17T09:23:18.739Z",
-      "updatedAt": "2026-05-18T03:54:45.827Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "b50acf49-9648-4534-a732-ad93266e2109",
@@ -3525,11 +3525,11 @@
       "qtyTon": 4.9459,
       "companyUnitPrice": 13.78,
       "companyTotalAmount": 68.15,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 12.78,
+      "truckSalaryAmount": 63.21,
       "status": "Draft",
       "createdAt": "2026-05-17T11:55:34.550Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "dedde9e3-d3c0-4b04-ab9f-f197b10e7ad0",
@@ -3545,11 +3545,11 @@
       "qtyTon": 2.7565,
       "companyUnitPrice": 13.78,
       "companyTotalAmount": 37.98,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 12.78,
+      "truckSalaryAmount": 35.23,
       "status": "Draft",
       "createdAt": "2026-05-17T11:55:58.207Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "0d9a02b1-c4fa-493d-9110-ea3d257ef539",
@@ -3565,11 +3565,11 @@
       "qtyTon": 2.226,
       "companyUnitPrice": 13.78,
       "companyTotalAmount": 30.67,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 12.78,
+      "truckSalaryAmount": 28.45,
       "status": "Draft",
       "createdAt": "2026-05-17T11:56:32.036Z",
-      "updatedAt": "2026-05-18T03:54:45.828Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "f6f69792-f83e-453e-bd82-6cd89704b574",
@@ -3585,11 +3585,11 @@
       "qtyTon": 7.674,
       "companyUnitPrice": 14.63,
       "companyTotalAmount": 112.27,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 14.53,
+      "truckSalaryAmount": 111.5,
       "status": "Draft",
       "createdAt": "2026-05-17T11:57:14.273Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "c494dcdc-f988-4b97-a850-8deb63df4abe",
@@ -3605,11 +3605,11 @@
       "qtyTon": 0.5,
       "companyUnitPrice": 14.63,
       "companyTotalAmount": 7.32,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 14.53,
+      "truckSalaryAmount": 7.26,
       "status": "Draft",
       "createdAt": "2026-05-17T11:57:38.771Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     },
     {
       "id": "b5f372d7-9de3-4329-a132-9b578e5bc2de",
@@ -3625,11 +3625,11 @@
       "qtyTon": 0.726,
       "companyUnitPrice": 14.63,
       "companyTotalAmount": 10.62,
-      "truckSalaryUnitPrice": 0,
-      "truckSalaryAmount": 0,
+      "truckSalaryUnitPrice": 14.53,
+      "truckSalaryAmount": 10.55,
       "status": "Draft",
       "createdAt": "2026-05-17T11:58:19.047Z",
-      "updatedAt": "2026-05-18T03:54:45.829Z"
+      "updatedAt": "2026-05-19 17:03:31"
     }
   ],
   "activity": [
