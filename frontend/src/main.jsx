@@ -980,6 +980,35 @@ function App() {
     }
   }
 
+  async function diagnoseDriverPrices() {
+    try {
+      const result = await api("/api/diagnose-driver");
+      if (result.zeroPriceDeliveries === 0) {
+        alert("All delivery rows have a non-zero driver price. Nothing to fix.");
+        return;
+      }
+      const lines = [`${result.zeroPriceDeliveries} delivery row(s) still have $0 driver price:\n`];
+      for (const p of result.problems) {
+        lines.push(`• ${p.toLocation} (${p.truckType}) on ${p.deliveryDate}`);
+        if (p.effectivePriceFound !== null && p.effectivePriceFound > 0) {
+          lines.push(`  → Price found: $${p.effectivePriceFound} (effective ${p.effectivePriceDate}) but not applied`);
+        } else if (p.effectivePriceFound !== null) {
+          lines.push(`  → Price found but is $0 (effective ${p.effectivePriceDate})`);
+        } else {
+          lines.push(`  → NO price found for this delivery date`);
+          if (p.allPricesForRoute.length > 0) {
+            lines.push(`  → Available prices: ${p.allPricesForRoute.map(x => `$${x.driver} from ${x.effectiveDate} (active:${x.active})`).join(", ")}`);
+          } else {
+            lines.push(`  → No prices exist for this route at all`);
+          }
+        }
+      }
+      alert(lines.join("\n"));
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function cleanupZeroDriverPrices() {
     const ok = window.confirm("Delete old Without Crane price entries that have $0 driver price and a newer entry exists? This cleans up duplicate entries.");
     if (!ok) return;
@@ -2130,7 +2159,10 @@ function App() {
                   Re-apply current driver prices to all existing delivery rows. Use this if driver payment amounts appear as $0 after a price update.
                 </p>
               </div>
-              <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Prices</Button>
+                <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
+              </div>
             </div>
           </Panel>
 

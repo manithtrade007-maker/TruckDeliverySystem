@@ -1993,6 +1993,40 @@ async function api(req, res, url) {
     return sendJson(res, 200, result);
   }
 
+  if (req.method === "GET" && url.pathname === "/api/diagnose-driver") {
+    const data = await readData();
+    const problems = [];
+    for (const delivery of data.deliveries) {
+      if (toNumber(delivery.truckSalaryUnitPrice) !== 0) continue;
+      const allForRoute = data.prices.filter(
+        (p) =>
+          p.fromLocation === delivery.fromLocation &&
+          locationBaseKey(p.toLocation) === locationBaseKey(delivery.toLocation) &&
+          p.truckType === delivery.truckType
+      );
+      const effectivePrice = findEffectivePrice(data, {
+        fromLocation: delivery.fromLocation,
+        toLocation: delivery.toLocation,
+        truckType: delivery.truckType,
+        deliveryDate: delivery.deliveryDate
+      });
+      problems.push({
+        toLocation: delivery.toLocation,
+        truckType: delivery.truckType,
+        deliveryDate: delivery.deliveryDate,
+        storedDriverPrice: delivery.truckSalaryUnitPrice,
+        effectivePriceFound: effectivePrice ? effectivePrice.truckSalaryUnitPrice : null,
+        effectivePriceDate: effectivePrice ? effectiveDateOf(effectivePrice) : null,
+        allPricesForRoute: allForRoute.map((p) => ({
+          effectiveDate: effectiveDateOf(p),
+          driver: p.truckSalaryUnitPrice,
+          active: p.active
+        }))
+      });
+    }
+    return sendJson(res, 200, { zeroPriceDeliveries: problems.length, problems });
+  }
+
   if (req.method === "POST" && url.pathname === "/api/prices/cleanup-zero-driver") {
     const result = await updateData((data) => {
       // Group Without Crane prices by route
