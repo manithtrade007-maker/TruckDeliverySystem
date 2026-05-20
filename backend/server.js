@@ -632,7 +632,12 @@ function locationMatchKey(value) {
 }
 
 function locationBaseKey(value) {
-  return locationMatchKey(normalizeText(value).replace(/\([^)]*\)/g, ""));
+  return normalizeText(value)
+    .replace(/\([^)]*\)/g, "")
+    .toLowerCase()
+    .replace(/^\s*(kh|khan)\s*[.]?\s*/i, "")
+    .replace(/^\s*d\s*\.\s*/i, "")
+    .replace(/[^a-z0-9]+/g, "");
 }
 
 function toNumber(value) {
@@ -653,14 +658,92 @@ function effectiveDateOf(price) {
 }
 
 function findEffectivePrice(data, { fromLocation, toLocation, truckType, deliveryDate }) {
+  const fromKey = normalizeText(fromLocation);
+  const toKey = locationBaseKey(toLocation);
+  const typeKey = normalizeText(truckType);
+
   return data.prices
     .filter((item) => item.active !== false)
-    .filter((item) => item.fromLocation === fromLocation)
-    .filter((item) => item.toLocation === toLocation)
-    .filter((item) => item.truckType === truckType)
+    .filter((item) => normalizeText(item.fromLocation) === fromKey)
+    .filter((item) => locationBaseKey(item.toLocation) === toKey)
+    .filter((item) => normalizeText(item.truckType) === typeKey)
     .filter((item) => effectiveDateOf(item) <= deliveryDate)
     .sort((a, b) => effectiveDateOf(b).localeCompare(effectiveDateOf(a)))
     [0];
+}
+
+function priceRouteKey({ fromLocation, toLocation, truckType }) {
+  return [
+    normalizeText(fromLocation),
+    normalizeText(truckType),
+    locationBaseKey(toLocation)
+  ].join("||");
+}
+
+function applyEffectivePriceToDelivery(data, delivery) {
+  const effectivePrice = findEffectivePrice(data, {
+    fromLocation: delivery.fromLocation,
+    toLocation: delivery.toLocation,
+    truckType: delivery.truckType,
+    deliveryDate: delivery.deliveryDate
+  });
+  if (!effectivePrice) return false;
+
+  const qtyTon = toNumber(delivery.qtyTon);
+  const nextDistanceKm = toNumber(effectivePrice.distanceKm);
+  const nextCompanyPrice = toNumber(effectivePrice.companyUnitPrice);
+  const nextDriverPrice = toNumber(effectivePrice.truckSalaryUnitPrice);
+  let changed = false;
+
+  if (nextDistanceKm > 0 && nextDistanceKm !== toNumber(delivery.distanceKm)) {
+    delivery.distanceKm = nextDistanceKm;
+    changed = true;
+  }
+
+  if (nextCompanyPrice > 0) {
+    const nextCompanyAmount = roundMoney(qtyTon * nextCompanyPrice);
+    if (
+      nextCompanyPrice !== toNumber(delivery.companyUnitPrice) ||
+      nextCompanyAmount !== toNumber(delivery.companyTotalAmount)
+    ) {
+      delivery.companyUnitPrice = nextCompanyPrice;
+      delivery.companyTotalAmount = nextCompanyAmount;
+      changed = true;
+    }
+  }
+
+  if (nextDriverPrice > 0) {
+    const nextDriverAmount = roundMoney(qtyTon * nextDriverPrice);
+    if (
+      nextDriverPrice !== toNumber(delivery.truckSalaryUnitPrice) ||
+      nextDriverAmount !== toNumber(delivery.truckSalaryAmount)
+    ) {
+      delivery.truckSalaryUnitPrice = nextDriverPrice;
+      delivery.truckSalaryAmount = nextDriverAmount;
+      changed = true;
+    }
+  }
+
+  if (changed) delivery.updatedAt = new Date().toISOString();
+  return changed;
+}
+
+function recalculateDeliveriesForPriceRoutes(data, prices) {
+  const routeKeys = new Set(prices.map((price) => priceRouteKey(price)));
+  let recalculatedDeliveries = 0;
+  for (const delivery of data.deliveries) {
+    if (!routeKeys.has(priceRouteKey(delivery))) continue;
+    if (applyEffectivePriceToDelivery(data, delivery)) recalculatedDeliveries += 1;
+  }
+  return recalculatedDeliveries;
+}
+
+function recalculateAllDeliveries(data) {
+  let recalculatedDeliveries = 0;
+  for (const delivery of data.deliveries) {
+    if (applyEffectivePriceToDelivery(data, delivery)) recalculatedDeliveries += 1;
+  }
+  return recalculatedDeliveries;
 }
 
 function nextStatementNumber(data, month) {
