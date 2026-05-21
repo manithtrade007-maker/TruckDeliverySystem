@@ -228,6 +228,7 @@ function App() {
   const [settingsForm, setSettingsForm] = useState({ companyName: "", defaultFromLocation: "" });
   const [backupFiles, setBackupFiles] = useState([]);
   const [emptyPriceResult, setEmptyPriceResult] = useState(null);
+  const [bulkLocationFilter, setBulkLocationFilter] = useState("");
 
   const selectedStatement = useMemo(
     () => data.statements.find((statement) => statement.id === selectedStatementId),
@@ -521,6 +522,22 @@ function App() {
         };
       });
   }, [bulkPriceForm, data.prices, data.settings.defaultFromLocation]);
+
+  const bulkLocationChoices = useMemo(() => {
+    const fromLocation = bulkPriceForm.fromLocation || data.settings.defaultFromLocation;
+    const seen = new Set();
+    const result = [];
+    data.prices
+      .filter((p) => p.fromLocation === fromLocation && p.truckType === bulkPriceForm.truckType && p.active !== false)
+      .forEach((p) => {
+        const key = locationBaseKey(p.toLocation);
+        if (!seen.has(key)) { seen.add(key); result.push(p.toLocation); }
+      });
+    result.sort();
+    if (!bulkLocationFilter.trim()) return result;
+    const fk = locationMatchKey(bulkLocationFilter);
+    return result.filter((loc) => locationMatchKey(loc).includes(fk));
+  }, [bulkPriceForm.fromLocation, bulkPriceForm.truckType, data.prices, data.settings.defaultFromLocation, bulkLocationFilter]);
 
   const isDraft = selectedStatement?.status === "Draft";
   const isEditingDelivery = Boolean(deliveryForm.id);
@@ -1835,7 +1852,7 @@ function App() {
                   </Select>
                 </Field>
                 <Field label="Truck Type">
-                  <Select value={bulkPriceForm.truckType} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, truckType: e.target.value })}>
+                  <Select value={bulkPriceForm.truckType} onChange={(e) => { setBulkPriceForm({ ...bulkPriceForm, truckType: e.target.value }); setBulkLocationFilter(""); }}>
                     <option value="With Crane">Crane</option>
                     <option value="Without Crane">No Crane</option>
                   </Select>
@@ -1846,6 +1863,47 @@ function App() {
                 <Field label="From Location">
                   <Input placeholder={data.settings.defaultFromLocation || "Warehouse-09"} value={bulkPriceForm.fromLocation} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, fromLocation: e.target.value })} />
                 </Field>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <Input
+                    placeholder="Filter locations (e.g. pp, kandal, kh)"
+                    value={bulkLocationFilter}
+                    onChange={(e) => setBulkLocationFilter(e.target.value)}
+                  />
+                  {bulkLocationFilter && (
+                    <button type="button" onClick={() => setBulkLocationFilter("")} className="text-slate-400 hover:text-slate-700 text-lg leading-none px-1">×</button>
+                  )}
+                  <span className="text-xs text-slate-400 whitespace-nowrap">{bulkLocationChoices.length} location{bulkLocationChoices.length !== 1 ? "s" : ""}</span>
+                </div>
+                {bulkLocationChoices.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-1">No matching locations found.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                    {bulkLocationChoices.map((loc) => {
+                      const alreadyAdded = bulkPriceForm.locationsText.split("\n").map((l) => l.trim()).includes(loc);
+                      return (
+                        <button
+                          key={loc}
+                          type="button"
+                          onClick={() => {
+                            if (alreadyAdded) return;
+                            const lines = bulkPriceForm.locationsText.split("\n").filter(Boolean);
+                            setBulkPriceForm({ ...bulkPriceForm, locationsText: [...lines, loc].join("\n"), rowsText: "" });
+                          }}
+                          className={`text-xs px-2.5 py-1 rounded-full border font-medium transition ${
+                            alreadyAdded
+                              ? "bg-teal-100 border-teal-300 text-teal-700 cursor-default"
+                              : "bg-white border-slate-200 text-slate-700 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700"
+                          }`}
+                        >
+                          {alreadyAdded ? "✓ " : ""}{loc}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 grid gap-3 lg:grid-cols-[0.9fr_1.3fr]">
