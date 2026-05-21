@@ -984,31 +984,26 @@ function App() {
   async function diagnoseEmptyPrices() {
     try {
       const result = await api("/api/diagnose-empty-prices");
-      const dCrane = result.missingDriver["With Crane"] || [];
-      const dNoCrane = result.missingDriver["Without Crane"] || [];
-      const cCrane = result.missingCompany["With Crane"] || [];
-      const cNoCrane = result.missingCompany["Without Crane"] || [];
+      const dCrane = (result.missingDriver || {})["With Crane"] || [];
+      const dNoCrane = (result.missingDriver || {})["Without Crane"] || [];
+      const cCrane = (result.missingCompany || {})["With Crane"] || [];
+      const cNoCrane = (result.missingCompany || {})["Without Crane"] || [];
       const total = dCrane.length + dNoCrane.length + cCrane.length + cNoCrane.length;
       if (total === 0) {
-        alert("All locations have both company and driver prices set. Nothing missing.");
+        flash("All locations have both company and driver prices set. Nothing missing.");
         return;
       }
-      const lines = [];
-      if (dCrane.length > 0 || dNoCrane.length > 0) {
-        lines.push(`--- MISSING DRIVER PRICE (${dCrane.length + dNoCrane.length}) ---`);
-        if (dCrane.length > 0) { lines.push(`Crane (${dCrane.length}):`); dCrane.forEach((l) => lines.push(`  • ${l}`)); }
-        if (dNoCrane.length > 0) { lines.push(`No Crane (${dNoCrane.length}):`); dNoCrane.forEach((l) => lines.push(`  • ${l}`)); }
-      }
-      if (cCrane.length > 0 || cNoCrane.length > 0) {
-        if (lines.length > 0) lines.push("");
-        lines.push(`--- MISSING COMPANY PRICE (${cCrane.length + cNoCrane.length}) ---`);
-        if (cCrane.length > 0) { lines.push(`Crane (${cCrane.length}):`); cCrane.forEach((l) => lines.push(`  • ${l}`)); }
-        if (cNoCrane.length > 0) { lines.push(`No Crane (${cNoCrane.length}):`); cNoCrane.forEach((l) => lines.push(`  • ${l}`)); }
-      }
-      alert(lines.join("\n"));
+      setEmptyPriceResult({ dCrane, dNoCrane, cCrane, cNoCrane });
     } catch (err) {
       flash(err.message, "error");
     }
+  }
+
+  function goToEmptyPrice(location, section) {
+    setEmptyPriceResult(null);
+    setPage("setup");
+    setSetupSection(section);
+    setSetupLocationSearch(location);
   }
 
   async function fixLocationNames() {
@@ -2220,6 +2215,84 @@ function App() {
           </Panel>
 
         </main>
+      )}
+
+      {emptyPriceResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEmptyPriceResult(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <h2 className="text-lg font-bold">Missing Prices</h2>
+              <button className="text-slate-400 hover:text-slate-700 text-2xl leading-none" onClick={() => setEmptyPriceResult(null)}>×</button>
+            </div>
+            <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
+              {(emptyPriceResult.dCrane.length > 0 || emptyPriceResult.dNoCrane.length > 0) && (
+                <div>
+                  <p className="font-semibold text-sm text-red-600 mb-2">
+                    Missing Driver Price — {emptyPriceResult.dCrane.length + emptyPriceResult.dNoCrane.length} location{emptyPriceResult.dCrane.length + emptyPriceResult.dNoCrane.length !== 1 ? "s" : ""}
+                  </p>
+                  {emptyPriceResult.dCrane.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs font-medium text-slate-500 mb-1">Crane ({emptyPriceResult.dCrane.length})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {emptyPriceResult.dCrane.map((loc) => (
+                          <button key={loc} onClick={() => goToEmptyPrice(loc, "driver")} className="text-sm px-3 py-1 rounded-full bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors">
+                            {loc}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {emptyPriceResult.dNoCrane.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 mb-1">No Crane ({emptyPriceResult.dNoCrane.length})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {emptyPriceResult.dNoCrane.map((loc) => (
+                          <button key={loc} onClick={() => goToEmptyPrice(loc, "driver")} className="text-sm px-3 py-1 rounded-full bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors">
+                            {loc}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {(emptyPriceResult.cCrane.length > 0 || emptyPriceResult.cNoCrane.length > 0) && (
+                <div>
+                  <p className="font-semibold text-sm text-amber-600 mb-2">
+                    Missing Company Price — {emptyPriceResult.cCrane.length + emptyPriceResult.cNoCrane.length} location{emptyPriceResult.cCrane.length + emptyPriceResult.cNoCrane.length !== 1 ? "s" : ""}
+                  </p>
+                  {emptyPriceResult.cCrane.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs font-medium text-slate-500 mb-1">Crane ({emptyPriceResult.cCrane.length})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {emptyPriceResult.cCrane.map((loc) => (
+                          <button key={loc} onClick={() => goToEmptyPrice(loc, "company")} className="text-sm px-3 py-1 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors">
+                            {loc}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {emptyPriceResult.cNoCrane.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 mb-1">No Crane ({emptyPriceResult.cNoCrane.length})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {emptyPriceResult.cNoCrane.map((loc) => (
+                          <button key={loc} onClick={() => goToEmptyPrice(loc, "company")} className="text-sm px-3 py-1 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors">
+                            {loc}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="px-5 py-3 border-t text-right">
+              <button className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium" onClick={() => setEmptyPriceResult(null)}>Close</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
