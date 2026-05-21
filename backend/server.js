@@ -1734,10 +1734,10 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
       commands.push(drawLine(col2 + 6, footerTop - 76, col3 - 6, footerTop - 76, 0.7, [0.3, 0.3, 0.3]));
       commands.push(drawLine(col3 + 6, footerTop - 76, tableX + tableWidth - 6, footerTop - 76, 0.7, [0.3, 0.3, 0.3]));
 
-      // header labels
-      commands.push(drawText("Prepared By", col1 + 6, footerTop, { size: 7.2, bold: true, width: fcw - 12 }));
+      // header labels — all centered in their column box
+      commands.push(drawText("Prepared By", col1 + 6, footerTop, { size: 7.2, bold: true, width: fcw - 12, align: "center" }));
       commands.push(drawText("Checked By", col2 + 6, footerTop, { size: 7.2, bold: true, width: fcw - 12, align: "center" }));
-      commands.push(drawText("Approved By", col3 + 6, footerTop, { size: 7.2, bold: true, width: fcw - 12, align: "right" }));
+      commands.push(drawText("Approved By", col3 + 6, footerTop, { size: 7.2, bold: true, width: fcw - 12, align: "center" }));
 
       // signature image in Prepared By column
       if (signatureImage) {
@@ -1797,9 +1797,9 @@ function statementPdf(data, rows, signatureImage) {
     { key: "truckType", label: "Type of Truck", width: 96 },
     { key: "from", label: "From Location", width: 96 },
     { key: "to", label: "To Location", width: 150 },
-    { key: "qty", label: "QTY(T)", width: 72, align: "right", bold: true },
-    { key: "unit", label: "Unit Price", width: 64, align: "right" },
-    { key: "amount", label: "Total Amount", width: 90, align: "right", bold: true }
+    { key: "qty", label: "QTY(T)", width: 88, align: "right", bold: true },
+    { key: "unit", label: "Unit Price", width: 72, align: "right" },
+    { key: "amount", label: "Total Amount", width: 96, align: "right", bold: true }
   ];
   return tablePdf({
     title: `Statement ${statement?.statementNumber || ""} - ${monthLabel(statement?.month)}`,
