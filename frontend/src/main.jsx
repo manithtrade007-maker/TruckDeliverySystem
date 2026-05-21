@@ -943,6 +943,23 @@ function App() {
     }
   }
 
+  async function deletePricesByDate() {
+    const truckLabel = bulkPriceForm.truckType === "With Crane" ? "Crane" : "No Crane";
+    const dateLabel = formatDate(bulkPriceForm.effectiveDate);
+    const ok = window.confirm(`Delete ALL ${truckLabel} price entries effective ${dateLabel}? This cannot be undone (a backup is created automatically).`);
+    if (!ok) return;
+    try {
+      const result = await api("/api/prices/delete-by-date", {
+        method: "POST",
+        body: JSON.stringify({ truckType: bulkPriceForm.truckType, effectiveDate: bulkPriceForm.effectiveDate })
+      });
+      await loadData();
+      flash(`Deleted ${result.deleted} ${truckLabel} price entries for ${dateLabel}.`);
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function deletePrice(price) {
     const ok = window.confirm(`Delete price for ${price.toLocation} (${truckTypeLabel(price.truckType)})? If it has delivery history, it will be deactivated instead of permanently deleted.`);
     if (!ok) return;
@@ -1942,6 +1959,9 @@ function App() {
                     </Button>
                     <Button type="button" variant="secondary" onClick={() => setBulkPriceForm({ ...bulkPriceForm, locationsText: "", pricesText: "", driverPricesText: "", rowsText: "" })}>
                       Clear
+                    </Button>
+                    <Button type="button" variant="danger" onClick={deletePricesByDate}>
+                      Delete All Prices for This Date
                     </Button>
                   </div>
                   <p className="mt-3 text-xs font-bold text-slate-500">

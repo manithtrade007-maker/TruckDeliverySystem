@@ -2264,6 +2264,23 @@ async function api(req, res, url) {
     return sendJson(res, 200, result);
   }
 
+  if (req.method === "POST" && url.pathname === "/api/prices/delete-by-date") {
+    const body = await readBody(req);
+    const result = await updateData(async (data) => {
+      const truckType = normalizeText(body.truckType);
+      const effectiveDate = normalizeText(body.effectiveDate);
+      if (!truckType) throw new Error("Truck type is required.");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate)) throw new Error("Effective date is required.");
+      await createBackup(data, "before-delete-by-date");
+      const before = data.prices.length;
+      data.prices = data.prices.filter((p) => !(p.truckType === truckType && priceEffectiveDate(p) === effectiveDate));
+      const deleted = before - data.prices.length;
+      if (deleted > 0) addActivity(data, `Deleted ${deleted} ${truckType} price entries for effective date ${effectiveDate}.`, "setup");
+      return { deleted };
+    });
+    return sendJson(res, 200, result);
+  }
+
   if (req.method === "DELETE" && url.pathname === "/api/prices") {
     const result = await updateData(async (data) => {
       await createBackup(data, "before-clear-prices");
