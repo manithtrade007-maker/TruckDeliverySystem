@@ -1978,11 +1978,11 @@ function App() {
                       <tr><td colSpan="8" className="px-3 py-6 text-center text-sm font-bold text-slate-400">No locations match.</td></tr>
                     );
                     return filtered.map((row, i) => {
-                      const cComp = row.crane ? toNumber(row.crane.companyUnitPrice) : null;
-                      const cDriv = row.crane ? toNumber(row.crane.truckSalaryUnitPrice) : null;
+                      const cComp = row.crane ? Number(row.crane.companyUnitPrice || 0) : null;
+                      const cDriv = row.crane ? Number(row.crane.truckSalaryUnitPrice || 0) : null;
                       const cMargin = cComp !== null ? cComp - cDriv : null;
-                      const nComp = row.noCrane ? toNumber(row.noCrane.companyUnitPrice) : null;
-                      const nDriv = row.noCrane ? toNumber(row.noCrane.truckSalaryUnitPrice) : null;
+                      const nComp = row.noCrane ? Number(row.noCrane.companyUnitPrice || 0) : null;
+                      const nDriv = row.noCrane ? Number(row.noCrane.truckSalaryUnitPrice || 0) : null;
                       const nMargin = nComp !== null ? nComp - nDriv : null;
                       const hasIssue = (cMargin !== null && cMargin < 0) || (nMargin !== null && nMargin < 0);
                       return (
