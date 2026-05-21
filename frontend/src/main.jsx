@@ -2227,16 +2227,19 @@ function App() {
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
               {(emptyPriceResult.dCrane.length > 0 || emptyPriceResult.dNoCrane.length > 0) && (
                 <div>
-                  <p className="font-semibold text-sm text-red-600 mb-2">
-                    Missing Driver Price — {emptyPriceResult.dCrane.length + emptyPriceResult.dNoCrane.length} location{emptyPriceResult.dCrane.length + emptyPriceResult.dNoCrane.length !== 1 ? "s" : ""}
-                  </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-semibold text-sm text-red-600">Missing Driver Price</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">{emptyPriceResult.dCrane.length + emptyPriceResult.dNoCrane.length} location{emptyPriceResult.dCrane.length + emptyPriceResult.dNoCrane.length !== 1 ? "s" : ""}</span>
+                    <span className="text-xs text-slate-400">→ Driver Price tab</span>
+                  </div>
                   {emptyPriceResult.dCrane.length > 0 && (
                     <div className="mb-3">
                       <p className="text-xs font-medium text-slate-500 mb-1">Crane ({emptyPriceResult.dCrane.length})</p>
                       <div className="flex flex-wrap gap-2">
                         {emptyPriceResult.dCrane.map((loc) => (
-                          <button key={loc} onClick={() => goToEmptyPrice(loc, "driver")} className="text-sm px-3 py-1 rounded-full bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors">
+                          <button key={loc} onClick={() => goToEmptyPrice(loc, "driver")} className="text-sm px-3 py-1 rounded-full bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors flex items-center gap-1.5">
                             {loc}
+                            <span className="text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded-full font-medium">Driver</span>
                           </button>
                         ))}
                       </div>
@@ -2247,8 +2250,9 @@ function App() {
                       <p className="text-xs font-medium text-slate-500 mb-1">No Crane ({emptyPriceResult.dNoCrane.length})</p>
                       <div className="flex flex-wrap gap-2">
                         {emptyPriceResult.dNoCrane.map((loc) => (
-                          <button key={loc} onClick={() => goToEmptyPrice(loc, "driver")} className="text-sm px-3 py-1 rounded-full bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors">
+                          <button key={loc} onClick={() => goToEmptyPrice(loc, "driver")} className="text-sm px-3 py-1 rounded-full bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors flex items-center gap-1.5">
                             {loc}
+                            <span className="text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded-full font-medium">Driver</span>
                           </button>
                         ))}
                       </div>
@@ -2258,16 +2262,19 @@ function App() {
               )}
               {(emptyPriceResult.cCrane.length > 0 || emptyPriceResult.cNoCrane.length > 0) && (
                 <div>
-                  <p className="font-semibold text-sm text-amber-600 mb-2">
-                    Missing Company Price — {emptyPriceResult.cCrane.length + emptyPriceResult.cNoCrane.length} location{emptyPriceResult.cCrane.length + emptyPriceResult.cNoCrane.length !== 1 ? "s" : ""}
-                  </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-semibold text-sm text-amber-600">Missing Company Price</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">{emptyPriceResult.cCrane.length + emptyPriceResult.cNoCrane.length} location{emptyPriceResult.cCrane.length + emptyPriceResult.cNoCrane.length !== 1 ? "s" : ""}</span>
+                    <span className="text-xs text-slate-400">→ Company Price tab</span>
+                  </div>
                   {emptyPriceResult.cCrane.length > 0 && (
                     <div className="mb-3">
                       <p className="text-xs font-medium text-slate-500 mb-1">Crane ({emptyPriceResult.cCrane.length})</p>
                       <div className="flex flex-wrap gap-2">
                         {emptyPriceResult.cCrane.map((loc) => (
-                          <button key={loc} onClick={() => goToEmptyPrice(loc, "company")} className="text-sm px-3 py-1 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors">
+                          <button key={loc} onClick={() => goToEmptyPrice(loc, "company")} className="text-sm px-3 py-1 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors flex items-center gap-1.5">
                             {loc}
+                            <span className="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full font-medium">Company</span>
                           </button>
                         ))}
                       </div>
@@ -2278,8 +2285,9 @@ function App() {
                       <p className="text-xs font-medium text-slate-500 mb-1">No Crane ({emptyPriceResult.cNoCrane.length})</p>
                       <div className="flex flex-wrap gap-2">
                         {emptyPriceResult.cNoCrane.map((loc) => (
-                          <button key={loc} onClick={() => goToEmptyPrice(loc, "company")} className="text-sm px-3 py-1 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors">
+                          <button key={loc} onClick={() => goToEmptyPrice(loc, "company")} className="text-sm px-3 py-1 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors flex items-center gap-1.5">
                             {loc}
+                            <span className="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full font-medium">Company</span>
                           </button>
                         ))}
                       </div>
