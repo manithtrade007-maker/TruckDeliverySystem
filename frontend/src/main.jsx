@@ -353,6 +353,7 @@ function App() {
   const [emptyPriceResult, setEmptyPriceResult] = useState(null);
   const [bulkLocationFilter, setBulkLocationFilter] = useState("");
   const [priceCompareFilter, setPriceCompareFilter] = useState("");
+  const [pricePeriodsMonth, setPricePeriodsMonth] = useState(today().slice(0, 7));
 
   const selectedStatement = useMemo(
     () => data.statements.find((statement) => statement.id === selectedStatementId),
@@ -594,6 +595,38 @@ function App() {
     });
     return rows;
   }, [data.prices]);
+
+  const pricePeriods = useMemo(() => {
+    const monthStart = `${pricePeriodsMonth}-01`;
+    const [y, m] = pricePeriodsMonth.split("-").map(Number);
+    const monthEnd = `${pricePeriodsMonth}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+    const deliveriesInMonth = data.deliveries.filter(
+      (d) => d.deliveryDate >= monthStart && d.deliveryDate <= monthEnd
+    );
+    if (deliveriesInMonth.length === 0) return [];
+    // Group deliveries by the effective price date applied to them
+    const periodMap = new Map();
+    for (const d of deliveriesInMonth) {
+      const price = data.prices
+        .filter((p) => p.active !== false && p.fromLocation === (d.fromLocation || data.settings.defaultFromLocation) && locationBaseKey(p.toLocation) === locationBaseKey(d.toLocation) && p.truckType === d.truckType)
+        .filter((p) => priceEffectiveDate(p) <= d.deliveryDate)
+        .sort((a, b) => priceEffectiveDate(b).localeCompare(priceEffectiveDate(a)))[0];
+      const effectiveKey = price ? priceEffectiveDate(price) : "unknown";
+      if (!periodMap.has(effectiveKey)) periodMap.set(effectiveKey, { effectiveDate: effectiveKey, deliveries: [] });
+      periodMap.get(effectiveKey).deliveries.push(d);
+    }
+    const periods = [...periodMap.values()].sort((a, b) => a.effectiveDate.localeCompare(b.effectiveDate));
+    // Calculate date ranges: each period ends the day before the next period starts
+    return periods.map((p, i) => {
+      const next = periods[i + 1];
+      const rangeEnd = next
+        ? (() => { const d = new Date(next.effectiveDate); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })()
+        : monthEnd;
+      const stmtIds = [...new Set(p.deliveries.map((d) => d.statementId))];
+      const stmts = stmtIds.map((id) => data.statements.find((s) => s.id === id)).filter(Boolean);
+      return { effectiveDate: p.effectiveDate, rangeStart: p.effectiveDate, rangeEnd, deliveryCount: p.deliveries.length, statements: stmts };
+    });
+  }, [data.deliveries, data.prices, data.statements, data.settings.defaultFromLocation, pricePeriodsMonth]);
 
   const bulkPriceRows = useMemo(() => {
     const priceType = bulkPriceForm.priceType;
@@ -1970,6 +2003,41 @@ function App() {
       ) : page === "prices" ? (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
           <PageHead title="Price Comparison" meta="Compare company price vs driver price side by side for all locations." />
+
+          <Panel>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">Price Periods Used</h2>
+              <input type="month" value={pricePeriodsMonth} onChange={(e) => setPricePeriodsMonth(e.target.value)}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100" />
+            </div>
+            {pricePeriods.length === 0 ? (
+              <p className="text-sm text-slate-400 py-2">No deliveries found for this month.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {pricePeriods.map((period, i) => (
+                  <div key={period.effectiveDate} className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex items-center gap-2 min-w-fit">
+                      <span className="rounded-full bg-teal-600 text-white text-xs font-bold px-2.5 py-0.5">Period {i + 1}</span>
+                      <span className="font-bold text-sm">{formatDate(period.rangeStart)}</span>
+                      <span className="text-slate-400 text-xs">→</span>
+                      <span className="font-bold text-sm">{formatDate(period.rangeEnd)}</span>
+                      <span className="text-xs text-slate-400">({period.deliveryCount} deliveries)</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {period.statements.map((s) => (
+                        <button key={s.id} type="button"
+                          onClick={() => { setPage("reports"); }}
+                          className="rounded-lg border border-teal-200 bg-white px-2.5 py-0.5 text-xs font-semibold text-teal-700 hover:bg-teal-50 transition">
+                          {s.statementNumber || s.id.slice(0, 8)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+
           <Panel>
             <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
