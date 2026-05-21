@@ -353,7 +353,8 @@ function App() {
   const [backupFiles, setBackupFiles] = useState([]);
   const [emptyPriceResult, setEmptyPriceResult] = useState(null);
   const [bulkLocationFilter, setBulkLocationFilter] = useState("");
-  const [priceCompareFilter, setPriceCompareFilter] = useState("");
+  const [priceCompareDate, setPriceCompareDate] = useState(() => today());
+  const [priceCompareProvince, setPriceCompareProvince] = useState("");
   const [pricePeriodsMonth, setPricePeriodsMonth] = useState(today().slice(0, 7));
 
   const selectedStatement = useMemo(
@@ -562,11 +563,10 @@ function App() {
     total: activeCompanyPriceRows.length
   }), [activeCompanyPriceRows]);
   const priceCompareRows = useMemo(() => {
-    const todayStr = today();
     const craneMap = new Map();
     const noCraneMap = new Map();
     for (const price of data.prices) {
-      if (price.active === false || priceEffectiveDate(price) > todayStr) continue;
+      if (priceEffectiveDate(price) > priceCompareDate) continue;
       const key = locationBaseKey(price.toLocation);
       if (price.truckType === "With Crane") {
         const ex = craneMap.get(key);
@@ -595,7 +595,27 @@ function App() {
       return a.canonicalName.localeCompare(b.canonicalName);
     });
     return rows;
+  }, [data.prices, priceCompareDate]);
+
+  const priceCompareDates = useMemo(() => {
+    const seen = new Set();
+    const todayStr = today();
+    for (const p of data.prices) {
+      const d = priceEffectiveDate(p);
+      if (d <= todayStr) seen.add(d);
+    }
+    return [...seen].sort((a, b) => b.localeCompare(a));
   }, [data.prices]);
+
+  const priceCompareProvinces = useMemo(() => {
+    const seen = [];
+    const seenSet = new Set();
+    for (const row of priceCompareRows) {
+      const m = row.canonicalName.match(/\(([^)]+)\)$/);
+      if (m && !seenSet.has(m[1])) { seenSet.add(m[1]); seen.push(m[1]); }
+    }
+    return seen;
+  }, [priceCompareRows]);
 
   const pricePeriods = useMemo(() => {
     const monthStart = `${pricePeriodsMonth}-01`;
@@ -2058,7 +2078,9 @@ function App() {
             <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-lg font-bold">Price Comparison</h2>
-                <p className="mt-1 text-sm font-bold text-slate-500">Company price vs driver price per location. Red margin = driver cost exceeds company income.</p>
+                <p className="mt-1 text-sm font-bold text-slate-500">
+                  Active prices as of <span className="text-slate-700">{formatDate(priceCompareDate)}</span>. Red margin = driver cost exceeds company income.
+                </p>
               </div>
               <div className="flex gap-3 flex-wrap text-sm font-black">
                 <span className="rounded-full bg-teal-50 px-3 py-1 text-teal-800">Crane {priceCompareRows.filter((r) => r.crane).length}</span>
@@ -2066,16 +2088,42 @@ function App() {
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Total {priceCompareRows.length}</span>
               </div>
             </div>
-            <div className="mb-4 flex items-center gap-2 max-w-md">
-              <Input
-                placeholder="Filter by province (e.g. pp, kandal, takeo)"
-                value={priceCompareFilter}
-                onChange={(e) => setPriceCompareFilter(e.target.value)}
-              />
-              {priceCompareFilter && (
-                <button type="button" onClick={() => setPriceCompareFilter("")} className="text-slate-400 hover:text-slate-700 text-lg leading-none px-1">×</button>
-              )}
+
+            <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">View price list as of date</p>
+              <div className="flex flex-wrap gap-2">
+                {priceCompareDates.map((d) => (
+                  <button key={d} type="button"
+                    onClick={() => setPriceCompareDate(d)}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-semibold border transition ${d === priceCompareDate ? "bg-teal-600 text-white border-teal-600" : "bg-white text-slate-600 border-slate-300 hover:border-teal-400 hover:text-teal-700"}`}>
+                    {formatDate(d)}
+                    {d === today() && <span className="ml-1 text-xs opacity-70">(today)</span>}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Filter by province</p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button"
+                  onClick={() => setPriceCompareProvince("")}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-semibold border transition ${priceCompareProvince === "" ? "bg-teal-600 text-white border-teal-600" : "bg-white text-slate-600 border-slate-300 hover:border-teal-400 hover:text-teal-700"}`}>
+                  All <span className="text-xs font-normal opacity-70">({priceCompareRows.length})</span>
+                </button>
+                {priceCompareProvinces.map((prov) => {
+                  const count = priceCompareRows.filter((r) => r.canonicalName.endsWith(`(${prov})`)).length;
+                  return (
+                    <button key={prov} type="button"
+                      onClick={() => setPriceCompareProvince(prov)}
+                      className={`rounded-lg px-3 py-1.5 text-sm font-semibold border transition ${priceCompareProvince === prov ? "bg-teal-600 text-white border-teal-600" : "bg-white text-slate-600 border-slate-300 hover:border-teal-400 hover:text-teal-700"}`}>
+                      {prov} <span className="text-xs font-normal opacity-70">({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="overflow-auto rounded-xl border border-slate-200">
               <table className="w-full min-w-[900px] border-collapse text-sm">
                 <thead className="sticky top-0 z-10">
@@ -2096,8 +2144,9 @@ function App() {
                 </thead>
                 <tbody>
                   {(() => {
-                    const fk = locationMatchKey(priceCompareFilter);
-                    const filtered = priceCompareRows.filter((r) => !fk || locationMatchKey(r.canonicalName).includes(fk));
+                    const filtered = priceCompareRows.filter((r) =>
+                      !priceCompareProvince || r.canonicalName.endsWith(`(${priceCompareProvince})`)
+                    );
                     if (filtered.length === 0) return (
                       <tr><td colSpan="8" className="px-3 py-6 text-center text-sm font-bold text-slate-400">No locations match.</td></tr>
                     );
