@@ -1678,13 +1678,64 @@ function App() {
             </Panel>
           )}
 
-          {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
-          <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
-            <KpiCard label={`${statementCounts.month} Crane Statements`} value={statementCounts.withCrane} tone="teal" />
-            <KpiCard label={`${statementCounts.month} No Crane Statements`} value={statementCounts.withoutCrane} tone="blue" />
-            <KpiCard label={`${statementCounts.month} Total Statements`} value={statementCounts.total} tone="slate" />
-          </div>
-          )}
+          {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (() => {
+            const svgR = 54;
+            const svgCirc = 2 * Math.PI * svgR;
+            const total = statementCounts.total;
+            const craneFrac = total > 0 ? statementCounts.withCrane / total : 0;
+            const nocrFrac = total > 0 ? statementCounts.withoutCrane / total : 0;
+            const monthLabel = statementCounts.month
+              ? new Date(statementCounts.month + "-01").toLocaleString("default", { month: "long", year: "numeric" })
+              : "";
+            return (
+              <Panel className="lg:col-span-2">
+                <p className="mb-4 text-xs font-black uppercase tracking-wide text-slate-500">{monthLabel} — Statement Overview</p>
+                <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+                  <div className="relative flex-shrink-0">
+                    <svg width="160" height="160" viewBox="0 0 160 160">
+                      <circle cx="80" cy="80" r={svgR} fill="none" stroke="#e2e8f0" strokeWidth="26" />
+                      {craneFrac > 0 && (
+                        <circle cx="80" cy="80" r={svgR} fill="none" stroke="#0d9488" strokeWidth="26"
+                          strokeDasharray={`${craneFrac * svgCirc} ${svgCirc}`}
+                          transform="rotate(-90 80 80)" strokeLinecap="butt" />
+                      )}
+                      {nocrFrac > 0 && (
+                        <circle cx="80" cy="80" r={svgR} fill="none" stroke="#3b82f6" strokeWidth="26"
+                          strokeDasharray={`${nocrFrac * svgCirc} ${svgCirc}`}
+                          transform={`rotate(${-90 + craneFrac * 360} 80 80)`} strokeLinecap="butt" />
+                      )}
+                      <text x="80" y="73" textAnchor="middle" fontSize="28" fontWeight="900" fill="#0f172a">{total}</text>
+                      <text x="80" y="92" textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748b" letterSpacing="1">TOTAL</text>
+                    </svg>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 w-full">
+                    <div className="flex items-center gap-4 rounded-xl bg-teal-50 border border-teal-100 px-4 py-3">
+                      <div className="h-4 w-4 rounded-sm bg-teal-600 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="text-xs font-black uppercase tracking-wide text-teal-700">Crane Statements</div>
+                        <div className="text-2xl font-black text-teal-950">{statementCounts.withCrane}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-black text-teal-700">{total > 0 ? Math.round(craneFrac * 100) : 0}%</div>
+                        <div className="text-xs font-bold text-teal-500">of total</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 rounded-xl bg-sky-50 border border-sky-100 px-4 py-3">
+                      <div className="h-4 w-4 rounded-sm bg-blue-500 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="text-xs font-black uppercase tracking-wide text-blue-700">No Crane Statements</div>
+                        <div className="text-2xl font-black text-blue-950">{statementCounts.withoutCrane}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-black text-blue-600">{total > 0 ? Math.round(nocrFrac * 100) : 0}%</div>
+                        <div className="text-xs font-bold text-blue-400">of total</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Panel>
+            );
+          })()}
 
           {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
             <Panel id="all-statements-panel" className="lg:col-span-2">
