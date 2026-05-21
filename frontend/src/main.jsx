@@ -27,6 +27,114 @@ const locationMatchKey = (value) =>
 const locationBaseKey = (value) => locationMatchKey(String(value || "").replace(/\([^)]*\)/g, ""));
 const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
 const routeKey = (price) => [price.fromLocation, locationBaseKey(price.toLocation), price.truckType].join("::");
+const CRANE_LOCATION_ORDER = [
+  "KH.Kambol (PP)",
+  "KH.Dangkao (PP)",
+  "KH.Mean Chey (PP)",
+  "KH.Chamkar Morn (PP)",
+  "KH.Boeng Keng Kong (PP)",
+  "KH.Doun Penh (PP)",
+  "KH.7 Makara (PP)",
+  "KH.Tuol Kouk (PP)",
+  "KH.Sen Sok (PP)",
+  "KH.Russei Keo (PP)",
+  "KH.Chba Ampeou (PP)",
+  "KH.Posenchey (PP)",
+  "KH.Prek Phnov (PP)",
+  "KH.Chroy Changvar (PP)",
+  "D.Takhmao (Kandal)",
+  "D.Kandal Stueng (Kandal)",
+  "D.Saang (Kandal)",
+  "D.Kien Svay (Kandal)",
+  "D.Ang Snuol (Kandal)",
+  "D.Muk Kampoul (Kandal)",
+  "D.Khsach Kandal (Kandal)",
+  "D.Ponhea Leu (Kandal)",
+  "D.Koh Thom (Kandal)",
+  "D.Leukdek (Kandal)",
+  "D.Lvea Em (Kandal)",
+  "D.Bati (Takeo)",
+  "D.Samrong (Takeo)",
+  "D.Prey Kabas (Takeo)",
+  "D.Daun Keo (Takeo)",
+  "D.Treang (Takeo)",
+  "D.Angkor Borei (Takeo)",
+  "D.Tram Kak (Takeo)",
+  "D.Koh Andet (Takeo)",
+  "D.Borei Chulsar (Takeo)",
+  "D.Kirivong (Takeo)",
+  "D.Kong Pisei (K.Speu)",
+  "D.Chbar Morn (K.Speu)",
+  "D.Oudong (K.Speu)",
+  "D.Samrong Torng (K.Speu)",
+  "D.Baset (K.Speu)",
+  "D.Thpong (K.Speu)",
+  "D.Peam Ro (Prey Veng)",
+  "D.Pea Reang (Prey Veng)",
+  "D.Baphnom (Prey Veng)",
+  "D.Peam Chor (Prey Veng)",
+  "D.Kampong Trabek (Prey Veng)",
+  "D.Preah Sdach (Prey Veng)",
+  "D.Prey Veng (Prey Veng)",
+  "D.Po Rieng (Prey Veng)",
+  "D.Sithor Kandal (Prey Veng)",
+  "D.Mesang (Prey Veng)",
+  "D.Svay Antor (Prey Veng)",
+  "D.Kanh Chreach (Prey Veng)",
+  "D.Kamchay Mea (Prey Veng)",
+  "D.Svay Chrum (Svay Rieng)",
+  "D.Svay Rieng (Svay Rieng)",
+  "D.Rum Duol (Svay Rieng)",
+  "D.Romeas Hek (Svay Rieng)",
+  "D.Svay Tiep (Svay Rieng)",
+  "D.Kompong Ro (Svay Rieng)",
+  "D.KampongTralach (K.Chhnan)",
+  "D.Batheay (K.Cham)",
+  "D.Prey Chhor (K.Cham)",
+  "D.Kampong Siem (K.Cham)",
+];
+const NO_CRANE_LOCATION_ORDER = [
+  "KH.Kambol (PP)", "KH.Dangkao (PP)", "KH.Mean Chey (PP)", "KH.Chamkar Morn (PP)",
+  "KH.Boeng Keng Kong (PP)", "KH.Doun Penh (PP)", "KH.7 Makara (PP)", "KH.Tuol Kouk (PP)",
+  "KH.Sen Sok (PP)", "KH.Russei Keo (PP)", "KH.Chba Ampeou (PP)", "KH.Posenchey (PP)",
+  "KH.Prek Phnov (PP)", "KH.Chroy Changvar (PP)",
+  "D.Takhmao (Kandal)", "D.Kandal Stueng (Kandal)", "D.Saang (Kandal)", "D.Kien Svay (Kandal)",
+  "D.Ang Snuol (Kandal)", "D.Muk Kampoul (Kandal)", "D.Khsach Kandal (Kandal)",
+  "D.Ponhea Leu (Kandal)", "D.Koh Thom (Kandal)", "D.Leukdek (Kandal)", "D.Lvea Em (Kandal)",
+  "D.Bati (Takeo)", "D.Samrong (Takeo)", "D.Prey Kabas (Takeo)", "D.Daun Keo (Takeo)",
+  "D.Treang (Takeo)", "D.Angkor Borei (Takeo)", "D.Tram Kak (Takeo)", "D.Koh Andet (Takeo)",
+  "D.Borei Chulsar (Takeo)", "D.Kirivong (Takeo)",
+  "D.Kong Pisei (K.Speu)", "D.Chbar Morn (K.Speu)", "D.Oudong (K.Speu)",
+  "D.Samrong Torng (K.Speu)", "D.Baset (K.Speu)", "D.Phnom Srouch (K.Speu)",
+  "D.Thpong (K.Speu)", "D.Kirirom (K.Speu)", "D.Oral (K.Speu)",
+  "D.Peam Ro (Prey Veng)", "D.Pea Reang (Prey Veng)", "D.Baphnom (Prey Veng)",
+  "D.Peam Chor (Prey Veng)", "D.Kampong Trabek (Prey Veng)", "D.Preah Sdach (Prey Veng)",
+  "D.Prey Veng (Prey Veng)", "D.Po Rieng (Prey Veng)", "D.Sithor Kandal (Prey Veng)",
+  "D.Mesang (Prey Veng)", "D.Svay Antor (Prey Veng)", "D.Kanh Chreach (Prey Veng)",
+  "D.Kamchay Mea (Prey Veng)",
+  "D.Svay Chrum (Svay Rieng)", "D.Svay Rieng (Svay Rieng)", "D.Rum Duol (Svay Rieng)",
+  "D.Romeas Hek (Svay Rieng)", "D.Svay Tiep (Svay Rieng)", "D.Kompong Ro (Svay Rieng)",
+  "D.Bavet (Svay Rieng)", "D.Chantrea (Svay Rieng)",
+  "D.Angkor Chey (Kampot)", "D.Chhouk (Kampot)", "D.Chumkiri (Kampot)",
+  "D.Dong Tung (Kampot)", "D.Kampong Trach (Kampot)", "D.Kampot (Kampot)", "D.Tuek Chhu (Kampot)",
+  "D.Damnak Changeor (Kep)", "D.Kep (Kep)",
+  "D.Samaki Meanchey (K.Chhnan)", "D.Kampong Tralach (K.Chhnan)", "D.Rolear Phiear (K.Chhnan)",
+  "D.Kampong Chhnang (K.Chhnan)", "D.Chulkiri (K.Chhnan)", "D.Tuek Phos (K.Chhnan)",
+  "D.Boribo (K.Chhnan)", "D.Kampong Leng (K.Chhnan)",
+  "D.Srey Santhor (K.Cham)", "D.Batheay (K.Cham)", "D.Prey Chhor (K.Cham)",
+  "D.Kampong Siem (K.Cham)", "D.Chamkar Leu (K.Cham)", "D.Kang Meas (K.Cham)",
+  "D.Santuk (K.Thom)", "D.Stueng Sen (K.Thom)", "D.Staung (K.Thom)",
+];
+const makeLocationSort = (order) => (a, b) => {
+  const ai = order.indexOf(a);
+  const bi = order.indexOf(b);
+  if (ai !== -1 && bi !== -1) return ai - bi;
+  if (ai !== -1) return -1;
+  if (bi !== -1) return 1;
+  return a.localeCompare(b);
+};
+const craneLocationSort = makeLocationSort(CRANE_LOCATION_ORDER);
+const noCraneLocationSort = makeLocationSort(NO_CRANE_LOCATION_ORDER);
 const deliverySort = (a, b) =>
   String(a.deliveryDate || "").localeCompare(String(b.deliveryDate || "")) ||
   String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
@@ -532,7 +640,7 @@ function App() {
         const key = locationBaseKey(p.toLocation);
         if (!seen.has(key)) { seen.add(key); result.push(p.toLocation); }
       });
-    result.sort();
+    result.sort(bulkPriceForm.truckType === "With Crane" ? craneLocationSort : noCraneLocationSort);
     if (!bulkLocationFilter.trim()) return result;
     const fk = locationMatchKey(bulkLocationFilter);
     return result.filter((loc) => locationMatchKey(loc).includes(fk));
@@ -1905,6 +2013,23 @@ function App() {
                     <button type="button" onClick={() => setBulkLocationFilter("")} className="text-slate-400 hover:text-slate-700 text-lg leading-none px-1">×</button>
                   )}
                   <span className="text-xs text-slate-400 whitespace-nowrap">{bulkLocationChoices.length} location{bulkLocationChoices.length !== 1 ? "s" : ""}</span>
+                  {bulkLocationChoices.length > 0 && (() => {
+                    const existing = new Set(bulkPriceForm.locationsText.split("\n").map((l) => l.trim()).filter(Boolean));
+                    const toAdd = bulkLocationChoices.filter((loc) => !existing.has(loc));
+                    if (toAdd.length === 0) return null;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const lines = bulkPriceForm.locationsText.split("\n").filter(Boolean);
+                          setBulkPriceForm({ ...bulkPriceForm, locationsText: [...lines, ...toAdd].join("\n"), rowsText: "" });
+                        }}
+                        className="whitespace-nowrap text-xs px-3 py-1 rounded-full bg-teal-600 text-white hover:bg-teal-700 font-medium transition"
+                      >
+                        + Add All ({toAdd.length})
+                      </button>
+                    );
+                  })()}
                 </div>
                 {bulkLocationChoices.length === 0 ? (
                   <p className="text-xs text-slate-400 py-1">No matching locations found.</p>
