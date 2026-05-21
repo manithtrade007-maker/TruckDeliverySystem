@@ -1217,7 +1217,7 @@ function accountingExport(data, rows) {
   );
 }
 
-async function accountingWorkbook(data, rows) {
+async function accountingWorkbook(data, rows, signatureImage) {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const workbook = new ExcelJS.Workbook();
   workbook.creator = data.settings.companyName || "N&M LOGISTIC";
@@ -1365,7 +1365,7 @@ async function accountingWorkbook(data, rows) {
   const nameRow = totalRowNumber + 3;
   const dateRow = totalRowNumber + 4;
   worksheet.getRow(signatureHeaderRow).height = 20;
-  worksheet.getRow(signatureBlankRow).height = 36;
+  worksheet.getRow(signatureBlankRow).height = 60;
   worksheet.getRow(nameRow).height = 18;
   worksheet.getRow(dateRow).height = 18;
   worksheet.mergeCells(signatureHeaderRow, 1, signatureHeaderRow, 3);
@@ -1386,7 +1386,7 @@ async function accountingWorkbook(data, rows) {
   worksheet.mergeCells(dateRow, 1, dateRow, 3);
   worksheet.mergeCells(dateRow, 4, dateRow, 7);
   worksheet.mergeCells(dateRow, 8, dateRow, 10);
-  worksheet.getCell(dateRow, 1).value = `Date: ${formatShortDate(currentLocalDate())}`;
+  worksheet.getCell(dateRow, 1).value = `Date: ${formatShortDate(statement?.statementDate || "")}`;
   worksheet.getCell(dateRow, 4).value = "Date:";
   worksheet.getCell(dateRow, 8).value = "Date:";
   styleRange(signatureHeaderRow, dateRow, 1, 10, {
@@ -1398,6 +1398,15 @@ async function accountingWorkbook(data, rows) {
       worksheet.getCell(rowNumber, colNumber).alignment = { horizontal: "left", vertical: "middle" };
     });
   });
+
+  if (signatureImage) {
+    const imgId = workbook.addImage({ buffer: signatureImage, extension: "jpeg" });
+    worksheet.addImage(imgId, {
+      tl: { col: 0, row: signatureBlankRow - 1 },
+      br: { col: 3, row: signatureBlankRow },
+      editAs: "oneCell"
+    });
+  }
 
   worksheet.pageSetup.printArea = `A1:J${dateRow}`;
   worksheet.views = [{ showGridLines: true }];
@@ -1543,10 +1552,45 @@ function drawText(value, x, y, options = {}) {
   return `BT ${pdfRgb(color)} rg /${font} ${fontSize} Tf ${textX.toFixed(2)} ${y.toFixed(2)} Td (${pdfEscape(text)}) Tj ET`;
 }
 
-function buildPdf(pages) {
+function readJpegInfo(buffer) {
+  let i = 0;
+  while (i < buffer.length - 12) {
+    if (buffer[i] !== 0xFF) { i++; continue; }
+    const marker = buffer[i + 1];
+    if (marker >= 0xC0 && marker <= 0xC3) {
+      return { height: (buffer[i+5] << 8) | buffer[i+6], width: (buffer[i+7] << 8) | buffer[i+8], components: buffer[i+9] };
+    }
+    if (marker === 0xD8 || marker === 0xFF) { i++; continue; }
+    const segLen = (buffer[i+2] << 8) | buffer[i+3];
+    if (segLen < 2) { i++; continue; }
+    i += 2 + segLen;
+  }
+  return null;
+}
+
+function drawImage(imgName, x, y, width, height) {
+  return `q ${width.toFixed(2)} 0 0 ${height.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /${imgName} Do Q`;
+}
+
+function buildPdf(pages, images = []) {
   const pageObjects = [];
+  const imageObjects = [];
   const kids = [];
-  let objectNumber = 5;
+  const imageBaseObj = 5;
+  let objectNumber = imageBaseObj + images.length;
+
+  for (let i = 0; i < images.length; i++) {
+    const img = images[i];
+    const colorSpace = img.components === 1 ? "/DeviceGray" : "/DeviceRGB";
+    const hexData = img.buffer.toString("hex").toUpperCase() + ">";
+    imageObjects.push(`${imageBaseObj + i} 0 obj << /Type /XObject /Subtype /Image /Width ${img.width} /Height ${img.height} /ColorSpace ${colorSpace} /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${hexData.length} >> stream\n${hexData}\nendstream endobj`);
+  }
+
+  const xObjPart = images.length > 0
+    ? ` /XObject << ${images.map((_, i) => `/Im${i + 1} ${imageBaseObj + i} 0 R`).join(" ")} >>`
+    : "";
+  const resources = `<< /Font << /F1 3 0 R /F2 4 0 R >>${xObjPart} >>`;
+
   for (const page of pages) {
     const content = page.commands.join("\n");
     const pageObject = objectNumber;
@@ -1554,7 +1598,7 @@ function buildPdf(pages) {
     kids.push(`${pageObject} 0 R`);
     const pageWidth = page.width || PDF_PAGE_WIDTH;
     const pageHeight = page.height || PDF_PAGE_HEIGHT;
-    pageObjects.push(`${pageObject} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObject} 0 R >> endobj`);
+    pageObjects.push(`${pageObject} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources ${resources} /Contents ${contentObject} 0 R >> endobj`);
     pageObjects.push(`${contentObject} 0 obj << /Length ${Buffer.byteLength(content)} >> stream\n${content}\nendstream endobj`);
     objectNumber += 2;
   }
@@ -1563,6 +1607,7 @@ function buildPdf(pages) {
     `2 0 obj << /Type /Pages /Kids [${kids.join(" ")}] /Count ${pages.length} >> endobj`,
     "3 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
     "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj",
+    ...imageObjects,
     ...pageObjects
   ];
   let pdf = "%PDF-1.4\n";
@@ -1580,7 +1625,7 @@ function buildPdf(pages) {
   return Buffer.from(pdf);
 }
 
-function tablePdf({ title, subtitle, columns, rows, totals, footer, header, preparedBy }) {
+function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer, header, preparedBy, signatureImage }) {
   const pageWidth = PDF_PAGE_WIDTH;
   const pageHeight = PDF_PAGE_HEIGHT;
   const margin = PDF_PAGE_MARGIN;
@@ -1597,7 +1642,7 @@ function tablePdf({ title, subtitle, columns, rows, totals, footer, header, prep
   const titleY = pageHeight - 20;
   const subtitleY = pageHeight - 36;
   const tableTop = hasCustomHeader ? pageHeight - 66 : pageHeight - 56;
-  const bottomY = footer ? 78 : 18;
+  const bottomY = footer ? 110 : 18;
   const calculatedRowsPerPage = Math.max(1, Math.floor((tableTop - bottomY - headerHeight - rowHeight) / rowHeight));
   const rowsPerPage = rows.length <= 30 ? 30 : calculatedRowsPerPage;
   const pages = [];
@@ -1647,37 +1692,51 @@ function tablePdf({ title, subtitle, columns, rows, totals, footer, header, prep
     if (isLastPage && totals) {
       y -= rowHeight;
       commands.push(drawRect(tableX, y, tableWidth, rowHeight, [1, 0.98, 0.89], [0.89, 0.92, 0.96]));
-      let cellX = tableX;
-      tableColumns.forEach((column) => {
-        commands.push(drawText(totals[column.key] || "", cellX + 3, y + 6, {
-          size: 6.8,
-          bold: true,
-          width: column.width - 6,
-          align: column.align || "left"
-        }));
-        cellX += column.width;
-      });
+      if (totalsLabel) {
+        const firstValueIdx = tableColumns.findIndex((col) => totals[col.key]);
+        const spanEnd = firstValueIdx < 0 ? tableColumns.length : firstValueIdx;
+        const labelWidth = tableColumns.slice(0, spanEnd).reduce((s, c) => s + c.width, 0);
+        commands.push(drawText(totalsLabel, tableX + 3, y + 6, { size: 7.5, bold: true, width: labelWidth - 6, align: "center" }));
+        let cx = tableX + labelWidth;
+        tableColumns.slice(spanEnd).forEach((column) => {
+          commands.push(drawText(totals[column.key] || "", cx + 3, y + 6, { size: 6.8, bold: true, width: column.width - 6, align: column.align || "left" }));
+          cx += column.width;
+        });
+      } else {
+        let cellX = tableX;
+        tableColumns.forEach((column) => {
+          commands.push(drawText(totals[column.key] || "", cellX + 3, y + 6, { size: 6.8, bold: true, width: column.width - 6, align: column.align || "left" }));
+          cellX += column.width;
+        });
+      }
     }
     if (isLastPage && footer) {
-      const footerTop = Math.max(42, y - 28);
+      const footerTop = Math.max(70, y - 28);
       const footerColumnWidth = tableWidth / 3;
       commands.push(drawText("Prepared By", tableX, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
       commands.push(drawText("Checked By", tableX + footerColumnWidth, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
       commands.push(drawText("Approved By", tableX + footerColumnWidth * 2, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
-      commands.push(drawText(preparedBy?.name ? `Name: ${preparedBy.name}` : "Name:", tableX + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Name:", tableX + footerColumnWidth + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Name:", tableX + footerColumnWidth * 2 + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText(preparedBy?.date ? `Date: ${preparedBy.date}` : "Date:", tableX + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Date:", tableX + footerColumnWidth + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Date:", tableX + footerColumnWidth * 2 + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
+      if (signatureImage) {
+        const sigWidth = Math.min(110, footerColumnWidth - 20);
+        const sigHeight = sigWidth * signatureImage.height / signatureImage.width;
+        const sigX = tableX + (footerColumnWidth - sigWidth) / 2;
+        const sigY = footerTop - 8 - sigHeight;
+        commands.push(drawImage("Im1", sigX, sigY, sigWidth, sigHeight));
+      }
+      commands.push(drawText(preparedBy?.name ? `Name: ${preparedBy.name}` : "Name:", tableX + 6, footerTop - 50, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Name:", tableX + footerColumnWidth + 6, footerTop - 50, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Name:", tableX + footerColumnWidth * 2 + 6, footerTop - 50, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText(preparedBy?.date ? `Date: ${preparedBy.date}` : "Date:", tableX + 6, footerTop - 64, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Date:", tableX + footerColumnWidth + 6, footerTop - 64, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Date:", tableX + footerColumnWidth * 2 + 6, footerTop - 64, { size: 6.8, width: footerColumnWidth - 12 }));
     }
     commands.push(drawText(`Page ${pageIndex + 1} of ${chunks.length}`, pageWidth - 108, 14, { size: 8, color: [0.39, 0.46, 0.56], width: 100, align: "right" }));
     pages.push({ commands, width: pageWidth, height: pageHeight });
   });
-  return buildPdf(pages);
+  return buildPdf(pages, signatureImage ? [signatureImage] : []);
 }
 
-function statementPdf(data, rows) {
+function statementPdf(data, rows, signatureImage) {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const totalQty = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
   const totalAmount = rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0);
@@ -1734,12 +1793,13 @@ function statementPdf(data, rows) {
       amount: `$ ${money(row.companyTotalAmount)}`
     })),
     totals: {
-      no: "Total",
       qty: `${totalQty.toFixed(5)}T`,
       amount: `$ ${money(totalAmount)}`
     },
+    totalsLabel: "TOTAL",
     footer: true,
-    preparedBy: { name: "Nhep Manith", date: formatShortDate(currentLocalDate()) }
+    preparedBy: { name: "Nhep Manith", date: formatShortDate(statement?.statementDate || "") },
+    signatureImage
   });
 }
 
@@ -2422,14 +2482,21 @@ async function api(req, res, url) {
       ? data.statements.find((item) => item.id === query.statementId)
       : null;
     const fileName = statementExportFileName(statement, rows);
+    const sigPath = path.join(__dirname, "signature.jpg");
+    let sigBuffer = null;
+    if (existsSync(sigPath)) {
+      const raw = await readFile(sigPath);
+      const info = readJpegInfo(raw);
+      if (info) sigBuffer = { buffer: raw, width: info.width, height: info.height, components: info.components };
+    }
     if (format === "pdf") {
       res.writeHead(200, {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${fileName}.pdf"`
       });
-      return res.end(statementPdf(data, rows));
+      return res.end(statementPdf(data, rows, sigBuffer));
     }
-    const workbookBuffer = await accountingWorkbook(data, rows);
+    const workbookBuffer = await accountingWorkbook(data, rows, sigBuffer?.buffer);
     res.writeHead(200, {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${fileName}.xlsx"`
