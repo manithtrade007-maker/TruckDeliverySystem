@@ -667,6 +667,15 @@ function App() {
       });
   }, [bulkPriceForm, data.prices, data.settings.defaultFromLocation]);
 
+  const bulkExistingDates = useMemo(() => {
+    const fromLocation = bulkPriceForm.fromLocation || data.settings.defaultFromLocation;
+    const seen = new Set();
+    data.prices
+      .filter((p) => p.fromLocation === fromLocation && p.truckType === bulkPriceForm.truckType && p.active !== false)
+      .forEach((p) => seen.add(priceEffectiveDate(p)));
+    return [...seen].sort((a, b) => b.localeCompare(a));
+  }, [bulkPriceForm.fromLocation, bulkPriceForm.truckType, data.prices, data.settings.defaultFromLocation]);
+
   const bulkLocationChoices = useMemo(() => {
     const fromLocation = bulkPriceForm.fromLocation || data.settings.defaultFromLocation;
     const seen = new Set();
@@ -2136,6 +2145,17 @@ function App() {
                 </Field>
                 <Field label="Effective Date">
                   <Input type="date" required value={bulkPriceForm.effectiveDate} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, effectiveDate: e.target.value })} />
+                  {bulkExistingDates.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {bulkExistingDates.map((d) => (
+                        <button key={d} type="button"
+                          onClick={() => setBulkPriceForm((f) => ({ ...f, effectiveDate: d }))}
+                          className={`rounded px-2 py-0.5 text-xs font-medium border transition-colors ${d === bulkPriceForm.effectiveDate ? "bg-teal-600 text-white border-teal-600" : "bg-white text-slate-600 border-slate-300 hover:border-teal-400 hover:text-teal-700"}`}>
+                          {formatDate(d)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </Field>
                 <Field label="From Location">
                   <Input placeholder={data.settings.defaultFromLocation || "Warehouse-09"} value={bulkPriceForm.fromLocation} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, fromLocation: e.target.value })} />
