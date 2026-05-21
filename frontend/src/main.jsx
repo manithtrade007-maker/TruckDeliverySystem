@@ -943,14 +943,14 @@ function App() {
     }
   }
 
-  async function deleteKhanFormatPrices() {
-    const ok = window.confirm('Delete ALL price entries where location starts with "Khan " (wrong format)? Correct KH. entries are not affected. A backup is created automatically.');
+  async function deleteNonstandardFormatPrices() {
+    const ok = window.confirm('Delete ALL price entries where location does NOT start with "KH." or "D."? Only standard-format entries are kept. A backup is created automatically.');
     if (!ok) return;
     try {
-      const result = await api("/api/prices/delete-khan-format", { method: "POST" });
+      const result = await api("/api/prices/delete-nonstandard-format", { method: "POST" });
       await loadData();
       setBulkLocationFilter("");
-      flash(`Deleted ${result.deleted} "Khan " format price entries.`);
+      flash(`Deleted ${result.deleted} non-standard format price entries.`);
     } catch (err) {
       flash(err.message, "error");
     }
@@ -1976,8 +1976,8 @@ function App() {
                     <Button type="button" variant="danger" onClick={deletePricesByDate}>
                       Delete All Prices for This Date
                     </Button>
-                    <Button type="button" variant="danger" onClick={deleteKhanFormatPrices}>
-                      Delete "Khan" Format Prices
+                    <Button type="button" variant="danger" onClick={deleteNonstandardFormatPrices}>
+                      Delete Non-Standard Format Prices
                     </Button>
                   </div>
                   <p className="mt-3 text-xs font-bold text-slate-500">

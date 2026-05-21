@@ -2264,13 +2264,13 @@ async function api(req, res, url) {
     return sendJson(res, 200, result);
   }
 
-  if (req.method === "POST" && url.pathname === "/api/prices/delete-khan-format") {
+  if (req.method === "POST" && url.pathname === "/api/prices/delete-nonstandard-format") {
     const result = await updateData(async (data) => {
-      await createBackup(data, "before-delete-khan-format");
+      await createBackup(data, "before-delete-nonstandard-format");
       const before = data.prices.length;
-      data.prices = data.prices.filter((p) => !/^\s*khan\s/i.test(p.toLocation));
+      data.prices = data.prices.filter((p) => /^\s*(KH\.|D\.)/i.test(p.toLocation));
       const deleted = before - data.prices.length;
-      if (deleted > 0) addActivity(data, `Deleted ${deleted} price entries with wrong "Khan " location format.`, "setup");
+      if (deleted > 0) addActivity(data, `Deleted ${deleted} price entries with non-standard location format (not starting with KH. or D.).`, "setup");
       return { deleted };
     });
     return sendJson(res, 200, result);
