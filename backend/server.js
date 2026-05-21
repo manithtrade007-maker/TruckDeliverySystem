@@ -997,7 +997,7 @@ function statementExportFileName(statement, fallbackRows = []) {
   }
   const month = statement.month || "";
   const m = month.match(/^(\d{4})-(\d{2})$/);
-  const monthYear = m ? `${m[2]}${m[1]}` : slug(month);
+  const monthYear = m ? `${m[2]}-${m[1]}` : slug(month);
   const truckLabel = statement.truckType === "With Crane" ? "Crane" : "NoCrane";
   return `ST-${statement.statementNumber}-${monthYear}-${truckLabel}`;
 }
@@ -1851,6 +1851,17 @@ function parseQuery(url) {
 async function api(req, res, url) {
   const data = await readData();
   const query = parseQuery(url);
+
+  if (req.method === "GET" && url.pathname === "/api/logo") {
+    const logoPath = path.join(__dirname, "logo.jpg");
+    if (existsSync(logoPath)) {
+      const buffer = await readFile(logoPath);
+      res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" });
+      return res.end(buffer);
+    }
+    res.writeHead(404);
+    return res.end();
+  }
 
   if (req.method === "GET" && url.pathname === "/api/data") {
     return sendJson(res, 200, { ...data, statements: statementsWithCounts(data) });
