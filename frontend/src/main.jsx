@@ -980,6 +980,36 @@ function App() {
     }
   }
 
+  async function diagnoseEmptyPrices() {
+    try {
+      const result = await api("/api/diagnose-empty-prices");
+      const dCrane = result.missingDriver["With Crane"] || [];
+      const dNoCrane = result.missingDriver["Without Crane"] || [];
+      const cCrane = result.missingCompany["With Crane"] || [];
+      const cNoCrane = result.missingCompany["Without Crane"] || [];
+      const total = dCrane.length + dNoCrane.length + cCrane.length + cNoCrane.length;
+      if (total === 0) {
+        alert("All locations have both company and driver prices set. Nothing missing.");
+        return;
+      }
+      const lines = [];
+      if (dCrane.length > 0 || dNoCrane.length > 0) {
+        lines.push(`--- MISSING DRIVER PRICE (${dCrane.length + dNoCrane.length}) ---`);
+        if (dCrane.length > 0) { lines.push(`Crane (${dCrane.length}):`); dCrane.forEach((l) => lines.push(`  • ${l}`)); }
+        if (dNoCrane.length > 0) { lines.push(`No Crane (${dNoCrane.length}):`); dNoCrane.forEach((l) => lines.push(`  • ${l}`)); }
+      }
+      if (cCrane.length > 0 || cNoCrane.length > 0) {
+        if (lines.length > 0) lines.push("");
+        lines.push(`--- MISSING COMPANY PRICE (${cCrane.length + cNoCrane.length}) ---`);
+        if (cCrane.length > 0) { lines.push(`Crane (${cCrane.length}):`); cCrane.forEach((l) => lines.push(`  • ${l}`)); }
+        if (cNoCrane.length > 0) { lines.push(`No Crane (${cNoCrane.length}):`); cNoCrane.forEach((l) => lines.push(`  • ${l}`)); }
+      }
+      alert(lines.join("\n"));
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function fixLocationNames() {
     const ok = window.confirm("Fix delivery location names that don't match the price list, then recalculate driver prices? This corrects name mismatches (e.g. 'Khan Kambol' → 'KH.Kambol').");
     if (!ok) return;
@@ -1918,14 +1948,17 @@ function App() {
                   Crane {activeCompanyPriceCounts.withCrane} | No Crane {activeCompanyPriceCounts.withoutCrane} | Total {activeCompanyPriceCounts.total}
                 </span>
               </div>
-              <div className="mb-4 max-w-xl">
-                <Field label="Search To Location">
-                  <Input
-                    placeholder="Type location name"
-                    value={setupLocationSearch}
-                    onChange={(event) => setSetupLocationSearch(event.target.value)}
-                  />
-                </Field>
+              <div className="mb-4 flex items-end gap-3 max-w-2xl">
+                <div className="flex-1">
+                  <Field label="Search To Location">
+                    <Input
+                      placeholder="Type location name"
+                      value={setupLocationSearch}
+                      onChange={(event) => setSetupLocationSearch(event.target.value)}
+                    />
+                  </Field>
+                </div>
+                <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
@@ -2001,14 +2034,17 @@ function App() {
                   )}
                 </div>
               </form>
-              <div className="mt-4 max-w-xl">
-                <Field label="Search To Location">
-                  <Input
-                    placeholder="Type location name"
-                    value={setupLocationSearch}
-                    onChange={(event) => setSetupLocationSearch(event.target.value)}
-                  />
-                </Field>
+              <div className="mt-4 flex items-end gap-3 max-w-2xl">
+                <div className="flex-1">
+                  <Field label="Search To Location">
+                    <Input
+                      placeholder="Type location name"
+                      value={setupLocationSearch}
+                      onChange={(event) => setSetupLocationSearch(event.target.value)}
+                    />
+                  </Field>
+                </div>
+                <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
               </div>
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
@@ -2074,14 +2110,17 @@ function App() {
                   )}
                 </div>
               </form>
-              <div className="mt-4 max-w-xl">
-                <Field label="Search To Location">
-                  <Input
-                    placeholder="Type location name"
-                    value={setupLocationSearch}
-                    onChange={(event) => setSetupLocationSearch(event.target.value)}
-                  />
-                </Field>
+              <div className="mt-4 flex items-end gap-3 max-w-2xl">
+                <div className="flex-1">
+                  <Field label="Search To Location">
+                    <Input
+                      placeholder="Type location name"
+                      value={setupLocationSearch}
+                      onChange={(event) => setSetupLocationSearch(event.target.value)}
+                    />
+                  </Field>
+                </div>
+                <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
               </div>
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
@@ -2172,36 +2211,13 @@ function App() {
                 </p>
               </div>
               <div className="flex gap-2 flex-wrap justify-end">
-                <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Prices</Button>
+                <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Deliveries</Button>
                 <Button type="button" variant="secondary" onClick={fixLocationNames}>Fix Location Names</Button>
                 <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
               </div>
             </div>
           </Panel>
 
-          <Panel>
-            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <h2 className="text-lg font-bold">Clean Up Old Without Crane Prices</h2>
-                <p className="mt-1 text-sm font-bold text-slate-500">
-                  Remove old $0 driver price entries for Without Crane routes that now have a newer price set. Also shows which locations are still missing a driver price.
-                </p>
-              </div>
-              <Button type="button" variant="secondary" onClick={cleanupZeroDriverPrices}>Clean Up Old Prices</Button>
-            </div>
-          </Panel>
-
-          <Panel>
-            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <h2 className="text-lg font-bold">Location Price Reset</h2>
-                <p className="mt-1 text-sm font-bold text-slate-500">
-                  Clear the current location price list before entering the new official location format. Existing statements and delivery rows stay unchanged.
-                </p>
-              </div>
-              <Button type="button" variant="danger" onClick={clearLocationPriceList}>Clear Location Prices</Button>
-            </div>
-          </Panel>
         </main>
       )}
     </div>

@@ -941,17 +941,6 @@
       "active": true
     },
     {
-      "id": "b9c484c2-9c72-4c77-9fe8-bf11d5df6942",
-      "fromLocation": "Warehouse-09",
-      "toLocation": "D.Cheung Prey (K.Cham)",
-      "truckType": "Without Crane",
-      "distanceKm": 107,
-      "companyUnitPrice": 16.63,
-      "truckSalaryUnitPrice": 0,
-      "effectiveDate": "2026-05-11",
-      "active": true
-    },
-    {
       "id": "e14f13c3-ebbd-4c42-8ea5-c9a0d1e92e8f",
       "fromLocation": "Warehouse-09",
       "toLocation": "D.Chhouk (Kampot)",
@@ -1359,11 +1348,11 @@
       "active": true
     },
     {
-      "id": "cf2d889c-9cd0-424e-bfb0-8a0a05411615",
+      "id": "b9c484c2-9c72-4c77-9fe8-bf11d5df6942",
       "fromLocation": "Warehouse-09",
       "toLocation": "D.Prey Chhor (K.Cham)",
       "truckType": "Without Crane",
-      "distanceKm": 114,
+      "distanceKm": 107,
       "companyUnitPrice": 16.91,
       "truckSalaryUnitPrice": 15.91,
       "effectiveDate": "2026-05-11",
@@ -1474,7 +1463,7 @@
       "toLocation": "D.Santuk (K.Thom)",
       "truckType": "Without Crane",
       "distanceKm": 100,
-      "companyUnitPrice": 0,
+      "companyUnitPrice": 17.05,
       "truckSalaryUnitPrice": 17.05,
       "effectiveDate": "2026-05-11",
       "active": true
@@ -1507,7 +1496,7 @@
       "toLocation": "D.Staung (K.Thom)",
       "truckType": "Without Crane",
       "distanceKm": 100,
-      "companyUnitPrice": 0,
+      "companyUnitPrice": 17.91,
       "truckSalaryUnitPrice": 17.91,
       "effectiveDate": "2026-05-11",
       "active": true
@@ -1828,6 +1817,16 @@
       "status": "Exported",
       "createdAt": "2026-05-17T09:15:19.082Z",
       "updatedAt": "2026-05-17T13:55:03.831Z"
+    },
+    {
+      "id": "498f2982-7e6e-405b-9a5d-30cbd814c933",
+      "month": "2026-05",
+      "statementNumber": 1548,
+      "statementDate": "2026-05-21",
+      "truckType": "Without Crane",
+      "status": "Draft",
+      "createdAt": "2026-05-21T07:24:25.652Z",
+      "updatedAt": "2026-05-21T07:24:25.652Z"
     }
   ],
   "deliveries": [
@@ -3634,6 +3633,54 @@
   ],
   "activity": [
     {
+      "id": "6e294cbc-4102-47c5-9c1c-f4a506516da8",
+      "message": "Updated No Crane price for D.Staung (K.Thom), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-21T07:34:14.423Z"
+    },
+    {
+      "id": "2c03eae2-eb90-4e72-bf7a-aafd9b0898ab",
+      "message": "Updated No Crane price for D.Santuk (K.Thom), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-21T07:33:45.521Z"
+    },
+    {
+      "id": "edb83f64-0c78-4f98-8538-f9fbd6b45791",
+      "message": "Updated No Crane price for D.Prey Chhor (K.Cham), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-21T07:32:27.691Z"
+    },
+    {
+      "id": "5a70f806-567e-472a-8ee5-4601c36598cd",
+      "message": "Deleted unused No Crane price for D.Prey Chhor (K.Cham), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-21T07:32:02.476Z"
+    },
+    {
+      "id": "a90d12a6-6312-48c6-bcbb-fe1017502feb",
+      "message": "Cleaned 1 empty draft statement.",
+      "type": "statement",
+      "createdAt": "2026-05-21T07:24:19.821Z"
+    },
+    {
+      "id": "335768fd-163a-4bdb-b705-39eb940ac2b9",
+      "message": "Updated No Crane price for D.Prey Chhor (K.Cham), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-21T07:23:27.061Z"
+    },
+    {
+      "id": "33a0251e-cf85-4bb4-9aca-61fcbe77f6c0",
+      "message": "Updated No Crane price for D.Prey Chhor (K.Cham), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-21T07:19:50.407Z"
+    },
+    {
+      "id": "b5246823-fc5a-48f5-aa85-361d6e8c5027",
+      "message": "Updated No Crane price for D.Prey Chhor (K.Cham), effective 2026-05-11.",
+      "type": "price",
+      "createdAt": "2026-05-21T07:18:49.350Z"
+    },
+    {
       "id": "88f587c1-43a9-4ace-930a-402d391b6213",
       "message": "Added No Crane price for D.Staung (K.Thom), effective 2026-05-11.",
       "type": "price",
@@ -3884,54 +3931,6 @@
       "message": "Updated Without Crane price for Rum Duol (Svay Rieng), effective 2026-05-11.",
       "type": "price",
       "createdAt": "2026-05-17T07:52:57.215Z"
-    },
-    {
-      "id": "6a5c169a-d411-4832-98e0-ba4f77463476",
-      "message": "Updated Without Crane price for Svay Rieng (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:52:37.013Z"
-    },
-    {
-      "id": "7680e23f-e8ec-43b0-862e-fa4022f7f034",
-      "message": "Updated Without Crane price for Romeas Hek (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:52:25.552Z"
-    },
-    {
-      "id": "08332d1c-cebb-4e2b-a9f0-6fb21db0ddbb",
-      "message": "Updated Without Crane price for Rum Duol (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:52:10.255Z"
-    },
-    {
-      "id": "b8664751-3343-41a3-b785-aa9db7dea672",
-      "message": "Updated Without Crane price for Romeas Hek (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:51:59.446Z"
-    },
-    {
-      "id": "3aaed88b-9588-4c70-895a-3685ec8fcdcd",
-      "message": "Updated Without Crane price for Kompong Ro (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:51:43.588Z"
-    },
-    {
-      "id": "dbdcb357-a960-4c4a-9e27-90b6d84bc1ed",
-      "message": "Updated Without Crane price for Kompong Ro (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:51:01.839Z"
-    },
-    {
-      "id": "014d49fe-d1fb-476f-8439-fbb40b682169",
-      "message": "Updated Without Crane price for Chantrea (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:49:39.455Z"
-    },
-    {
-      "id": "9a51a017-bc08-4d20-9f63-3fa629da1e5d",
-      "message": "Updated Without Crane price for Chantrea (Svay Rieng), effective 2026-05-11.",
-      "type": "price",
-      "createdAt": "2026-05-17T07:48:52.524Z"
     }
   ]
 }

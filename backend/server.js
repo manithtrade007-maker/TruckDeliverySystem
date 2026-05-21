@@ -2055,6 +2055,28 @@ async function api(req, res, url) {
     return sendJson(res, 200, { zeroPriceDeliveries: problems.length, problems });
   }
 
+  if (req.method === "GET" && url.pathname === "/api/diagnose-empty-prices") {
+    const data = await readData();
+    const activeByRoute = new Map();
+    for (const price of data.prices) {
+      if (price.active === false) continue;
+      const key = `${price.fromLocation}||${locationBaseKey(price.toLocation)}||${price.truckType}`;
+      const current = activeByRoute.get(key);
+      if (!current || effectiveDateOf(price) > effectiveDateOf(current)) {
+        activeByRoute.set(key, price);
+      }
+    }
+    const missingDriver = { "With Crane": [], "Without Crane": [] };
+    const missingCompany = { "With Crane": [], "Without Crane": [] };
+    for (const price of activeByRoute.values()) {
+      if (toNumber(price.truckSalaryUnitPrice) === 0) (missingDriver[price.truckType] ||= []).push(price.toLocation);
+      if (toNumber(price.companyUnitPrice) === 0) (missingCompany[price.truckType] ||= []).push(price.toLocation);
+    }
+    for (const key of Object.keys(missingDriver)) missingDriver[key].sort();
+    for (const key of Object.keys(missingCompany)) missingCompany[key].sort();
+    return sendJson(res, 200, { missingDriver, missingCompany });
+  }
+
   if (req.method === "POST" && url.pathname === "/api/prices/cleanup-zero-driver") {
     const result = await updateData((data) => {
       // Group Without Crane prices by route
