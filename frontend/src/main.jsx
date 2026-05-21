@@ -2251,10 +2251,36 @@ function App() {
                       </Field>
                     )}
                   </div>
+                  {(() => {
+                    const locCount = (bulkPriceForm.locationsText || bulkPriceForm.rowsText).split(/\r?\n/).map(l => l.trim()).filter(Boolean).length;
+                    const priceCount = bulkPriceForm.pricesText.split(/\r?\n/).map(l => l.trim()).filter(Boolean).length;
+                    const driverCount = bulkPriceForm.priceType === "both" ? bulkPriceForm.driverPricesText.split(/\r?\n/).map(l => l.trim()).filter(Boolean).length : priceCount;
+                    if (locCount === 0 && priceCount === 0) return null;
+                    const mismatch = locCount !== priceCount || (bulkPriceForm.priceType === "both" && locCount !== driverCount);
+                    return mismatch ? (
+                      <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+                        {locCount} location{locCount !== 1 ? "s" : ""} but {priceCount} price{priceCount !== 1 ? "s" : ""}
+                        {bulkPriceForm.priceType === "both" && locCount !== driverCount ? ` and ${driverCount} driver price${driverCount !== 1 ? "s" : ""}` : ""}
+                        {" "}— counts must match exactly.
+                      </div>
+                    ) : (
+                      <div className="mt-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-bold text-teal-700">
+                        {locCount} location{locCount !== 1 ? "s" : ""} and {priceCount} price{priceCount !== 1 ? "s" : ""} — counts match ✓
+                      </div>
+                    );
+                  })()}
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Button type="button" onClick={applyBulkPriceUpdate} disabled={bulkPriceRows.length < 1 || bulkPriceRows.some((row) => !row.valid)}>
-                      Apply Price Update
-                    </Button>
+                    {(() => {
+                      const locCount = (bulkPriceForm.locationsText || bulkPriceForm.rowsText).split(/\r?\n/).map(l => l.trim()).filter(Boolean).length;
+                      const priceCount = bulkPriceForm.pricesText.split(/\r?\n/).map(l => l.trim()).filter(Boolean).length;
+                      const driverCount = bulkPriceForm.priceType === "both" ? bulkPriceForm.driverPricesText.split(/\r?\n/).map(l => l.trim()).filter(Boolean).length : priceCount;
+                      const countMismatch = locCount > 0 && (locCount !== priceCount || (bulkPriceForm.priceType === "both" && locCount !== driverCount));
+                      return (
+                        <Button type="button" onClick={applyBulkPriceUpdate} disabled={bulkPriceRows.length < 1 || bulkPriceRows.some((row) => !row.valid) || countMismatch}>
+                          Apply Price Update
+                        </Button>
+                      );
+                    })()}
                     <Button type="button" variant="secondary" onClick={() => setBulkPriceForm({ ...bulkPriceForm, locationsText: "", pricesText: "", driverPricesText: "", rowsText: "" })}>
                       Clear
                     </Button>
