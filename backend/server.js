@@ -1642,7 +1642,7 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
   const titleY = pageHeight - 20;
   const subtitleY = pageHeight - 36;
   const tableTop = hasCustomHeader ? pageHeight - 66 : pageHeight - 56;
-  const bottomY = footer ? 110 : 18;
+  const bottomY = footer ? 145 : 18;
   const calculatedRowsPerPage = Math.max(1, Math.floor((tableTop - bottomY - headerHeight - rowHeight) / rowHeight));
   const rowsPerPage = rows.length <= 30 ? 30 : calculatedRowsPerPage;
   const pages = [];
@@ -1711,24 +1711,25 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
       }
     }
     if (isLastPage && footer) {
-      const footerTop = Math.max(70, y - 28);
+      const footerTop = Math.max(110, y - 28);
       const footerColumnWidth = tableWidth / 3;
-      commands.push(drawText("Prepared By", tableX, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
-      commands.push(drawText("Checked By", tableX + footerColumnWidth, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
-      commands.push(drawText("Approved By", tableX + footerColumnWidth * 2, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
+      commands.push(drawText("Prepared By", tableX + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Checked By", tableX + footerColumnWidth + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Approved By", tableX + footerColumnWidth * 2 + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12 }));
       if (signatureImage) {
-        const sigWidth = Math.min(110, footerColumnWidth - 20);
+        const sigWidth = Math.min(120, footerColumnWidth - 20);
         const sigHeight = sigWidth * signatureImage.height / signatureImage.width;
+        const sigCenterY = footerTop - 42;
         const sigX = tableX + (footerColumnWidth - sigWidth) / 2;
-        const sigY = footerTop - 8 - sigHeight;
+        const sigY = sigCenterY - sigHeight / 2;
         commands.push(drawImage("Im1", sigX, sigY, sigWidth, sigHeight));
       }
-      commands.push(drawText(preparedBy?.name ? `Name: ${preparedBy.name}` : "Name:", tableX + 6, footerTop - 50, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Name:", tableX + footerColumnWidth + 6, footerTop - 50, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Name:", tableX + footerColumnWidth * 2 + 6, footerTop - 50, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText(preparedBy?.date ? `Date: ${preparedBy.date}` : "Date:", tableX + 6, footerTop - 64, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Date:", tableX + footerColumnWidth + 6, footerTop - 64, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Date:", tableX + footerColumnWidth * 2 + 6, footerTop - 64, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText(preparedBy?.name ? `Name: ${preparedBy.name}` : "Name:", tableX + 6, footerTop - 82, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Name:", tableX + footerColumnWidth + 6, footerTop - 82, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Name:", tableX + footerColumnWidth * 2 + 6, footerTop - 82, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText(preparedBy?.date ? `Date: ${preparedBy.date}` : "Date:", tableX + 6, footerTop - 96, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Date:", tableX + footerColumnWidth + 6, footerTop - 96, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Date:", tableX + footerColumnWidth * 2 + 6, footerTop - 96, { size: 6.8, width: footerColumnWidth - 12 }));
     }
     commands.push(drawText(`Page ${pageIndex + 1} of ${chunks.length}`, pageWidth - 108, 14, { size: 8, color: [0.39, 0.46, 0.56], width: 100, align: "right" }));
     pages.push({ commands, width: pageWidth, height: pageHeight });
