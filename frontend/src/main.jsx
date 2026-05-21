@@ -24,7 +24,7 @@ const locationMatchKey = (value) =>
     .toLowerCase()
     .replace(/\bkh[\s.]*/g, "khan")
     .replace(/[^a-z0-9]+/g, "");
-const locationBaseKey = (value) => locationMatchKey(String(value || "").replace(/\([^)]*\)/g, ""));
+const locationBaseKey = (value) => locationMatchKey(String(value || "").replace(/\([^)]*\)/g, "").replace(/^\s*d\s*\.\s*/i, ""));
 const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
 const routeKey = (price) => [price.fromLocation, locationBaseKey(price.toLocation), price.truckType].join("::");
 const CRANE_LOCATION_ORDER = [
