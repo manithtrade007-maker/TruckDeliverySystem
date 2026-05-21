@@ -1540,6 +1540,10 @@ function drawRect(x, y, width, height, fill, stroke = null) {
   return commands.join("\n");
 }
 
+function drawLine(x1, y1, x2, y2, lineWidth = 0.5, color = [0.6, 0.6, 0.6]) {
+  return `q ${pdfRgb(color)} RG ${lineWidth} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S Q`;
+}
+
 function drawText(value, x, y, options = {}) {
   const fontSize = options.size || 10;
   const font = options.bold ? "F2" : "F1";
@@ -1711,25 +1715,46 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
       }
     }
     if (isLastPage && footer) {
-      const footerTop = Math.max(110, y - 28);
-      const footerColumnWidth = tableWidth / 3;
-      commands.push(drawText("Prepared By", tableX + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Checked By", tableX + footerColumnWidth + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12, align: "center" }));
-      commands.push(drawText("Approved By", tableX + footerColumnWidth * 2 + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12, align: "right" }));
+      const footerTop = Math.max(116, y - 20);
+      const fcw = tableWidth / 3;
+      const col1 = tableX;
+      const col2 = tableX + fcw;
+      const col3 = tableX + fcw * 2;
+      const footerBottom = footerTop - 108;
+
+      // outer box
+      commands.push(drawRect(col1, footerBottom, tableWidth, footerTop - footerBottom + 14, null, [0.7, 0.7, 0.7]));
+      // vertical dividers
+      commands.push(drawLine(col2, footerTop + 14, col2, footerBottom, 0.5));
+      commands.push(drawLine(col3, footerTop + 14, col3, footerBottom, 0.5));
+      // horizontal line separating header label row from signing area
+      commands.push(drawLine(col1, footerTop - 14, col1 + tableWidth, footerTop - 14, 0.5));
+      // signature line above Name/Date
+      commands.push(drawLine(col1 + 6, footerTop - 76, col2 - 6, footerTop - 76, 0.7, [0.3, 0.3, 0.3]));
+      commands.push(drawLine(col2 + 6, footerTop - 76, col3 - 6, footerTop - 76, 0.7, [0.3, 0.3, 0.3]));
+      commands.push(drawLine(col3 + 6, footerTop - 76, tableX + tableWidth - 6, footerTop - 76, 0.7, [0.3, 0.3, 0.3]));
+
+      // header labels
+      commands.push(drawText("Prepared By", col1 + 6, footerTop, { size: 7.2, bold: true, width: fcw - 12 }));
+      commands.push(drawText("Checked By", col2 + 6, footerTop, { size: 7.2, bold: true, width: fcw - 12, align: "center" }));
+      commands.push(drawText("Approved By", col3 + 6, footerTop, { size: 7.2, bold: true, width: fcw - 12, align: "right" }));
+
+      // signature image in Prepared By column
       if (signatureImage) {
-        const sigWidth = Math.min(120, footerColumnWidth - 12);
+        const sigWidth = Math.min(120, fcw - 12);
         const sigHeight = sigWidth * signatureImage.height / signatureImage.width;
-        const sigX = tableX + 6;
-        const sigCenterY = footerTop - 42;
-        const sigY = sigCenterY - sigHeight / 2;
+        const sigX = col1 + 6;
+        const sigY = footerTop - 14 - (60 - sigHeight) / 2 - sigHeight;
         commands.push(drawImage("Im1", sigX, sigY, sigWidth, sigHeight));
       }
-      commands.push(drawText(preparedBy?.name ? `Name: ${preparedBy.name}` : "Name:", tableX + 6, footerTop - 82, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Name:", tableX + footerColumnWidth + 6, footerTop - 82, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Name:", tableX + footerColumnWidth * 2 + 6, footerTop - 82, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText(preparedBy?.date ? `Date: ${preparedBy.date}` : "Date:", tableX + 6, footerTop - 96, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Date:", tableX + footerColumnWidth + 6, footerTop - 96, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Date:", tableX + footerColumnWidth * 2 + 6, footerTop - 96, { size: 6.8, width: footerColumnWidth - 12 }));
+
+      // Name / Date rows
+      commands.push(drawText(preparedBy?.name ? `Name: ${preparedBy.name}` : "Name:", col1 + 6, footerTop - 88, { size: 6.8, width: fcw - 12 }));
+      commands.push(drawText("Name:", col2 + 6, footerTop - 88, { size: 6.8, width: fcw - 12 }));
+      commands.push(drawText("Name:", col3 + 6, footerTop - 88, { size: 6.8, width: fcw - 12 }));
+      commands.push(drawText(preparedBy?.date ? `Date: ${preparedBy.date}` : "Date:", col1 + 6, footerTop - 100, { size: 6.8, width: fcw - 12 }));
+      commands.push(drawText("Date:", col2 + 6, footerTop - 100, { size: 6.8, width: fcw - 12 }));
+      commands.push(drawText("Date:", col3 + 6, footerTop - 100, { size: 6.8, width: fcw - 12 }));
     }
     commands.push(drawText(`Page ${pageIndex + 1} of ${chunks.length}`, pageWidth - 108, 14, { size: 8, color: [0.39, 0.46, 0.56], width: 100, align: "right" }));
     pages.push({ commands, width: pageWidth, height: pageHeight });
