@@ -2575,7 +2575,9 @@ const server = createServer(async (req, res) => {
       const logoPath = path.join(__dirname, "logo.jpg");
       if (existsSync(logoPath)) {
         const buffer = await readFile(logoPath);
-        res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" });
+        const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+        const contentType = isPng ? "image/png" : "image/jpeg";
+        res.writeHead(200, { "Content-Type": contentType, "Cache-Control": "public, max-age=3600" });
         return res.end(buffer);
       }
       res.writeHead(404);
