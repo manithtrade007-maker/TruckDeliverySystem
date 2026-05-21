@@ -624,6 +624,11 @@ function normalizeCode(value) {
   return normalizeText(value).replace(/\s+/g, "");
 }
 
+// Remove extra space after KH. or D. prefix: "KH. Kambol" → "KH.Kambol"
+function normalizeLocationName(value) {
+  return normalizeText(value).replace(/^(KH|D)\.\s+/i, (_, p) => p.toUpperCase() + ".");
+}
+
 function locationMatchKey(value) {
   return normalizeText(value)
     .toLowerCase()
@@ -1945,7 +1950,7 @@ async function api(req, res, url) {
       const price = {
         id: body.id || crypto.randomUUID(),
         fromLocation: normalizeText(body.fromLocation || data.settings.defaultFromLocation),
-        toLocation: normalizeText(body.toLocation),
+        toLocation: normalizeLocationName(body.toLocation),
         truckType: normalizeText(body.truckType),
         distanceKm: toNumber(body.distanceKm),
         companyUnitPrice: toNumber(body.companyUnitPrice),
@@ -2155,8 +2160,8 @@ async function api(req, res, url) {
       const saved = [];
       const seenRows = new Map();
       for (const row of rows) {
-        const pastedLocation = normalizeText(row.rawLocation || row.toLocation);
-        const toLocation = normalizeText(row.toLocation || pastedLocation);
+        const pastedLocation = normalizeLocationName(row.rawLocation || row.toLocation);
+        const toLocation = normalizeLocationName(row.toLocation || pastedLocation);
         if (!toLocation) throw new Error(`Missing location on row ${row.line || saved.length + 1}.`);
         const rowKey = locationBaseKey(toLocation);
         if (seenRows.has(rowKey)) {
@@ -2289,6 +2294,34 @@ async function api(req, res, url) {
       const deleted = before - data.prices.length;
       if (deleted > 0) addActivity(data, `Deleted ${deleted} ${truckType} price entries for effective date ${effectiveDate}.`, "setup");
       return { deleted };
+    });
+    return sendJson(res, 200, result);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/prices/normalize-location-spacing") {
+    const result = await updateData((data) => {
+      let fixedPrices = 0;
+      let fixedDeliveries = 0;
+      for (const price of data.prices) {
+        const normalized = normalizeLocationName(price.toLocation);
+        if (normalized !== price.toLocation) {
+          price.toLocation = normalized;
+          price.updatedAt = new Date().toISOString();
+          fixedPrices++;
+        }
+      }
+      for (const delivery of data.deliveries) {
+        const normalized = normalizeLocationName(delivery.toLocation);
+        if (normalized !== delivery.toLocation) {
+          delivery.toLocation = normalized;
+          delivery.updatedAt = new Date().toISOString();
+          fixedDeliveries++;
+        }
+      }
+      if (fixedPrices > 0 || fixedDeliveries > 0) {
+        addActivity(data, `Normalized location spacing: fixed ${fixedPrices} price entries and ${fixedDeliveries} deliveries.`, "setup");
+      }
+      return { fixedPrices, fixedDeliveries };
     });
     return sendJson(res, 200, result);
   }

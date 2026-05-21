@@ -1197,6 +1197,20 @@ function App() {
     setSetupLocationSearch(location);
   }
 
+  async function normalizeLocationSpacing() {
+    const ok = window.confirm('Fix location names that have an extra space after "KH." or "D." prefix (e.g. "KH. Kambol" → "KH.Kambol")? This updates both the price list and delivery records.');
+    if (!ok) return;
+    try {
+      const result = await api("/api/prices/normalize-location-spacing", { method: "POST" });
+      await loadData();
+      const total = result.fixedPrices + result.fixedDeliveries;
+      if (total === 0) flash("All location names already have correct spacing. Nothing to fix.");
+      else flash(`Fixed spacing in ${result.fixedPrices} price entr${result.fixedPrices !== 1 ? "ies" : "y"} and ${result.fixedDeliveries} deliver${result.fixedDeliveries !== 1 ? "ies" : "y"}.`);
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function fixLocationNames() {
     const ok = window.confirm("Fix delivery location names that don't match the price list, then recalculate driver prices? This corrects name mismatches (e.g. 'Khan Kambol' → 'KH.Kambol').");
     if (!ok) return;
@@ -2553,6 +2567,7 @@ function App() {
               <div className="flex gap-2 flex-wrap justify-end">
                 <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Deliveries</Button>
                 <Button type="button" variant="secondary" onClick={fixLocationNames}>Fix Location Names</Button>
+                <Button type="button" variant="secondary" onClick={normalizeLocationSpacing}>Fix Location Spacing</Button>
                 <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
               </div>
             </div>
