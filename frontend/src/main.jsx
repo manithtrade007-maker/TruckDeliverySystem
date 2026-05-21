@@ -2179,63 +2179,39 @@ function App() {
                 </Field>
               </div>
 
-              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <div className="mb-2 flex items-center gap-2">
-                  <Input
-                    placeholder="Filter locations (e.g. pp, kandal, kh)"
-                    value={bulkLocationFilter}
-                    onChange={(e) => setBulkLocationFilter(e.target.value)}
-                  />
-                  {bulkLocationFilter && (
-                    <button type="button" onClick={() => setBulkLocationFilter("")} className="text-slate-400 hover:text-slate-700 text-lg leading-none px-1">×</button>
-                  )}
-                  <span className="text-xs text-slate-400 whitespace-nowrap">{bulkLocationChoices.length} location{bulkLocationChoices.length !== 1 ? "s" : ""}</span>
-                  {bulkLocationChoices.length > 0 && (() => {
-                    const existing = new Set(bulkPriceForm.locationsText.split("\n").map((l) => l.trim()).filter(Boolean));
-                    const toAdd = bulkLocationChoices.filter((loc) => !existing.has(loc));
-                    if (toAdd.length === 0) return null;
-                    return (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const lines = bulkPriceForm.locationsText.split("\n").filter(Boolean);
-                          setBulkPriceForm({ ...bulkPriceForm, locationsText: [...lines, ...toAdd].join("\n"), rowsText: "" });
-                        }}
-                        className="whitespace-nowrap text-xs px-3 py-1 rounded-full bg-teal-600 text-white hover:bg-teal-700 font-medium transition"
-                      >
-                        + Add All ({toAdd.length})
+              {(() => {
+                const order = bulkPriceForm.truckType === "With Crane" ? CRANE_LOCATION_ORDER : NO_CRANE_LOCATION_ORDER;
+                const provinceGroups = [];
+                const seen = new Map();
+                for (const loc of order) {
+                  const m = loc.match(/\(([^)]+)\)$/);
+                  const prov = m ? m[1] : "Other";
+                  if (!seen.has(prov)) { seen.set(prov, []); provinceGroups.push(prov); }
+                  seen.get(prov).push(loc);
+                }
+                return (
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500 font-medium mb-2">Click a province to fill the Location box, then paste your prices:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {provinceGroups.map((prov) => {
+                        const locs = seen.get(prov);
+                        return (
+                          <button key={prov} type="button"
+                            onClick={() => setBulkPriceForm((f) => ({ ...f, locationsText: locs.join("\n"), pricesText: "", driverPricesText: "", rowsText: "" }))}
+                            className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-500 hover:text-teal-700 transition">
+                            {prov} <span className="text-xs font-normal text-slate-400">({locs.length})</span>
+                          </button>
+                        );
+                      })}
+                      <button type="button"
+                        onClick={() => setBulkPriceForm((f) => ({ ...f, locationsText: order.join("\n"), pricesText: "", driverPricesText: "", rowsText: "" }))}
+                        className="px-3 py-1.5 rounded-lg bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition">
+                        All <span className="text-xs font-normal opacity-80">({order.length})</span>
                       </button>
-                    );
-                  })()}
-                </div>
-                {bulkLocationChoices.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-1">No matching locations found.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
-                    {bulkLocationChoices.map((loc) => {
-                      const alreadyAdded = bulkPriceForm.locationsText.split("\n").map((l) => l.trim()).includes(loc);
-                      return (
-                        <button
-                          key={loc}
-                          type="button"
-                          onClick={() => {
-                            if (alreadyAdded) return;
-                            const lines = bulkPriceForm.locationsText.split("\n").filter(Boolean);
-                            setBulkPriceForm({ ...bulkPriceForm, locationsText: [...lines, loc].join("\n"), rowsText: "" });
-                          }}
-                          className={`text-xs px-2.5 py-1 rounded-full border font-medium transition ${
-                            alreadyAdded
-                              ? "bg-teal-100 border-teal-300 text-teal-700 cursor-default"
-                              : "bg-white border-slate-200 text-slate-700 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700"
-                          }`}
-                        >
-                          {alreadyAdded ? "✓ " : ""}{loc}
-                        </button>
-                      );
-                    })}
+                    </div>
                   </div>
-                )}
-              </div>
+                );
+              })()}
 
               <div className="mt-4 grid gap-3 lg:grid-cols-[0.9fr_1.3fr]">
                 <div>
