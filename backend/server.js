@@ -2264,6 +2264,18 @@ async function api(req, res, url) {
     return sendJson(res, 200, result);
   }
 
+  if (req.method === "POST" && url.pathname === "/api/prices/delete-khan-format") {
+    const result = await updateData(async (data) => {
+      await createBackup(data, "before-delete-khan-format");
+      const before = data.prices.length;
+      data.prices = data.prices.filter((p) => !/^\s*khan\s/i.test(p.toLocation));
+      const deleted = before - data.prices.length;
+      if (deleted > 0) addActivity(data, `Deleted ${deleted} price entries with wrong "Khan " location format.`, "setup");
+      return { deleted };
+    });
+    return sendJson(res, 200, result);
+  }
+
   if (req.method === "POST" && url.pathname === "/api/prices/delete-by-date") {
     const body = await readBody(req);
     const result = await updateData(async (data) => {

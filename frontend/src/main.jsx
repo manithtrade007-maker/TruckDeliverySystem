@@ -943,6 +943,19 @@ function App() {
     }
   }
 
+  async function deleteKhanFormatPrices() {
+    const ok = window.confirm('Delete ALL price entries where location starts with "Khan " (wrong format)? Correct KH. entries are not affected. A backup is created automatically.');
+    if (!ok) return;
+    try {
+      const result = await api("/api/prices/delete-khan-format", { method: "POST" });
+      await loadData();
+      setBulkLocationFilter("");
+      flash(`Deleted ${result.deleted} "Khan " format price entries.`);
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function deletePricesByDate() {
     const truckLabel = bulkPriceForm.truckType === "With Crane" ? "Crane" : "No Crane";
     const dateLabel = formatDate(bulkPriceForm.effectiveDate);
@@ -1962,6 +1975,9 @@ function App() {
                     </Button>
                     <Button type="button" variant="danger" onClick={deletePricesByDate}>
                       Delete All Prices for This Date
+                    </Button>
+                    <Button type="button" variant="danger" onClick={deleteKhanFormatPrices}>
+                      Delete "Khan" Format Prices
                     </Button>
                   </div>
                   <p className="mt-3 text-xs font-bold text-slate-500">
