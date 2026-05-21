@@ -1852,17 +1852,6 @@ async function api(req, res, url) {
   const data = await readData();
   const query = parseQuery(url);
 
-  if (req.method === "GET" && url.pathname === "/api/logo") {
-    const logoPath = path.join(__dirname, "logo.jpg");
-    if (existsSync(logoPath)) {
-      const buffer = await readFile(logoPath);
-      res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" });
-      return res.end(buffer);
-    }
-    res.writeHead(404);
-    return res.end();
-  }
-
   if (req.method === "GET" && url.pathname === "/api/data") {
     return sendJson(res, 200, { ...data, statements: statementsWithCounts(data) });
   }
@@ -2582,6 +2571,16 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   try {
     if (url.pathname === "/api/health") return sendJson(res, 200, { ok: true });
+    if (url.pathname === "/api/logo") {
+      const logoPath = path.join(__dirname, "logo.jpg");
+      if (existsSync(logoPath)) {
+        const buffer = await readFile(logoPath);
+        res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" });
+        return res.end(buffer);
+      }
+      res.writeHead(404);
+      return res.end();
+    }
     if (!isAuthorized(req)) return requestAuth(res);
     if (url.pathname.startsWith("/api/")) return await api(req, res, url);
     return await staticFile(req, res, url);
