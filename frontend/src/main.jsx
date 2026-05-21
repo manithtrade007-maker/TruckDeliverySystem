@@ -28,6 +28,7 @@ const locationBaseKey = (value) => locationMatchKey(String(value || "").replace(
 const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
 const routeKey = (price) => [price.fromLocation, locationBaseKey(price.toLocation), price.truckType].join("::");
 const CRANE_LOCATION_ORDER = [
+  // PP (14)
   "KH.Kambol (PP)",
   "KH.Dangkao (PP)",
   "KH.Mean Chey (PP)",
@@ -42,6 +43,7 @@ const CRANE_LOCATION_ORDER = [
   "KH.Posenchey (PP)",
   "KH.Prek Phnov (PP)",
   "KH.Chroy Changvar (PP)",
+  // Kandal (11)
   "D.Takhmao (Kandal)",
   "D.Kandal Stueng (Kandal)",
   "D.Saang (Kandal)",
@@ -53,6 +55,7 @@ const CRANE_LOCATION_ORDER = [
   "D.Koh Thom (Kandal)",
   "D.Leukdek (Kandal)",
   "D.Lvea Em (Kandal)",
+  // Takeo (10)
   "D.Bati (Takeo)",
   "D.Samrong (Takeo)",
   "D.Prey Kabas (Takeo)",
@@ -63,12 +66,15 @@ const CRANE_LOCATION_ORDER = [
   "D.Koh Andet (Takeo)",
   "D.Borei Chulsar (Takeo)",
   "D.Kirivong (Takeo)",
+  // K.Speu (7)
   "D.Kong Pisei (K.Speu)",
   "D.Chbar Morn (K.Speu)",
   "D.Oudong (K.Speu)",
   "D.Samrong Torng (K.Speu)",
   "D.Baset (K.Speu)",
+  "D.Phnom Srouch (K.Speu)",
   "D.Thpong (K.Speu)",
+  // Prey Veng (13)
   "D.Peam Ro (Prey Veng)",
   "D.Pea Reang (Prey Veng)",
   "D.Baphnom (Prey Veng)",
@@ -82,13 +88,23 @@ const CRANE_LOCATION_ORDER = [
   "D.Svay Antor (Prey Veng)",
   "D.Kanh Chreach (Prey Veng)",
   "D.Kamchay Mea (Prey Veng)",
+  // Svay Rieng (6)
   "D.Svay Chrum (Svay Rieng)",
   "D.Svay Rieng (Svay Rieng)",
   "D.Rum Duol (Svay Rieng)",
   "D.Romeas Hek (Svay Rieng)",
   "D.Svay Tiep (Svay Rieng)",
   "D.Kompong Ro (Svay Rieng)",
-  "D.KampongTralach (K.Chhnan)",
+  // K.Chhnan (7)
+  "D.Kampong Tralach (K.Chhnan)",
+  "D.Rolear Phiear (K.Chhnan)",
+  "D.Kampong Chhnang (K.Chhnan)",
+  "D.Chulkiri (K.Chhnan)",
+  "D.Tuek Phos (K.Chhnan)",
+  "D.Boribo (K.Chhnan)",
+  "D.Kampong Leng (K.Chhnan)",
+  // K.Cham (4)
+  "D.Srey Santhor (K.Cham)",
   "D.Batheay (K.Cham)",
   "D.Prey Chhor (K.Cham)",
   "D.Kampong Siem (K.Cham)",
