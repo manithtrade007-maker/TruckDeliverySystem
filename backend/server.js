@@ -2290,7 +2290,7 @@ async function api(req, res, url) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate)) throw new Error("Effective date is required.");
       await createBackup(data, "before-delete-by-date");
       const before = data.prices.length;
-      data.prices = data.prices.filter((p) => !(p.truckType === truckType && priceEffectiveDate(p) === effectiveDate));
+      data.prices = data.prices.filter((p) => !(p.truckType === truckType && effectiveDateOf(p) === effectiveDate));
       const deleted = before - data.prices.length;
       if (deleted > 0) addActivity(data, `Deleted ${deleted} ${truckType} price entries for effective date ${effectiveDate}.`, "setup");
       return { deleted };
