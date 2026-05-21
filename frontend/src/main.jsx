@@ -227,6 +227,7 @@ function App() {
   });
   const [settingsForm, setSettingsForm] = useState({ companyName: "", defaultFromLocation: "" });
   const [backupFiles, setBackupFiles] = useState([]);
+  const [emptyPriceResult, setEmptyPriceResult] = useState(null);
 
   const selectedStatement = useMemo(
     () => data.statements.find((statement) => statement.id === selectedStatementId),
