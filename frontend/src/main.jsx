@@ -29,14 +29,13 @@ const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveM
 const routeKey = (price) => [price.fromLocation, locationBaseKey(price.toLocation), price.truckType].join("::");
 const deliverySort = (a, b) =>
   String(a.deliveryDate || "").localeCompare(String(b.deliveryDate || "")) ||
-  String(a.invoiceNo || "").localeCompare(String(b.invoiceNo || "")) ||
   String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
 const truckTypeLabel = (truckType) => truckType === "With Crane" ? "Crane" : truckType === "Without Crane" ? "No Crane" : truckType;
 const formatDate = (value) => {
   const text = String(value || "");
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return text;
-  return `${match[3]}/${match[2]}/${match[1]}`;
+  return `${match[3]}.${match[2]}.${match[1]}`;
 };
 const formatDateTime = (value) => {
   const date = new Date(value);
@@ -396,7 +395,7 @@ function App() {
           ...truck,
           rows: monthlyRows
             .filter((row) => row.truckNo === truck.truckNo)
-            .sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate) || a.invoiceNo.localeCompare(b.invoiceNo))
+            .sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))
         })),
     [truckPerformance, monthlyRows]
   );
@@ -552,7 +551,7 @@ function App() {
   const missingPrice = priceLookupReady && !selectedPrice;
   const deliveryFormReady = Boolean(
     deliveryForm.deliveryDate &&
-    deliveryForm.invoiceNo &&
+    deliveryForm.invoiceNo.length === 10 &&
     selectedTruck &&
     deliveryForm.toLocation &&
     Number(deliveryForm.qtyTon || 0) > 0
@@ -1554,8 +1553,8 @@ function App() {
                       disabled={!canEditRows}
                       inputMode="numeric"
                       maxLength="10"
-                      pattern="[0-9]{1,10}"
-                      placeholder="Max 10 numbers"
+                      pattern="[0-9]{10}"
+                      placeholder="10 digit number"
                       value={deliveryForm.invoiceNo}
                       onChange={(e) => setDeliveryForm({ ...deliveryForm, invoiceNo: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                     />
