@@ -1740,23 +1740,32 @@ function App() {
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
 
           <Panel>
-            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-5">
-              {[
-                ["trucks", "Truck Master"],
-                ["company", "Company Price"],
-                ["driver", "Driver Price"],
-                ["active-prices", "Active Prices"],
-                ["bulk", "Bulk Price Update"]
-              ].map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSetupSection(key)}
-                  className={`rounded-xl px-4 py-3 text-left text-sm font-black transition ${setupSection === key ? "bg-teal-700 text-white shadow-sm" : "bg-white text-slate-700 hover:text-slate-950"}`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="flex items-stretch gap-2">
+              <div className="flex-1 grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-5">
+                {[
+                  ["trucks", "Truck Master"],
+                  ["company", "Company Price"],
+                  ["driver", "Driver Price"],
+                  ["active-prices", "Active Prices"],
+                  ["bulk", "Bulk Price Update"]
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSetupSection(key)}
+                    className={`rounded-xl px-4 py-3 text-left text-sm font-black transition ${setupSection === key ? "bg-teal-700 text-white shadow-sm" : "bg-white text-slate-700 hover:text-slate-950"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={diagnoseEmptyPrices}
+                className="rounded-xl px-4 py-3 text-sm font-black transition bg-white border border-slate-200 text-slate-700 hover:text-slate-950 hover:bg-slate-50 whitespace-nowrap"
+              >
+                Check Empty Prices
+              </button>
             </div>
           </Panel>
 
@@ -1944,17 +1953,14 @@ function App() {
                   Crane {activeCompanyPriceCounts.withCrane} | No Crane {activeCompanyPriceCounts.withoutCrane} | Total {activeCompanyPriceCounts.total}
                 </span>
               </div>
-              <div className="mb-4 flex items-end gap-3 max-w-2xl">
-                <div className="flex-1">
-                  <Field label="Search To Location">
-                    <Input
-                      placeholder="Type location name"
-                      value={setupLocationSearch}
-                      onChange={(event) => setSetupLocationSearch(event.target.value)}
-                    />
-                  </Field>
-                </div>
-                <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
+              <div className="mb-4 max-w-2xl">
+                <Field label="Search To Location">
+                  <Input
+                    placeholder="Type location name"
+                    value={setupLocationSearch}
+                    onChange={(event) => setSetupLocationSearch(event.target.value)}
+                  />
+                </Field>
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
@@ -2030,17 +2036,14 @@ function App() {
                   )}
                 </div>
               </form>
-              <div className="mt-4 flex items-end gap-3 max-w-2xl">
-                <div className="flex-1">
-                  <Field label="Search To Location">
-                    <Input
-                      placeholder="Type location name"
-                      value={setupLocationSearch}
-                      onChange={(event) => setSetupLocationSearch(event.target.value)}
-                    />
-                  </Field>
-                </div>
-                <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
+              <div className="mt-4 max-w-2xl">
+                <Field label="Search To Location">
+                  <Input
+                    placeholder="Type location name"
+                    value={setupLocationSearch}
+                    onChange={(event) => setSetupLocationSearch(event.target.value)}
+                  />
+                </Field>
               </div>
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
@@ -2106,17 +2109,14 @@ function App() {
                   )}
                 </div>
               </form>
-              <div className="mt-4 flex items-end gap-3 max-w-2xl">
-                <div className="flex-1">
-                  <Field label="Search To Location">
-                    <Input
-                      placeholder="Type location name"
-                      value={setupLocationSearch}
-                      onChange={(event) => setSetupLocationSearch(event.target.value)}
-                    />
-                  </Field>
-                </div>
-                <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
+              <div className="mt-4 max-w-2xl">
+                <Field label="Search To Location">
+                  <Input
+                    placeholder="Type location name"
+                    value={setupLocationSearch}
+                    onChange={(event) => setSetupLocationSearch(event.target.value)}
+                  />
+                </Field>
               </div>
               <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
                   <div className="grid gap-2">
