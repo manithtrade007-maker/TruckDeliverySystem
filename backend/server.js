@@ -1714,13 +1714,13 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
       const footerTop = Math.max(110, y - 28);
       const footerColumnWidth = tableWidth / 3;
       commands.push(drawText("Prepared By", tableX + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Checked By", tableX + footerColumnWidth + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Approved By", tableX + footerColumnWidth * 2 + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12 }));
+      commands.push(drawText("Checked By", tableX + footerColumnWidth + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12, align: "center" }));
+      commands.push(drawText("Approved By", tableX + footerColumnWidth * 2 + 6, footerTop, { size: 7.2, bold: true, width: footerColumnWidth - 12, align: "right" }));
       if (signatureImage) {
-        const sigWidth = Math.min(120, footerColumnWidth - 20);
+        const sigWidth = Math.min(120, footerColumnWidth - 12);
         const sigHeight = sigWidth * signatureImage.height / signatureImage.width;
+        const sigX = tableX + 6;
         const sigCenterY = footerTop - 42;
-        const sigX = tableX + (footerColumnWidth - sigWidth) / 2;
         const sigY = sigCenterY - sigHeight / 2;
         commands.push(drawImage("Im1", sigX, sigY, sigWidth, sigHeight));
       }
