@@ -615,17 +615,29 @@ function App() {
       if (!periodMap.has(effectiveKey)) periodMap.set(effectiveKey, { effectiveDate: effectiveKey, deliveries: [] });
       periodMap.get(effectiveKey).deliveries.push(d);
     }
-    const periods = [...periodMap.values()].sort((a, b) => a.effectiveDate.localeCompare(b.effectiveDate));
+    const knownPeriods = [...periodMap.values()]
+      .filter((p) => p.effectiveDate !== "unknown" && /^\d{4}-\d{2}-\d{2}$/.test(p.effectiveDate))
+      .sort((a, b) => a.effectiveDate.localeCompare(b.effectiveDate));
+    const unknownPeriod = periodMap.get("unknown");
     // Calculate date ranges: each period ends the day before the next period starts
-    return periods.map((p, i) => {
-      const next = periods[i + 1];
-      const rangeEnd = next
-        ? (() => { const d = new Date(next.effectiveDate); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })()
-        : monthEnd;
+    const result = knownPeriods.map((p, i) => {
+      const next = knownPeriods[i + 1];
+      let rangeEnd = monthEnd;
+      if (next) {
+        const d = new Date(next.effectiveDate);
+        d.setDate(d.getDate() - 1);
+        if (!isNaN(d.getTime())) rangeEnd = d.toISOString().slice(0, 10);
+      }
       const stmtIds = [...new Set(p.deliveries.map((d) => d.statementId))];
       const stmts = stmtIds.map((id) => data.statements.find((s) => s.id === id)).filter(Boolean);
       return { effectiveDate: p.effectiveDate, rangeStart: p.effectiveDate, rangeEnd, deliveryCount: p.deliveries.length, statements: stmts };
     });
+    if (unknownPeriod) {
+      const stmtIds = [...new Set(unknownPeriod.deliveries.map((d) => d.statementId))];
+      const stmts = stmtIds.map((id) => data.statements.find((s) => s.id === id)).filter(Boolean);
+      result.push({ effectiveDate: "unknown", rangeStart: null, rangeEnd: null, deliveryCount: unknownPeriod.deliveries.length, statements: stmts });
+    }
+    return result;
   }, [data.deliveries, data.prices, data.statements, data.settings.defaultFromLocation, pricePeriodsMonth]);
 
   const bulkPriceRows = useMemo(() => {
@@ -2017,10 +2029,13 @@ function App() {
                 {pricePeriods.map((period, i) => (
                   <div key={period.effectiveDate} className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
                     <div className="flex items-center gap-2 min-w-fit">
-                      <span className="rounded-full bg-teal-600 text-white text-xs font-bold px-2.5 py-0.5">Period {i + 1}</span>
-                      <span className="font-bold text-sm">{formatDate(period.rangeStart)}</span>
-                      <span className="text-slate-400 text-xs">→</span>
-                      <span className="font-bold text-sm">{formatDate(period.rangeEnd)}</span>
+                      {period.effectiveDate === "unknown"
+                        ? <span className="rounded-full bg-red-500 text-white text-xs font-bold px-2.5 py-0.5">No Price Found</span>
+                        : <><span className="rounded-full bg-teal-600 text-white text-xs font-bold px-2.5 py-0.5">Period {i + 1}</span>
+                          <span className="font-bold text-sm">{formatDate(period.rangeStart)}</span>
+                          <span className="text-slate-400 text-xs">→</span>
+                          <span className="font-bold text-sm">{formatDate(period.rangeEnd)}</span></>
+                      }
                       <span className="text-xs text-slate-400">({period.deliveryCount} deliveries)</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
