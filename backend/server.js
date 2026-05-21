@@ -2174,8 +2174,10 @@ async function api(req, res, url) {
             locationBaseKey(price.toLocation) === locationBaseKey(toLocation) &&
             price.truckType === truckType
         );
-        if (!matchedRoute) throw new Error(`Location does not match system price list: ${toLocation}.`);
-        const matchedLocation = matchedRoute.toLocation;
+        if (!matchedRoute && !/^\s*(KH\.|D\.)/i.test(toLocation)) {
+          throw new Error(`Location "${toLocation}" must start with KH. or D. to be created.`);
+        }
+        const matchedLocation = matchedRoute ? matchedRoute.toLocation : toLocation;
         const currentPrice = findEffectivePrice(data, { fromLocation, toLocation: matchedLocation, truckType, deliveryDate: effectiveDate });
         const distanceKm = row.distanceKm === "" || row.distanceKm == null
           ? toNumber(currentPrice?.distanceKm)

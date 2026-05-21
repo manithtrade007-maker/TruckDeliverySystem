@@ -607,7 +607,8 @@ function App() {
     return locationLines.map((locationText, index) => {
         const locationKey = locationBaseKey(locationText);
         const matchedRoute = routeMap.get(locationKey);
-        const matchedLocation = matchedRoute?.toLocation || "";
+        const isValidFormat = /^\s*(KH\.|D\.)/i.test(locationText.trim());
+        const matchedLocation = matchedRoute?.toLocation || (isValidFormat ? locationText.trim() : "");
         const duplicateLine = seenPastedLocations.get(locationKey);
         if (!duplicateLine) seenPastedLocations.set(locationKey, index + 1);
         const companyPriceText = priceLines[index] || "";
