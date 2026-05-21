@@ -336,6 +336,7 @@ function App() {
   const [backupFiles, setBackupFiles] = useState([]);
   const [emptyPriceResult, setEmptyPriceResult] = useState(null);
   const [bulkLocationFilter, setBulkLocationFilter] = useState("");
+  const [priceCompareFilter, setPriceCompareFilter] = useState("");
 
   const selectedStatement = useMemo(
     () => data.statements.find((statement) => statement.id === selectedStatementId),
@@ -542,6 +543,42 @@ function App() {
     withoutCrane: activeCompanyPriceRows.filter((price) => price.truckType === "Without Crane").length,
     total: activeCompanyPriceRows.length
   }), [activeCompanyPriceRows]);
+  const priceCompareRows = useMemo(() => {
+    const todayStr = today();
+    const craneMap = new Map();
+    const noCraneMap = new Map();
+    for (const price of data.prices) {
+      if (price.active === false || priceEffectiveDate(price) > todayStr) continue;
+      const key = locationBaseKey(price.toLocation);
+      if (price.truckType === "With Crane") {
+        const ex = craneMap.get(key);
+        if (!ex || priceEffectiveDate(price) > priceEffectiveDate(ex)) craneMap.set(key, price);
+      } else if (price.truckType === "Without Crane") {
+        const ex = noCraneMap.get(key);
+        if (!ex || priceEffectiveDate(price) > priceEffectiveDate(ex)) noCraneMap.set(key, price);
+      }
+    }
+    const allKeys = new Set([...craneMap.keys(), ...noCraneMap.keys()]);
+    const combinedOrder = [
+      ...NO_CRANE_LOCATION_ORDER,
+      ...CRANE_LOCATION_ORDER.filter((loc) => !NO_CRANE_LOCATION_ORDER.includes(loc))
+    ];
+    const rows = [...allKeys].map((key) => {
+      const crane = craneMap.get(key) || null;
+      const noCrane = noCraneMap.get(key) || null;
+      return { key, canonicalName: (crane || noCrane).toLocation, crane, noCrane };
+    });
+    rows.sort((a, b) => {
+      const ai = combinedOrder.indexOf(a.canonicalName);
+      const bi = combinedOrder.indexOf(b.canonicalName);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.canonicalName.localeCompare(b.canonicalName);
+    });
+    return rows;
+  }, [data.prices]);
+
   const bulkPriceRows = useMemo(() => {
     const priceType = bulkPriceForm.priceType;
     const fromLocation = bulkPriceForm.fromLocation || data.settings.defaultFromLocation;
@@ -1266,6 +1303,7 @@ function App() {
     ["dashboard", "Dashboard"],
     ["data-entry", "Data Entry"],
     ["reports", "Reports"],
+    ["prices", "Prices"],
     ["setup", "Setup"]
   ];
 
@@ -1889,6 +1927,95 @@ function App() {
             </Panel>
           )}
         </main>
+      ) : page === "prices" ? (
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+          <PageHead title="Price Comparison" meta="Compare company price vs driver price side by side for all locations." />
+          <Panel>
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-lg font-bold">Price Comparison</h2>
+                <p className="mt-1 text-sm font-bold text-slate-500">Company price vs driver price per location. Red margin = driver cost exceeds company income.</p>
+              </div>
+              <div className="flex gap-3 flex-wrap text-sm font-black">
+                <span className="rounded-full bg-teal-50 px-3 py-1 text-teal-800">Crane {priceCompareRows.filter((r) => r.crane).length}</span>
+                <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-800">No Crane {priceCompareRows.filter((r) => r.noCrane).length}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Total {priceCompareRows.length}</span>
+              </div>
+            </div>
+            <div className="mb-4 flex items-center gap-2 max-w-md">
+              <Input
+                placeholder="Filter by province (e.g. pp, kandal, takeo)"
+                value={priceCompareFilter}
+                onChange={(e) => setPriceCompareFilter(e.target.value)}
+              />
+              {priceCompareFilter && (
+                <button type="button" onClick={() => setPriceCompareFilter("")} className="text-slate-400 hover:text-slate-700 text-lg leading-none px-1">×</button>
+              )}
+            </div>
+            <div className="overflow-auto rounded-xl border border-slate-200">
+              <table className="w-full min-w-[900px] border-collapse text-sm">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-slate-900 text-white">
+                    <th className="w-10 px-3 py-2 text-center font-black" rowSpan="2">No</th>
+                    <th className="px-3 py-2 text-left font-black" rowSpan="2">Location</th>
+                    <th className="px-3 py-2 text-center font-black border-l border-slate-600" colSpan="3">CRANE</th>
+                    <th className="px-3 py-2 text-center font-black border-l border-slate-600" colSpan="3">NO CRANE</th>
+                  </tr>
+                  <tr className="bg-slate-800 text-white text-xs">
+                    <th className="px-3 py-2 text-right font-black border-l border-slate-600">Company</th>
+                    <th className="px-3 py-2 text-right font-black">Driver</th>
+                    <th className="px-3 py-2 text-right font-black">Margin</th>
+                    <th className="px-3 py-2 text-right font-black border-l border-slate-600">Company</th>
+                    <th className="px-3 py-2 text-right font-black">Driver</th>
+                    <th className="px-3 py-2 text-right font-black">Margin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const fk = locationMatchKey(priceCompareFilter);
+                    const filtered = priceCompareRows.filter((r) => !fk || locationMatchKey(r.canonicalName).includes(fk));
+                    if (filtered.length === 0) return (
+                      <tr><td colSpan="8" className="px-3 py-6 text-center text-sm font-bold text-slate-400">No locations match.</td></tr>
+                    );
+                    return filtered.map((row, i) => {
+                      const cComp = row.crane ? toNumber(row.crane.companyUnitPrice) : null;
+                      const cDriv = row.crane ? toNumber(row.crane.truckSalaryUnitPrice) : null;
+                      const cMargin = cComp !== null ? cComp - cDriv : null;
+                      const nComp = row.noCrane ? toNumber(row.noCrane.companyUnitPrice) : null;
+                      const nDriv = row.noCrane ? toNumber(row.noCrane.truckSalaryUnitPrice) : null;
+                      const nMargin = nComp !== null ? nComp - nDriv : null;
+                      const hasIssue = (cMargin !== null && cMargin < 0) || (nMargin !== null && nMargin < 0);
+                      return (
+                        <tr key={row.key} className={`border-b border-slate-100 ${hasIssue ? "bg-red-50" : i % 2 === 0 ? "bg-white" : "bg-slate-50"}`}>
+                          <td className="px-3 py-2 text-center text-xs font-bold text-slate-400">{i + 1}</td>
+                          <td className="px-3 py-2 font-black text-slate-800">{row.canonicalName}</td>
+                          {row.crane ? (
+                            <>
+                              <td className="px-3 py-2 text-right tabular-nums border-l border-slate-100">$ {unitMoney(cComp)}</td>
+                              <td className="px-3 py-2 text-right tabular-nums">$ {unitMoney(cDriv)}</td>
+                              <td className={`px-3 py-2 text-right tabular-nums font-black ${cMargin < 0 ? "text-red-600" : "text-teal-700"}`}>$ {unitMoney(cMargin)}</td>
+                            </>
+                          ) : (
+                            <td colSpan="3" className="px-3 py-2 text-center text-slate-300 border-l border-slate-100">—</td>
+                          )}
+                          {row.noCrane ? (
+                            <>
+                              <td className="px-3 py-2 text-right tabular-nums border-l border-slate-100">$ {unitMoney(nComp)}</td>
+                              <td className="px-3 py-2 text-right tabular-nums">$ {unitMoney(nDriv)}</td>
+                              <td className={`px-3 py-2 text-right tabular-nums font-black ${nMargin < 0 ? "text-red-600" : "text-teal-700"}`}>$ {unitMoney(nMargin)}</td>
+                            </>
+                          ) : (
+                            <td colSpan="3" className="px-3 py-2 text-center text-slate-300 border-l border-slate-100">—</td>
+                          )}
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        </main>
       ) : (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
@@ -1900,7 +2027,6 @@ function App() {
                   ["trucks", "Truck Master"],
                   ["company", "Company Price"],
                   ["driver", "Driver Price"],
-                  ["active-prices", "Active Prices"],
                   ["bulk", "Bulk Price Update"]
                 ].map(([key, label]) => (
                   <button
