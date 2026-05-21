@@ -2291,10 +2291,15 @@ async function api(req, res, url) {
       if (!truckType) throw new Error("Truck type is required.");
       if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate)) throw new Error("Effective date is required.");
       await createBackup(data, "before-delete-by-date");
-      const before = data.prices.length;
-      data.prices = data.prices.filter((p) => !(p.truckType === truckType && effectiveDateOf(p) === effectiveDate));
-      const deleted = before - data.prices.length;
-      if (deleted > 0) addActivity(data, `Deleted ${deleted} ${truckType} price entries for effective date ${effectiveDate}.`, "setup");
+      let deleted = 0;
+      for (const p of data.prices) {
+        if (p.truckType === truckType && effectiveDateOf(p) === effectiveDate && p.active !== false) {
+          p.active = false;
+          p.updatedAt = new Date().toISOString();
+          deleted++;
+        }
+      }
+      if (deleted > 0) addActivity(data, `Deactivated ${deleted} ${truckType} price entries for effective date ${effectiveDate} (locations preserved).`, "setup");
       return { deleted };
     });
     return sendJson(res, 200, result);
