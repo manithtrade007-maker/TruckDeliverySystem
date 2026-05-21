@@ -234,6 +234,28 @@ function Input(props) {
   );
 }
 
+function DateInput({ value, onChange, required, disabled, ...props }) {
+  const display = value
+    ? (() => { const [y, m, d] = value.split("-"); return `${d}/${m}/${y.slice(2)}`; })()
+    : null;
+  return (
+    <div className="relative">
+      <input
+        type="date"
+        value={value || ""}
+        onChange={onChange}
+        required={required}
+        disabled={disabled}
+        className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        {...props}
+      />
+      <div className={`pointer-events-none min-h-11 flex items-center rounded-xl border px-3 text-sm font-semibold shadow-sm transition peer-focus:border-teal-700 peer-focus:ring-4 peer-focus:ring-teal-100 ${disabled ? "border-slate-200 bg-slate-100 text-slate-500 shadow-none" : "border-slate-200 bg-white text-slate-900"}`}>
+        {display ?? <span className="font-normal text-slate-400">DD/MM/YY</span>}
+      </div>
+    </div>
+  );
+}
+
 function Select({ children, ...props }) {
   return (
     <select
@@ -1824,7 +1846,7 @@ function App() {
                 <Input type="number" min="1" required placeholder="Enter your statement number" value={statementForm.statementNumber} onChange={(event) => setStatementForm({ ...statementForm, statementNumber: event.target.value })} />
               </Field>
               <Field label="Statement Date">
-                <Input type="date" required value={statementForm.statementDate} onChange={(event) => setStatementForm({ ...statementForm, statementDate: event.target.value })} />
+                <DateInput required value={statementForm.statementDate} onChange={(event) => setStatementForm({ ...statementForm, statementDate: event.target.value })} />
               </Field>
               <div className="flex flex-wrap items-end gap-2 md:col-span-4">
                 <Button type="submit">{statementForm.id ? "Save Changes" : "Create Statement"}</Button>
@@ -1849,7 +1871,7 @@ function App() {
                   </span>
                 </div>
                 <form className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
-                  <Field label="Delivery Date"><Input type="date" required disabled={!canEditRows} value={deliveryForm.deliveryDate} onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })} /></Field>
+                  <Field label="Delivery Date"><DateInput required disabled={!canEditRows} value={deliveryForm.deliveryDate} onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })} /></Field>
                   <Field label="Invoice No">
                     <Input
                       required
