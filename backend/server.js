@@ -995,7 +995,11 @@ function statementExportFileName(statement, fallbackRows = []) {
   if (!statement) {
     return `accounting-${slug(fallbackRows[0]?.truckType || "all")}`;
   }
-  return `statement-${statement.statementNumber}-${numericMonthFilePart(statement.month)}-${truckTypeFileLabel(statement.truckType)}`;
+  const month = statement.month || "";
+  const m = month.match(/^(\d{4})-(\d{2})$/);
+  const monthYear = m ? `${m[2]}${m[1]}` : slug(month);
+  const truckLabel = statement.truckType === "With Crane" ? "Crane" : "NoCrane";
+  return `ST-${statement.statementNumber}-${monthYear}-${truckLabel}`;
 }
 
 function rowsByPage(rows, pageSize = 30) {
@@ -1576,7 +1580,7 @@ function buildPdf(pages) {
   return Buffer.from(pdf);
 }
 
-function tablePdf({ title, subtitle, columns, rows, totals, footer, header }) {
+function tablePdf({ title, subtitle, columns, rows, totals, footer, header, preparedBy }) {
   const pageWidth = PDF_PAGE_WIDTH;
   const pageHeight = PDF_PAGE_HEIGHT;
   const margin = PDF_PAGE_MARGIN;
@@ -1660,10 +1664,10 @@ function tablePdf({ title, subtitle, columns, rows, totals, footer, header }) {
       commands.push(drawText("Prepared By", tableX, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
       commands.push(drawText("Checked By", tableX + footerColumnWidth, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
       commands.push(drawText("Approved By", tableX + footerColumnWidth * 2, footerTop, { size: 7.2, bold: true, width: footerColumnWidth, align: "center" }));
-      commands.push(drawText("Name:", tableX + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText(preparedBy?.name ? `Name: ${preparedBy.name}` : "Name:", tableX + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
       commands.push(drawText("Name:", tableX + footerColumnWidth + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
       commands.push(drawText("Name:", tableX + footerColumnWidth * 2 + 6, footerTop - 22, { size: 6.8, width: footerColumnWidth - 12 }));
-      commands.push(drawText("Date:", tableX + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
+      commands.push(drawText(preparedBy?.date ? `Date: ${preparedBy.date}` : "Date:", tableX + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
       commands.push(drawText("Date:", tableX + footerColumnWidth + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
       commands.push(drawText("Date:", tableX + footerColumnWidth * 2 + 6, footerTop - 36, { size: 6.8, width: footerColumnWidth - 12 }));
     }
@@ -1734,7 +1738,8 @@ function statementPdf(data, rows) {
       qty: `${totalQty.toFixed(5)}T`,
       amount: `$ ${money(totalAmount)}`
     },
-    footer: true
+    footer: true,
+    preparedBy: { name: "Nhep Manith", date: formatShortDate(currentLocalDate()) }
   });
 }
 
@@ -2420,14 +2425,14 @@ async function api(req, res, url) {
     if (format === "pdf") {
       res.writeHead(200, {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${slug(fileName)}.pdf"`
+        "Content-Disposition": `attachment; filename="${fileName}.pdf"`
       });
       return res.end(statementPdf(data, rows));
     }
     const workbookBuffer = await accountingWorkbook(data, rows);
     res.writeHead(200, {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${slug(fileName)}.xlsx"`
+      "Content-Disposition": `attachment; filename="${fileName}.xlsx"`
     });
     return res.end(workbookBuffer);
   }
