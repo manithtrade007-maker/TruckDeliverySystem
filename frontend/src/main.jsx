@@ -318,6 +318,7 @@ function App() {
   const [filters, setFilters] = useState({ month: currentMonth(), statementNumber: "" });
   const [setupSection, setSetupSection] = useState("trucks");
   const [setupLocationSearch, setSetupLocationSearch] = useState("");
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [truckForm, setTruckForm] = useState({ truckNo: "", truckType: "With Crane", driverName: "", phone: "" });
   const [priceForm, setPriceForm] = useState({
     id: "",
@@ -2144,31 +2145,22 @@ function App() {
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
 
           <Panel>
-            <div className="flex items-stretch gap-2">
-              <div className="flex-1 grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-5">
-                {[
-                  ["trucks", "Truck Master"],
-                  ["company", "Company Price"],
-                  ["driver", "Driver Price"],
-                  ["bulk", "Bulk Price Update"]
-                ].map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setSetupSection(key)}
-                    className={`rounded-xl px-4 py-3 text-left text-sm font-black transition ${setupSection === key ? "bg-teal-700 text-white shadow-sm" : "bg-white text-slate-700 hover:text-slate-950"}`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={diagnoseEmptyPrices}
-                className="rounded-xl px-4 py-3 text-sm font-black transition bg-white border border-slate-200 text-slate-700 hover:text-slate-950 hover:bg-slate-50 whitespace-nowrap"
-              >
-                Check Empty Prices
-              </button>
+            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-4">
+              {[
+                ["trucks", "Truck Master"],
+                ["company", "Company Price"],
+                ["driver", "Driver Price"],
+                ["bulk", "Bulk Price Update"]
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSetupSection(key)}
+                  className={`rounded-xl px-4 py-3 text-left text-sm font-black transition ${setupSection === key ? "bg-teal-700 text-white shadow-sm" : "bg-white text-slate-700 hover:text-slate-950"}`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </Panel>
 
@@ -2361,9 +2353,6 @@ function App() {
                     </Button>
                     <Button type="button" variant="danger" onClick={deletePricesByDate}>
                       Delete All Prices for This Date
-                    </Button>
-                    <Button type="button" variant="danger" onClick={deleteNonstandardFormatPrices}>
-                      Delete Non-Standard Format Prices
                     </Button>
                   </div>
                   <p className="mt-3 text-xs font-bold text-slate-500">
@@ -2650,48 +2639,66 @@ function App() {
             </Panel>
           )}
 
-          <Panel>
-            <h2 className="mb-3 text-lg font-bold">Settings</h2>
-            <form className="grid gap-3 md:grid-cols-3" onSubmit={saveSettings}>
-              <Field label="Company"><Input value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} /></Field>
-              <Field label="Default From"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
-              <div className="flex items-end"><Button type="submit">Save Settings</Button></div>
-            </form>
-          </Panel>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Panel>
+              <h2 className="mb-3 text-lg font-bold">Settings</h2>
+              <form className="grid gap-3" onSubmit={saveSettings}>
+                <Field label="Company"><Input value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} /></Field>
+                <Field label="Default From Location"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
+                <div><Button type="submit">Save Settings</Button></div>
+              </form>
+            </Panel>
 
-          <Panel>
-            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <h2 className="text-lg font-bold">Data Backup</h2>
-                <p className="mt-1 text-sm font-bold text-slate-500">
-                  Automatic backup runs before the first data change each day. Create or download a backup before major edits.
-                </p>
-                <p className="mt-2 text-xs font-black uppercase tracking-wide text-slate-500">
-                  Latest backup: {backupFiles[0] || "No backup file yet"}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
+            <Panel>
+              <h2 className="mb-3 text-lg font-bold">Data Backup</h2>
+              <p className="text-sm font-bold text-slate-500">
+                Automatic backup runs before the first data change each day.
+              </p>
+              <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-500">
+                Latest: {backupFiles[0] || "No backup yet"}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button type="button" onClick={createManualBackup}>Create Backup</Button>
                 <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
-                <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
               </div>
-            </div>
-          </Panel>
+            </Panel>
+          </div>
 
           <Panel>
             <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
-                <h2 className="text-lg font-bold">Recalculate Driver Prices</h2>
+                <h2 className="text-lg font-bold">Tools</h2>
                 <p className="mt-1 text-sm font-bold text-slate-500">
-                  Re-apply current driver prices to all existing delivery rows. Use this if driver payment amounts appear as $0 after a price update.
+                  Check for missing prices or re-apply driver prices after a bulk update.
                 </p>
               </div>
               <div className="flex gap-2 flex-wrap justify-end">
-                <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Deliveries</Button>
-                <Button type="button" variant="secondary" onClick={fixLocationNames}>Fix Location Names</Button>
-                <Button type="button" variant="secondary" onClick={normalizeLocationSpacing}>Fix Location Spacing</Button>
+                <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
                 <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
               </div>
+            </div>
+
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowAdvancedTools((v) => !v)}
+                className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition"
+              >
+                <span className={`inline-block transition-transform ${showAdvancedTools ? "rotate-90" : ""}`}>▶</span>
+                Advanced Tools
+              </button>
+              {showAdvancedTools && (
+                <div className="mt-3 grid gap-3">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Use only when troubleshooting — these operations affect all data.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Deliveries</Button>
+                    <Button type="button" variant="secondary" onClick={fixLocationNames}>Fix Location Names</Button>
+                    <Button type="button" variant="secondary" onClick={normalizeLocationSpacing}>Fix Location Spacing</Button>
+                    <Button type="button" variant="secondary" onClick={deleteNonstandardFormatPrices}>Delete Non-Standard Prices</Button>
+                    <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
+                  </div>
+                </div>
+              )}
             </div>
           </Panel>
 
