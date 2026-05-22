@@ -322,7 +322,6 @@ function App() {
   const invoiceInputRef = useRef(null);
   const deliveryFormRef = useRef(null);
   const [activeField, setActiveField] = useState("");
-  const [editedIds, setEditedIds] = useState(new Set());
   const [filters, setFilters] = useState({ month: currentMonth(), statementNumber: "" });
   const [setupSection, setSetupSection] = useState("trucks");
   const [setupLocationSearch, setSetupLocationSearch] = useState("");
@@ -1043,13 +1042,9 @@ function App() {
         body: JSON.stringify({ ...deliveryForm, statementId: selectedStatementId })
       });
       const wasEditing = isEditingDelivery;
-      const editedId = deliveryForm.id;
       resetDeliveryForm(deliveryForm.deliveryDate);
       await loadData();
       flash(wasEditing ? "Delivery row updated." : statementRows.length + 1 >= 30 ? "Statement reached 30 rows. Create the next statement." : "Delivery saved.");
-      if (wasEditing) {
-        setEditedIds((prev) => new Set([...prev, editedId]));
-      }
       requestAnimationFrame(() => invoiceInputRef.current?.focus());
     } catch (err) {
       flash(err.message, "error");
@@ -1424,13 +1419,11 @@ function App() {
 
   function exportStatement() {
     if (!selectedStatement) return;
-    const hl = editedIds.size ? `&highlightIds=${encodeURIComponent([...editedIds].join(","))}` : "";
-    window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedStatement.id)}&truckType=${encodeURIComponent(selectedStatement.truckType)}${hl}`;
+    window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedStatement.id)}&truckType=${encodeURIComponent(selectedStatement.truckType)}`;
   }
 
   function exportStatementFile(statement, format = "xls") {
-    const hl = editedIds.size ? `&highlightIds=${encodeURIComponent([...editedIds].join(","))}` : "";
-    window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(statement.id)}&truckType=${encodeURIComponent(statement.truckType)}&format=${encodeURIComponent(format)}${hl}`;
+    window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(statement.id)}&truckType=${encodeURIComponent(statement.truckType)}&format=${encodeURIComponent(format)}`;
   }
 
   const navItems = [
@@ -1652,7 +1645,7 @@ function App() {
                   <Button
                     type="button"
                     onClick={() => {
-                      window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedViewStatement.id)}&truckType=${encodeURIComponent(selectedViewStatement.truckType)}${editedIds.size ? `&highlightIds=${encodeURIComponent([...editedIds].join(","))}` : ""}`;
+                      window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedViewStatement.id)}&truckType=${encodeURIComponent(selectedViewStatement.truckType)}`;
                     }}
                     disabled={viewStatementRows.length < 1}
                   >
@@ -1992,7 +1985,7 @@ function App() {
                 </thead>
                 <tbody>
                   {statementRows.map((row, index) => (
-                    <tr key={row.id} className={`border-b border-slate-100 transition ${deliveryForm.id === row.id ? "bg-teal-50" : editedIds.has(row.id) ? "bg-yellow-100" : "odd:bg-white even:bg-slate-50 hover:bg-sky-50"}`}>
+                    <tr key={row.id} className={`border-b border-slate-100 transition ${deliveryForm.id === row.id ? "bg-teal-50" : row.highlighted ? "bg-yellow-100" : "odd:bg-white even:bg-slate-50 hover:bg-sky-50"}`}>
                       <td className="px-3 py-3">{index + 1}</td>
                       <td className="px-3 py-3 text-center">{formatDate(row.deliveryDate)}</td>
                       <td className="px-3 py-3">{row.invoiceNo}</td>

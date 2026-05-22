@@ -405,6 +405,7 @@ function createSchema(database) {
       truckSalaryUnitPrice REAL NOT NULL DEFAULT 0,
       truckSalaryAmount REAL NOT NULL DEFAULT 0,
       status TEXT,
+      highlighted INTEGER NOT NULL DEFAULT 0,
       createdAt TEXT,
       updatedAt TEXT
     );
@@ -447,11 +448,11 @@ function writeDataToDb(data) {
     }
 
     const insertDelivery = database.prepare(`
-      INSERT INTO deliveries (id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO deliveries (id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const delivery of normalized.deliveries) {
-      insertDelivery.run(delivery.id, delivery.statementId, delivery.deliveryDate, delivery.invoiceNo, delivery.truckNo, delivery.truckType, delivery.driverName || "", delivery.fromLocation, delivery.toLocation, toNumber(delivery.distanceKm), toNumber(delivery.qtyTon), toNumber(delivery.companyUnitPrice), toNumber(delivery.companyTotalAmount), toNumber(delivery.truckSalaryUnitPrice), toNumber(delivery.truckSalaryAmount), delivery.status || "Draft", delivery.createdAt || "", delivery.updatedAt || "");
+      insertDelivery.run(delivery.id, delivery.statementId, delivery.deliveryDate, delivery.invoiceNo, delivery.truckNo, delivery.truckType, delivery.driverName || "", delivery.fromLocation, delivery.toLocation, toNumber(delivery.distanceKm), toNumber(delivery.qtyTon), toNumber(delivery.companyUnitPrice), toNumber(delivery.companyTotalAmount), toNumber(delivery.truckSalaryUnitPrice), toNumber(delivery.truckSalaryAmount), delivery.status || "Draft", delivery.highlighted ? 1 : 0, delivery.createdAt || "", delivery.updatedAt || "");
     }
 
     const insertActivity = database.prepare("INSERT INTO activity (id, message, type, createdAt) VALUES (?, ?, ?, ?)");
@@ -474,6 +475,7 @@ async function ensureDataStore() {
   await mkdir(backupDir, { recursive: true });
   const database = getDb();
   createSchema(database);
+  try { database.exec("ALTER TABLE deliveries ADD COLUMN highlighted INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
   const hasRows = database.prepare(`
     SELECT
       (SELECT COUNT(*) FROM trucks) +
@@ -499,7 +501,7 @@ async function readData() {
     trucks: database.prepare("SELECT truckNo, truckType, driverName, phone, active FROM trucks ORDER BY truckNo").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     prices: database.prepare("SELECT id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active FROM prices ORDER BY truckType, toLocation, effectiveDate").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all(),
-    deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all(),
+    deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all()
   });
 }
@@ -854,6 +856,7 @@ function enrichDelivery(data, input) {
   const companyUnitPrice = toNumber(price.companyUnitPrice);
   const truckSalaryUnitPrice = toNumber(price.truckSalaryUnitPrice);
 
+  const existing = data.deliveries.find((item) => item.id === input.id);
   return {
     id: input.id || crypto.randomUUID(),
     statementId,
@@ -871,7 +874,8 @@ function enrichDelivery(data, input) {
     truckSalaryUnitPrice,
     truckSalaryAmount: roundMoney(qtyTon * truckSalaryUnitPrice),
     status: input.status || "Draft",
-    createdAt: input.createdAt || new Date().toISOString(),
+    highlighted: existing ? true : false,
+    createdAt: existing?.createdAt || input.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 }
@@ -1218,7 +1222,7 @@ function accountingExport(data, rows) {
   );
 }
 
-async function accountingWorkbook(data, rows, signatureImage, highlightIds = "") {
+async function accountingWorkbook(data, rows, signatureImage) {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const workbook = new ExcelJS.Workbook();
   workbook.creator = data.settings.companyName || "N&M LOGISTIC";
@@ -1327,7 +1331,6 @@ async function accountingWorkbook(data, rows, signatureImage, highlightIds = "")
     fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } }
   });
 
-  const highlightSet = new Set(highlightIds ? highlightIds.split(",").map((s) => s.trim()).filter(Boolean) : []);
   rows.forEach((row, index) => {
     const rowNumber = index + 5;
     worksheet.getRow(rowNumber).height = 22;
@@ -1343,7 +1346,7 @@ async function accountingWorkbook(data, rows, signatureImage, highlightIds = "")
       `$${unitMoney(row.companyUnitPrice)}`,
       `$${money(row.companyTotalAmount)}`
     ];
-    const isHighlighted = highlightSet.has(row.id);
+    const isHighlighted = Boolean(row.highlighted);
     styleRange(rowNumber, rowNumber, 1, 10, {
       font: baseFont,
       alignment: { horizontal: "center", vertical: "middle", wrapText: false },
@@ -1766,7 +1769,7 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
   return buildPdf(pages, signatureImage ? [signatureImage] : []);
 }
 
-function statementPdf(data, rows, signatureImage, highlightIds = "") {
+function statementPdf(data, rows, signatureImage) {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const totalQty = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
   const totalAmount = rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0);
@@ -1805,7 +1808,6 @@ function statementPdf(data, rows, signatureImage, highlightIds = "") {
     { key: "unit", label: "Unit Price", width: 72, align: "right" },
     { key: "amount", label: "Total Amount", width: 96, align: "right", bold: true }
   ];
-  const highlightSet = new Set(highlightIds ? highlightIds.split(",").map((s) => s.trim()).filter(Boolean) : []);
   return tablePdf({
     title: `Statement ${statement?.statementNumber || ""} - ${monthLabel(statement?.month)}`,
     subtitle: `${truckTypeLabel(statement?.truckType) || ""} | ${statement?.status || ""} | ${rows.length}/30 rows | From: ${data.settings.fromName || "Nhep Manith"} | To: ${data.settings.toName || "SLP"} | Date: ${formatShortDate(statement?.statementDate || "")}`,
@@ -1822,7 +1824,7 @@ function statementPdf(data, rows, signatureImage, highlightIds = "") {
       qty: `${Number(row.qtyTon || 0).toFixed(5)}T`,
       unit: `$ ${unitMoney(row.companyUnitPrice)}`,
       amount: `$ ${money(row.companyTotalAmount)}`,
-      _highlighted: highlightSet.has(row.id)
+      _highlighted: Boolean(row.highlighted)
     })),
     totals: {
       qty: `${totalQty.toFixed(5)}T`,
@@ -2514,7 +2516,6 @@ async function api(req, res, url) {
       ? data.statements.find((item) => item.id === query.statementId)
       : null;
     const fileName = statementExportFileName(statement, rows);
-    const highlightId = normalizeText(query.highlightIds || query.highlightId);
     const sigPath = path.join(__dirname, "signature.jpg");
     let sigBuffer = null;
     if (existsSync(sigPath)) {
@@ -2527,9 +2528,9 @@ async function api(req, res, url) {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${fileName}.pdf"`
       });
-      return res.end(statementPdf(data, rows, sigBuffer, highlightId));
+      return res.end(statementPdf(data, rows, sigBuffer));
     }
-    const workbookBuffer = await accountingWorkbook(data, rows, sigBuffer?.buffer, highlightId);
+    const workbookBuffer = await accountingWorkbook(data, rows, sigBuffer?.buffer);
     res.writeHead(200, {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${fileName}.xlsx"`
