@@ -225,22 +225,22 @@ function Button({ variant = "primary", className = "", ...props }) {
   return <button className={`${base} ${styles} ${className}`} {...props} />;
 }
 
-const Input = React.forwardRef(function Input({ type, ...props }, ref) {
+const Input = React.forwardRef(function Input({ type, className = "", ...props }, ref) {
   return (
     <input
       ref={ref}
       type={type}
-      className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none"
+      className={`min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-yellow-400 focus:bg-yellow-50 focus:ring-4 focus:ring-yellow-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
       {...(type === "date" ? { lang: "en-GB" } : {})}
       {...props}
     />
   );
 });
 
-function Select({ children, ...props }) {
+function Select({ children, className = "", ...props }) {
   return (
     <select
-      className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none"
+      className={`min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
       {...props}
     >
       {children}
@@ -1911,17 +1911,15 @@ function App() {
                   </Field>
                   {isEditingDelivery && (
                     <Field label="From Location">
-                      <Input
-                        list="delivery-from-options"
+                      <Select
                         required
                         disabled={!canEditRows}
-                        placeholder="From location"
                         value={deliveryForm.fromLocation}
                         onChange={(e) => setDeliveryForm({ ...deliveryForm, fromLocation: e.target.value })}
-                      />
-                      <datalist id="delivery-from-options">
-                        {fromLocations.map((loc) => <option key={loc} value={loc} />)}
-                      </datalist>
+                      >
+                        <option value="Warehouse-09">Warehouse-09</option>
+                        <option value="GS01">GS01</option>
+                      </Select>
                     </Field>
                   )}
                   <Field label="QTY(T)"><Input type="number" step="any" min="0" required disabled={!canEditRows} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} /></Field>
