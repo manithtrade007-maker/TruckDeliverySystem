@@ -442,7 +442,7 @@ function App() {
   const selectedPrice = selectedTruck
     ? data.prices
         .filter((price) => price.active !== false)
-        .filter((price) => price.fromLocation === (deliveryForm.fromLocation || data.settings.defaultFromLocation))
+        .filter((price) => price.fromLocation === data.settings.defaultFromLocation)
         .filter((price) => price.toLocation === deliveryForm.toLocation)
         .filter((price) => price.truckType === selectedTruck.truckType)
         .filter((price) => priceEffectiveDate(price) <= (deliveryForm.deliveryDate || today()))
