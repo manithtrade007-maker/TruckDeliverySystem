@@ -1475,7 +1475,7 @@ function App() {
       });
       await loadData();
       setAssignModal(null);
-      flash(paymentMonth ? `Statement assigned to ${monthLabel(paymentMonth)} payment.` : "Statement removed from payment.");
+      flash(paymentMonth ? `Statement assigned to ${monthName(paymentMonth)} payment.` : "Statement removed from payment.");
     } catch (err) {
       flash(err.message, "error");
     }
@@ -1880,7 +1880,7 @@ function App() {
                       <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "xls")} disabled={statement.rowCount < 1}>Excel</Button>
                       <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "pdf")} disabled={statement.rowCount < 1}>PDF</Button>
                       <Button type="button" variant="secondary" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
-                        {statement.paymentMonth ? `Payment: ${monthLabel(statement.paymentMonth)}` : "Assign Payment"}
+                        {statement.paymentMonth ? `Payment: ${monthName(statement.paymentMonth)}` : "Assign Payment"}
                       </Button>
                       <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
                       <Button type="button" variant="danger" onClick={() => deleteStatement(statement)}>Delete</Button>
@@ -2314,7 +2314,7 @@ function App() {
         const StatementRow = ({ s, index, showPaymentMonth }) => (
           <tr key={s.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50 text-sm">
             <td className="px-3 py-2 text-center text-slate-500">{index + 1}</td>
-            {showPaymentMonth && <td className="px-3 py-2 font-bold text-slate-600">{monthLabel(s.paymentMonth)}</td>}
+            {showPaymentMonth && <td className="px-3 py-2 font-bold text-slate-600">{monthName(s.paymentMonth)}</td>}
             <td className="px-3 py-2 font-bold text-slate-600">{monthName(s.month)}</td>
             <td className="px-3 py-2 font-black tabular-nums">{s.statementNumber}</td>
             <td className="px-3 py-2 text-right font-black tabular-nums">$ {money(s.companyTotalAmount)}</td>
@@ -2336,7 +2336,7 @@ function App() {
             <div className="grid gap-4 lg:grid-cols-3">
               {/* File 1 — Statements created this month */}
               <Panel>
-                <h3 className="mb-3 text-base font-black tracking-tight">Statements Created — {monthLabel(paymentsViewMonth)}</h3>
+                <h3 className="mb-3 text-base font-black tracking-tight">Statements Created — {monthName(paymentsViewMonth)}</h3>
                 <p className="mb-3 text-xs font-bold text-slate-500">All statements you created in this calendar month.</p>
                 {createdThisMonth.length === 0 ? (
                   <p className="text-sm font-bold text-slate-400 text-center py-6">No statements for this month.</p>
@@ -2368,7 +2368,7 @@ function App() {
               {/* File 2 — Company pays this month */}
               <Panel>
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <h3 className="text-base font-black tracking-tight">Company Pays — {monthLabel(paymentsViewMonth)}</h3>
+                  <h3 className="text-base font-black tracking-tight">Company Pays — {monthName(paymentsViewMonth)}</h3>
                   {assignedToMonth.length > 0 && (
                     <button
                       onClick={() => togglePaymentReceived(paymentsViewMonth)}
