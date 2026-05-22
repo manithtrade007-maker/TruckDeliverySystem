@@ -315,6 +315,7 @@ function App() {
     deliveryDate: today(),
     invoiceNo: "",
     truckNo: "",
+    fromLocation: "",
     toLocation: "",
     qtyTon: ""
   });
@@ -433,10 +434,15 @@ function App() {
     [data.prices, activeDeliveryTruckType]
   );
 
+  const fromLocations = useMemo(
+    () => [...new Set(data.prices.filter((p) => p.active !== false).map((p) => p.fromLocation).filter(Boolean))].sort(),
+    [data.prices]
+  );
+
   const selectedPrice = selectedTruck
     ? data.prices
         .filter((price) => price.active !== false)
-        .filter((price) => price.fromLocation === data.settings.defaultFromLocation)
+        .filter((price) => price.fromLocation === (deliveryForm.fromLocation || data.settings.defaultFromLocation))
         .filter((price) => price.toLocation === deliveryForm.toLocation)
         .filter((price) => price.truckType === selectedTruck.truckType)
         .filter((price) => priceEffectiveDate(price) <= (deliveryForm.deliveryDate || today()))
@@ -821,6 +827,7 @@ function App() {
       defaultFromLocation: next.settings.defaultFromLocation || ""
     });
     setPriceForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
+    setDeliveryForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
     loadBackups().catch(() => {});
   }
 
@@ -1049,6 +1056,7 @@ function App() {
       deliveryDate: row.deliveryDate,
       invoiceNo: row.invoiceNo,
       truckNo: row.truckNo,
+      fromLocation: row.fromLocation || data.settings.defaultFromLocation || "",
       toLocation: row.toLocation,
       qtyTon: row.qtyTon
     });
@@ -1059,7 +1067,7 @@ function App() {
   }
 
   function resetDeliveryForm(deliveryDate = today()) {
-    setDeliveryForm({ id: "", deliveryDate, invoiceNo: "", truckNo: "", toLocation: "", qtyTon: "" });
+    setDeliveryForm({ id: "", deliveryDate, invoiceNo: "", truckNo: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", qtyTon: "" });
   }
 
   async function deleteDelivery(row) {
@@ -1898,6 +1906,19 @@ function App() {
                     />
                     <datalist id="delivery-location-options">
                       {locations.map((location) => <option key={location} value={location} />)}
+                    </datalist>
+                  </Field>
+                  <Field label="From Location">
+                    <Input
+                      list="delivery-from-options"
+                      required
+                      disabled={!canEditRows}
+                      placeholder="From location"
+                      value={deliveryForm.fromLocation}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, fromLocation: e.target.value })}
+                    />
+                    <datalist id="delivery-from-options">
+                      {fromLocations.map((loc) => <option key={loc} value={loc} />)}
                     </datalist>
                   </Field>
                   <Field label="QTY(T)"><Input type="number" step="any" min="0" required disabled={!canEditRows} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} /></Field>
