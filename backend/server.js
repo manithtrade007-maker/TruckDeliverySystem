@@ -255,7 +255,8 @@ const defaultData = {
     companyName: "N&M LOGISTIC",
     fromName: "Nhep Manith",
     toName: "SLP",
-    defaultFromLocation: "Warehouse-09"
+    defaultFromLocation: "Warehouse-09",
+    deletePassword: ""
   },
   trucks: [
     { truckNo: "3G-0397", truckType: "With Crane", driverName: "", phone: "", active: true },
@@ -2079,6 +2080,11 @@ async function api(req, res, url) {
     await updateData((data) => {
       const statement = data.statements.find((item) => item.id === id);
       if (!statement) throw new Error("Statement not found.");
+      const deletePassword = data.settings?.deletePassword || "";
+      if (deletePassword) {
+        const provided = req.headers["x-delete-password"] || "";
+        if (provided !== deletePassword) throw new Error("Incorrect password. You are not authorized to delete statements.");
+      }
       data.statements = data.statements.filter((item) => item.id !== id);
       data.deliveries = data.deliveries.filter((item) => item.statementId !== id);
       addActivity(data, `Deleted statement ${statement.statementNumber} (${statement.status}).`, "statement");

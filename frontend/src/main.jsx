@@ -302,6 +302,7 @@ function App() {
   const [reportTruckNo, setReportTruckNo] = useState("");
   const [deductionEdits, setDeductionEdits] = useState({});
   const [assignModal, setAssignModal] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ statement: null, password: "", error: "" });
   const [assignMonth, setAssignMonth] = useState(currentMonth());
   const [paymentsViewMonth, setPaymentsViewMonth] = useState(currentMonth());
   const [quickForm, setQuickForm] = useState({ statementNumber: "", month: currentMonth(), manualAmount: "" });
@@ -836,7 +837,8 @@ function App() {
     setData(next);
     setSettingsForm({
       companyName: next.settings.companyName || "",
-      defaultFromLocation: next.settings.defaultFromLocation || ""
+      defaultFromLocation: next.settings.defaultFromLocation || "",
+      deletePassword: next.settings.deletePassword || ""
     });
     setPriceForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
     setDeliveryForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
@@ -1031,12 +1033,17 @@ function App() {
   }
 
   async function deleteStatement(statement) {
-    const msg = statement.status === "Draft"
-      ? `Delete draft Statement ${statement.statementNumber}? This will also delete all delivery rows inside it.`
-      : `Delete Statement ${statement.statementNumber} (${statement.status})?\n\nThis will permanently delete the statement and all its delivery rows. This cannot be undone.`;
-    if (!window.confirm(msg)) return;
+    setDeleteModal({ statement, password: "", error: "" });
+  }
+
+  async function confirmDeleteStatement() {
+    const { statement, password } = deleteModal;
     try {
-      await api(`/api/statements/${statement.id}`, { method: "DELETE" });
+      await api(`/api/statements/${statement.id}`, {
+        method: "DELETE",
+        headers: { "x-delete-password": password }
+      });
+      setDeleteModal({ statement: null, password: "", error: "" });
       if (selectedStatementId === statement.id) {
         setSelectedStatementId("");
         setStatementForm({ id: "", month: statement.month, truckType: "With Crane", statementNumber: "", statementDate: today() });
@@ -1045,7 +1052,7 @@ function App() {
       await loadData();
       flash("Statement deleted.");
     } catch (err) {
-      flash(err.message, "error");
+      setDeleteModal((prev) => ({ ...prev, error: err.message }));
     }
   }
 
@@ -3231,6 +3238,9 @@ function App() {
               <form className="grid gap-3" onSubmit={saveSettings}>
                 <Field label="Company"><Input value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} /></Field>
                 <Field label="Default From Location"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
+                <Field label="VIP Delete Password" hint="Required to delete any statement. Leave blank to allow deletion without a password.">
+                  <Input type="password" value={settingsForm.deletePassword} onChange={(e) => setSettingsForm({ ...settingsForm, deletePassword: e.target.value })} placeholder="Set a password…" />
+                </Field>
                 <div><Button type="submit">Save Settings</Button></div>
               </form>
             </Panel>
@@ -3376,6 +3386,42 @@ function App() {
           </div>
         </div>
       )}
+      {deleteModal.statement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl">
+            <div className="px-6 py-5 border-b border-red-100 bg-red-50 rounded-t-2xl">
+              <h3 className="text-base font-black text-red-700">Delete Statement</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Statement <strong>{deleteModal.statement.statementNumber}</strong> — {monthName(deleteModal.statement.month)}
+                <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-600">{deleteModal.statement.status}</span>
+              </p>
+              <p className="mt-2 text-xs font-bold text-red-600">This will permanently delete the statement and all its delivery rows.</p>
+            </div>
+            <div className="px-6 py-5 grid gap-3">
+              {data.settings?.deletePassword ? (
+                <Field label="VIP Password">
+                  <Input
+                    type="password"
+                    placeholder="Enter password…"
+                    value={deleteModal.password}
+                    autoFocus
+                    onChange={(e) => setDeleteModal((prev) => ({ ...prev, password: e.target.value, error: "" }))}
+                    onKeyDown={(e) => e.key === "Enter" && confirmDeleteStatement()}
+                  />
+                </Field>
+              ) : (
+                <p className="text-sm font-bold text-slate-500">No delete password is set. Confirm to proceed.</p>
+              )}
+              {deleteModal.error && <p className="text-xs font-black text-red-600">{deleteModal.error}</p>}
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => setDeleteModal({ statement: null, password: "", error: "" })}>Cancel</Button>
+              <Button type="button" variant="danger" onClick={confirmDeleteStatement}>Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {assignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl">
