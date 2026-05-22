@@ -203,7 +203,12 @@ function groupPriceHistory(prices) {
 }
 
 function getToken() { return localStorage.getItem("auth_token") || ""; }
-function setToken(t) { if (t) localStorage.setItem("auth_token", t); else localStorage.removeItem("auth_token"); }
+function getRole() { return localStorage.getItem("auth_role") || ""; }
+function setToken(t) {
+  if (t) localStorage.setItem("auth_token", t);
+  else { localStorage.removeItem("auth_token"); localStorage.removeItem("auth_role"); }
+}
+function setRole(r) { if (r) localStorage.setItem("auth_role", r); else localStorage.removeItem("auth_role"); }
 
 async function api(path, options = {}) {
   const token = getToken();
@@ -324,7 +329,8 @@ function LoginPage({ onLogin }) {
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Login failed."); return; }
       setToken(data.token);
-      onLogin();
+      setRole(data.role);
+      onLogin(data.role);
     } catch {
       setError("Cannot connect to server.");
     } finally {
@@ -381,6 +387,8 @@ function LoginPage({ onLogin }) {
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(Boolean(getToken()));
+  const [userRole, setUserRole] = useState(getRole);
+  const isAdmin = userRole === "admin";
   const [page, setPage] = useState("dashboard");
   const [data, setData] = useState({ settings: {}, trucks: [], prices: [], statements: [], deliveries: [] });
   const [selectedStatementId, setSelectedStatementId] = useState("");
@@ -452,6 +460,10 @@ function App() {
     rowsText: ""
   });
   const [settingsForm, setSettingsForm] = useState({ companyName: "", defaultFromLocation: "" });
+  const [staffUsers, setStaffUsers] = useState([]);
+  const [newUserForm, setNewUserForm] = useState({ username: "", password: "", role: "staff" });
+  const [editPasswordId, setEditPasswordId] = useState(null);
+  const [editPasswordValue, setEditPasswordValue] = useState("");
   const [backupFiles, setBackupFiles] = useState([]);
   const [emptyPriceResult, setEmptyPriceResult] = useState(null);
   const [bulkLocationFilter, setBulkLocationFilter] = useState("");
@@ -949,6 +961,10 @@ function App() {
   }, [loggedIn]);
 
   useEffect(() => {
+    if (setupSection === "users") loadStaffUsers();
+  }, [setupSection]);
+
+  useEffect(() => {
     const edits = {};
     for (const d of (data.truckDeductions || [])) {
       if (d.month === reportMonth) {
@@ -1404,6 +1420,39 @@ function App() {
     }
   }
 
+  async function loadStaffUsers() {
+    if (!isAdmin) return;
+    try { setStaffUsers(await api("/api/users")); } catch {}
+  }
+
+  async function createStaffUser(e) {
+    e.preventDefault();
+    try {
+      await api("/api/users", { method: "POST", body: JSON.stringify(newUserForm) });
+      setNewUserForm({ username: "", password: "", role: "staff" });
+      await loadStaffUsers();
+      flash("User created.");
+    } catch (err) { flash(err.message, "error"); }
+  }
+
+  async function deleteStaffUser(id) {
+    if (!window.confirm("Delete this user? They will be logged out immediately.")) return;
+    try {
+      await api(`/api/users/${id}`, { method: "DELETE" });
+      await loadStaffUsers();
+      flash("User deleted.");
+    } catch (err) { flash(err.message, "error"); }
+  }
+
+  async function saveStaffPassword(id) {
+    try {
+      await api(`/api/users/${id}/password`, { method: "PUT", body: JSON.stringify({ password: editPasswordValue }) });
+      setEditPasswordId(null);
+      setEditPasswordValue("");
+      flash("Password updated.");
+    } catch (err) { flash(err.message, "error"); }
+  }
+
   async function saveSettings(event) {
     event.preventDefault();
     try {
@@ -1636,9 +1685,7 @@ function App() {
     ["dashboard", "Dashboard"],
     ["data-entry", "Data Entry"],
     ["reports", "Reports"],
-    ["payments", "Payments"],
-    ["prices", "Prices"],
-    ["setup", "Setup"]
+    ...(isAdmin ? [["payments", "Payments"], ["prices", "Prices"], ["setup", "Setup"]] : []),
   ];
 
   async function logout() {
@@ -1647,7 +1694,7 @@ function App() {
     setLoggedIn(false);
   }
 
-  if (!loggedIn) return <LoginPage onLogin={() => setLoggedIn(true)} />;
+  if (!loggedIn) return <LoginPage onLogin={(role) => { setLoggedIn(true); setUserRole(role); }} />;
 
   return (
     <div className="min-h-screen text-slate-900">
@@ -1678,9 +1725,9 @@ function App() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <Button className="lg:min-w-[190px]" onClick={exportStatement} disabled={!selectedStatement || statementRows.length < 1}>
-              Export Statement
-            </Button>
+            <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-500 lg:inline">
+              {isAdmin ? "Admin" : "Staff"}
+            </span>
             <button
               type="button" onClick={logout} title="Sign out"
               className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition"
@@ -1728,25 +1775,12 @@ function App() {
           <Panel>
             <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <h3 className="text-lg font-black tracking-tight">Truck Performance</h3>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  onClick={() => {
-                    window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=xls`;
-                  }}
-                >
-                  Export Excel
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=pdf`;
-                  }}
-                >
-                  Export PDF
-                </Button>
-              </div>
+              {isAdmin && (
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" onClick={() => { window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=xls`; }}>Export Excel</Button>
+                  <Button type="button" variant="secondary" onClick={() => { window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=pdf`; }}>Export PDF</Button>
+                </div>
+              )}
             </div>
             <div className="overflow-auto rounded-xl border border-slate-200">
               <table className="w-full min-w-[1100px] border-collapse bg-white text-sm">
@@ -2075,13 +2109,15 @@ function App() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>
-                      <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "xls")} disabled={statement.rowCount < 1}>Excel</Button>
-                      <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "pdf")} disabled={statement.rowCount < 1}>PDF</Button>
-                      <Button type="button" variant="secondary" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
-                        {statement.paymentMonth ? `Payment: ${monthName(statement.paymentMonth)}` : "Assign Payment"}
-                      </Button>
+                      {isAdmin && <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "xls")} disabled={statement.rowCount < 1}>Excel</Button>}
+                      {isAdmin && <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "pdf")} disabled={statement.rowCount < 1}>PDF</Button>}
+                      {isAdmin && (
+                        <Button type="button" variant="secondary" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
+                          {statement.paymentMonth ? `Payment: ${monthName(statement.paymentMonth)}` : "Assign Payment"}
+                        </Button>
+                      )}
                       <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
-                      <Button type="button" variant="danger" onClick={() => deleteStatement(statement)}>Delete</Button>
+                      {isAdmin && <Button type="button" variant="danger" onClick={() => deleteStatement(statement)}>Delete</Button>}
                     </div>
                   </div>
                 ))}
@@ -2341,8 +2377,8 @@ function App() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="secondary" onClick={() => setReportTruckNo("")}>Back</Button>
-                    <Button type="button" variant="secondary" onClick={() => exportSalary(selectedDriverPaymentSection, "pdf")}>PDF</Button>
-                    <Button type="button" onClick={() => exportSalary(selectedDriverPaymentSection, "xls")}>Excel</Button>
+                    {isAdmin && <Button type="button" variant="secondary" onClick={() => exportSalary(selectedDriverPaymentSection, "pdf")}>PDF</Button>}
+                    {isAdmin && <Button type="button" onClick={() => exportSalary(selectedDriverPaymentSection, "xls")}>Excel</Button>}
                   </div>
                 </div>
                 <div className="overflow-auto rounded-xl border border-slate-200">
@@ -2472,8 +2508,8 @@ function App() {
                     </div>
                     <div className="border-t border-slate-100 px-5 py-3 flex justify-end gap-2">
                       <Button type="button" variant="secondary" onClick={() => setReportTruckNo(truck.truckNo)}>View</Button>
-                      <Button type="button" variant="secondary" onClick={() => exportSalary(truck, "pdf")}>PDF</Button>
-                      <Button type="button" onClick={() => exportSalary(truck, "xls")}>Excel</Button>
+                      {isAdmin && <Button type="button" variant="secondary" onClick={() => exportSalary(truck, "pdf")}>PDF</Button>}
+                      {isAdmin && <Button type="button" onClick={() => exportSalary(truck, "xls")}>Excel</Button>}
                     </div>
                   </div>
                 );
@@ -2850,12 +2886,13 @@ function App() {
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
 
           <Panel>
-            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-4">
+            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-5">
               {[
                 ["trucks", "Truck Master"],
                 ["company", "Company Price"],
                 ["driver", "Driver Price"],
-                ["bulk", "Bulk Price Update"]
+                ["bulk", "Bulk Price Update"],
+                ["users", "User Management"]
               ].map(([key, label]) => (
                 <button
                   key={key}
@@ -3341,6 +3378,68 @@ function App() {
                     ))}
                   </div>
               </div>
+            </Panel>
+          )}
+
+          {setupSection === "users" && (
+            <Panel>
+              <h2 className="mb-4 text-lg font-bold">User Management</h2>
+              <p className="mb-4 text-sm font-bold text-slate-500">Staff users can do data entry but cannot access Payments, Prices, Setup, or export reports.</p>
+              <form onSubmit={createStaffUser} className="mb-6 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-slate-500">Add New User</p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Field label="Username"><Input value={newUserForm.username} onChange={(e) => setNewUserForm({ ...newUserForm, username: e.target.value })} required placeholder="e.g. sokheng" /></Field>
+                  <Field label="Password"><Input type="password" value={newUserForm.password} onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })} required placeholder="Min 6 characters" /></Field>
+                  <Field label="Role">
+                    <select value={newUserForm.role} onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                      <option value="staff">Staff</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </Field>
+                </div>
+                <div><Button type="submit">Create User</Button></div>
+              </form>
+              {staffUsers.length === 0 ? (
+                <p className="text-sm font-bold text-slate-400 text-center py-4">No staff users yet.</p>
+              ) : (
+                <div className="overflow-auto rounded-xl border border-slate-200">
+                  <table className="w-full border-collapse bg-white text-sm">
+                    <thead className="bg-slate-900 text-white text-xs">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Username</th>
+                        <th className="px-4 py-3 text-left">Role</th>
+                        <th className="px-4 py-3 text-left">Created</th>
+                        <th className="px-4 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {staffUsers.map((u) => (
+                        <tr key={u.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                          <td className="px-4 py-3 font-black">{u.username}</td>
+                          <td className="px-4 py-3">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-black ${u.role === "admin" ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600"}`}>{u.role}</span>
+                          </td>
+                          <td className="px-4 py-3 text-slate-500 text-xs">{u.createdAt?.slice(0, 10)}</td>
+                          <td className="px-4 py-3 text-right">
+                            {editPasswordId === u.id ? (
+                              <div className="flex items-center gap-2 justify-end">
+                                <input type="password" value={editPasswordValue} onChange={(e) => setEditPasswordValue(e.target.value)} placeholder="New password" className="h-8 rounded-lg border border-slate-200 px-2 text-sm outline-none focus:border-teal-500 w-36" />
+                                <Button type="button" onClick={() => saveStaffPassword(u.id)}>Save</Button>
+                                <Button type="button" variant="secondary" onClick={() => { setEditPasswordId(null); setEditPasswordValue(""); }}>Cancel</Button>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2 justify-end">
+                                <Button type="button" variant="secondary" onClick={() => { setEditPasswordId(u.id); setEditPasswordValue(""); }}>Change Password</Button>
+                                <Button type="button" variant="danger" onClick={() => deleteStaffUser(u.id)}>Delete</Button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </Panel>
           )}
 

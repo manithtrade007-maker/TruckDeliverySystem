@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes, timingSafeEqual, scrypt } from "node:crypto";
 import ExcelJS from "exceljs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -512,6 +512,7 @@ async function ensureDataStore() {
   try { database.exec("ALTER TABLE statements ADD COLUMN isManual INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
   try { database.exec("ALTER TABLE statements ADD COLUMN manualAmount REAL NOT NULL DEFAULT 0"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
+  try { database.exec("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, passwordHash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'staff', createdAt TEXT NOT NULL)"); } catch (_) {}
   const hasRows = database.prepare(`
     SELECT
       (SELECT COUNT(*) FROM trucks) +
@@ -636,18 +637,47 @@ function safeEqual(a, b) {
   return timingSafeEqual(bufA, bufB);
 }
 
-function createSession() {
+function hashPassword(password) {
+  return new Promise((resolve, reject) => {
+    const salt = randomBytes(16).toString("hex");
+    scrypt(password, salt, 64, (err, key) => {
+      if (err) reject(err);
+      else resolve(`${salt}:${key.toString("hex")}`);
+    });
+  });
+}
+
+function verifyPassword(password, stored) {
+  return new Promise((resolve) => {
+    const [salt, key] = (stored || "").split(":");
+    if (!salt || !key) return resolve(false);
+    scrypt(String(password), salt, 64, (err, derivedKey) => {
+      if (err) return resolve(false);
+      try { resolve(timingSafeEqual(Buffer.from(key, "hex"), derivedKey)); }
+      catch { resolve(false); }
+    });
+  });
+}
+
+function createSession(role) {
   const token = randomBytes(32).toString("hex");
-  sessions.set(token, Date.now() + SESSION_TTL_MS);
+  sessions.set(token, { role, expiresAt: Date.now() + SESSION_TTL_MS });
   return token;
 }
 
-function isValidSession(token) {
-  if (!token) return false;
-  const expiresAt = sessions.get(token);
-  if (!expiresAt) return false;
-  if (Date.now() > expiresAt) { sessions.delete(token); return false; }
-  return true;
+function getSessionRole(token) {
+  if (!token) return null;
+  const session = sessions.get(token);
+  if (!session) return null;
+  if (Date.now() > session.expiresAt) { sessions.delete(token); return null; }
+  return session.role;
+}
+
+function getAuthorizedRole(req) {
+  if (!isAuthEnabled()) return "admin";
+  const header = req.headers.authorization || "";
+  if (!header.startsWith("Bearer ")) return null;
+  return getSessionRole(header.slice(7));
 }
 
 function getClientIp(req) {
@@ -673,10 +703,7 @@ function recordFailedLogin(ip) {
 }
 
 function isAuthorized(req) {
-  if (!isAuthEnabled()) return true;
-  const header = req.headers.authorization || "";
-  if (!header.startsWith("Bearer ")) return false;
-  return isValidSession(header.slice(7));
+  return getAuthorizedRole(req) !== null;
 }
 
 function requestAuth(res) {
@@ -2020,15 +2047,56 @@ function parseQuery(url) {
   return Object.fromEntries(url.searchParams.entries());
 }
 
-async function api(req, res, url) {
+async function api(req, res, url, role = "admin") {
   const data = await readData();
   const query = parseQuery(url);
+  const db = getDb();
+  function requireAdmin() {
+    if (role !== "admin") throw Object.assign(new Error("Admin access required."), { status: 403 });
+  }
+
+  // Users management (admin only)
+  if (req.method === "GET" && url.pathname === "/api/users") {
+    requireAdmin();
+    const users = db.prepare("SELECT id, username, role, createdAt FROM users ORDER BY createdAt").all();
+    return sendJson(res, 200, users);
+  }
+  if (req.method === "POST" && url.pathname === "/api/users") {
+    requireAdmin();
+    const body = await readBody(req);
+    const username = normalizeText(body.username);
+    const password = String(body.password || "").trim();
+    const userRole = body.role === "admin" ? "admin" : "staff";
+    if (!username) throw new Error("Username is required.");
+    if (password.length < 6) throw new Error("Password must be at least 6 characters.");
+    if (db.prepare("SELECT id FROM users WHERE username = ?").get(username)) throw new Error("Username already exists.");
+    const id = `user-${Date.now()}`;
+    const passwordHash = await hashPassword(password);
+    db.prepare("INSERT INTO users (id, username, passwordHash, role, createdAt) VALUES (?, ?, ?, ?, ?)").run(id, username, passwordHash, userRole, new Date().toISOString());
+    return sendJson(res, 200, { id, username, role: userRole });
+  }
+  if (req.method === "PUT" && url.pathname.startsWith("/api/users/") && url.pathname.endsWith("/password")) {
+    requireAdmin();
+    const id = decodeURIComponent(url.pathname.split("/")[3]);
+    const body = await readBody(req);
+    const password = String(body.password || "").trim();
+    if (password.length < 6) throw new Error("Password must be at least 6 characters.");
+    db.prepare("UPDATE users SET passwordHash = ? WHERE id = ?").run(await hashPassword(password), id);
+    return sendJson(res, 200, { ok: true });
+  }
+  if (req.method === "DELETE" && url.pathname.startsWith("/api/users/")) {
+    requireAdmin();
+    const id = decodeURIComponent(url.pathname.split("/").pop());
+    db.prepare("DELETE FROM users WHERE id = ?").run(id);
+    return sendJson(res, 200, { ok: true });
+  }
 
   if (req.method === "GET" && url.pathname === "/api/data") {
     return sendJson(res, 200, { ...data, statements: statementsWithCounts(data) });
   }
 
   if (req.method === "GET" && url.pathname === "/api/backup/download") {
+    requireAdmin();
     const fileName = `truck-delivery-backup-${timestampForFile()}.json`;
     res.writeHead(200, {
       "Content-Type": "application/json; charset=utf-8",
@@ -2038,6 +2106,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/backup/create") {
+    requireAdmin();
     const result = await updateData(async (data) => {
       addActivity(data, "Created manual data backup.", "backup");
       const fileName = await createBackup(data, "manual");
@@ -2054,6 +2123,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/backup/restore") {
+    requireAdmin();
     const restored = await readBody(req);
     validateRestoreData(restored);
     await updateData(async (data) => {
@@ -2120,6 +2190,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "DELETE" && url.pathname.startsWith("/api/statements/")) {
+    requireAdmin();
     const id = decodeURIComponent(url.pathname.split("/").pop());
     await updateData((data) => {
       const statement = data.statements.find((item) => item.id === id);
@@ -2138,6 +2209,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/statements/quick") {
+    requireAdmin();
     const body = await readBody(req);
     const month = normalizeText(body.month);
     const statementNumber = Number(body.statementNumber);
@@ -2169,6 +2241,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "POST" && url.pathname.startsWith("/api/statements/") && url.pathname.endsWith("/assign-payment")) {
+    requireAdmin();
     const id = decodeURIComponent(url.pathname.split("/")[3]);
     const { paymentMonth } = await readBody(req);
     await updateData((data) => {
@@ -2186,6 +2259,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/payment-months/toggle") {
+    requireAdmin();
     const { month } = await readBody(req);
     if (!month) throw new Error("month is required.");
     await updateData((data) => {
@@ -2198,6 +2272,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/settings") {
+    requireAdmin();
     const body = await readBody(req);
     const settings = await updateData((data) => {
       data.settings = { ...data.settings, ...body };
@@ -2207,6 +2282,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/trucks") {
+    requireAdmin();
     const body = await readBody(req);
     const truck = await updateData((data) => {
       const truck = {
@@ -2227,6 +2303,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "DELETE" && url.pathname.startsWith("/api/trucks/")) {
+    requireAdmin();
     const truckNo = decodeURIComponent(url.pathname.split("/").pop());
     const result = await updateData((data) => {
       const truck = data.trucks.find((item) => item.truckNo === truckNo);
@@ -2635,6 +2712,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "DELETE" && url.pathname === "/api/prices") {
+    requireAdmin();
     const result = await updateData(async (data) => {
       await createBackup(data, "before-clear-prices");
       const deletedCount = data.prices.length;
@@ -2646,6 +2724,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "DELETE" && url.pathname.startsWith("/api/prices/")) {
+    requireAdmin();
     const id = decodeURIComponent(url.pathname.split("/").pop());
     const result = await updateData((data) => {
       const price = data.prices.find((item) => item.id === id);
@@ -2765,6 +2844,7 @@ async function api(req, res, url) {
   }
 
   if (req.method === "GET" && url.pathname === "/api/export/salary") {
+    requireAdmin();
     const rows = filteredDeliveries(data, query);
     if (!query.truckType && !query.truckNo && new Set(rows.map((row) => row.truckType)).size > 1) {
       throw new Error("Please export Crane and No Crane salary reports separately, or select one truck.");
@@ -2865,17 +2945,23 @@ const server = createServer(async (req, res) => {
         return res.end(JSON.stringify({ error: "Too many failed attempts. Try again in 15 minutes." }));
       }
       if (!isAuthEnabled()) {
-        return sendJson(res, 200, { token: "no-auth" });
+        return sendJson(res, 200, { token: "no-auth", role: "admin" });
       }
-      const validUser = safeEqual(body.username || "", appUsername);
-      const validPass = safeEqual(body.password || "", appPassword);
-      if (!validUser || !validPass) {
-        recordFailedLogin(ip);
-        res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
-        return res.end(JSON.stringify({ error: "Incorrect username or password." }));
+      // Check admin (env vars)
+      if (safeEqual(body.username || "", appUsername) && safeEqual(body.password || "", appPassword)) {
+        loginAttempts.delete(ip);
+        return sendJson(res, 200, { token: createSession("admin"), role: "admin" });
       }
-      loginAttempts.delete(ip);
-      return sendJson(res, 200, { token: createSession() });
+      // Check staff users in database
+      const db = getDb();
+      const dbUser = db.prepare("SELECT id, passwordHash, role FROM users WHERE username = ?").get(String(body.username || ""));
+      if (dbUser && await verifyPassword(body.password || "", dbUser.passwordHash)) {
+        loginAttempts.delete(ip);
+        return sendJson(res, 200, { token: createSession(dbUser.role), role: dbUser.role });
+      }
+      recordFailedLogin(ip);
+      res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ error: "Incorrect username or password." }));
     }
 
     // Logout endpoint — invalidates session token
@@ -2885,10 +2971,12 @@ const server = createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true });
     }
 
-    if (!isAuthorized(req)) return requestAuth(res);
-    return await api(req, res, url);
+    const role = getAuthorizedRole(req);
+    if (!role) return requestAuth(res);
+    return await api(req, res, url, role);
   } catch (error) {
-    return sendJson(res, 400, { error: error.message || "Unexpected error." });
+    const status = error.status || 400;
+    return sendJson(res, status, { error: error.message || "Unexpected error." });
   }
 });
 
