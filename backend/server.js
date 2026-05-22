@@ -2854,6 +2854,9 @@ const server = createServer(async (req, res) => {
       res.writeHead(404);
       return res.end();
     }
+    // Serve static files without auth — React app must load to show login page
+    if (!url.pathname.startsWith("/api/")) return await staticFile(req, res, url);
+
     // Login endpoint — public, no auth required
     if (req.method === "POST" && url.pathname === "/api/auth/login") {
       const body = await readBody(req);
@@ -2884,8 +2887,7 @@ const server = createServer(async (req, res) => {
     }
 
     if (!isAuthorized(req)) return requestAuth(res);
-    if (url.pathname.startsWith("/api/")) return await api(req, res, url);
-    return await staticFile(req, res, url);
+    return await api(req, res, url);
   } catch (error) {
     return sendJson(res, 400, { error: error.message || "Unexpected error." });
   }
