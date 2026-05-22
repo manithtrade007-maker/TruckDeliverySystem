@@ -1086,6 +1086,16 @@ function App() {
     }
   }
 
+  async function clearHighlights() {
+    try {
+      await api("/api/deliveries/clear-highlights", { method: "POST", body: JSON.stringify({ statementId: selectedStatementId }) });
+      await loadData();
+      flash("Highlights cleared.");
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function saveTruck(event) {
     event.preventDefault();
     try {
@@ -1967,10 +1977,13 @@ function App() {
           <Panel className="lg:col-span-2">
             <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
               <h2 className="text-lg font-black tracking-tight">Current Statement Rows</h2>
-              <div className="flex flex-wrap gap-3 text-sm font-black text-slate-600">
+              <div className="flex flex-wrap items-center gap-3 text-sm font-black text-slate-600">
                 <span>Rows: {statementRows.length} / 30</span>
                 <span>QTY: {totals.qty.toFixed(4)}T</span>
                 <span>Total: ${money(totals.amount)}</span>
+                {statementRows.some((r) => r.highlighted) && (
+                  <Button type="button" variant="secondary" onClick={clearHighlights}>Clear Highlights</Button>
+                )}
               </div>
             </div>
             <div className="overflow-auto rounded-xl border border-slate-200">

@@ -2479,6 +2479,17 @@ async function api(req, res, url) {
     return sendJson(res, 200, delivery);
   }
 
+  if (req.method === "POST" && url.pathname === "/api/deliveries/clear-highlights") {
+    const { statementId } = await readBody(req);
+    if (!statementId) throw new Error("statementId is required.");
+    await updateData((data) => {
+      for (const delivery of data.deliveries) {
+        if (delivery.statementId === statementId) delivery.highlighted = false;
+      }
+    });
+    return sendJson(res, 200, { ok: true });
+  }
+
   if (req.method === "DELETE" && url.pathname.startsWith("/api/deliveries/")) {
     const id = decodeURIComponent(url.pathname.split("/").pop());
     await updateData((data) => {
