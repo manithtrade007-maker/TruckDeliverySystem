@@ -2410,6 +2410,15 @@ function App() {
           </tr>
         );
 
+        // Received history: payment months marked as received, sorted newest first
+        const receivedHistory = allPaymentMonths
+          .filter((pm) => pm.received)
+          .map((pm) => {
+            const pmStatements = allStatements.filter((s) => s.paymentMonth === pm.month);
+            return { month: pm.month, total: sumAmount(pmStatements), count: pmStatements.length };
+          })
+          .sort((a, b) => b.month.localeCompare(a.month));
+
         return (
           <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
             <PageHead
@@ -2421,6 +2430,28 @@ function App() {
                 </Field>
               )}
             />
+
+            {/* Received payments history */}
+            {receivedHistory.length > 0 && (
+              <Panel>
+                <p className="mb-3 text-xs font-black uppercase tracking-wide text-slate-500">Money Received from Company</p>
+                <div className="flex flex-wrap gap-3">
+                  {receivedHistory.map((rec) => {
+                    const [yr, mo] = rec.month.split("-");
+                    return (
+                      <div key={rec.month} className="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 min-w-[200px]">
+                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-black">✓</div>
+                        <div className="flex-1">
+                          <div className="text-xs font-black uppercase tracking-wide text-emerald-700">Paid on 05/{mo}/{yr.slice(2)}</div>
+                          <div className="text-lg font-black text-emerald-900">$ {money(rec.total)}</div>
+                          <div className="text-xs font-bold text-emerald-600">{rec.count} statement{rec.count !== 1 ? "s" : ""}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Panel>
+            )}
 
             <div className="grid gap-4 lg:grid-cols-3">
               {/* File 1 — Statements created this month */}
