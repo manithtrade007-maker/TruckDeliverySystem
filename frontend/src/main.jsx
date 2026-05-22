@@ -2385,12 +2385,17 @@ function App() {
         const paymentMonthRecord = allPaymentMonths.find((pm) => pm.month === paymentsViewMonth);
         const isReceived = paymentMonthRecord?.received || false;
 
-        // Section 3: everything the company owes — assigned-unreceived + unassigned
-        // Includes: statements with paymentMonth where that month is not received yet
-        //           statements with no paymentMonth (not yet submitted to company)
+        // Section 3: everything the company owes
+        // Includes: statements assigned to an unpaid payment month (submitted but not received)
+        //           unassigned statements from the current calendar month only (pending next submission)
         // Excludes: statements whose paymentMonth has been marked as received
+        //           old unassigned statements from past months (historical entries never submitted)
+        const thisMonth = currentMonth();
         const outstanding = allStatements
-          .filter((s) => !s.paymentMonth || !allPaymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received))
+          .filter((s) =>
+            (s.paymentMonth && !allPaymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received)) ||
+            (!s.paymentMonth && s.month === thisMonth)
+          )
           .sort((a, b) => (a.month || "").localeCompare(b.month || "") || Number(a.statementNumber) - Number(b.statementNumber));
 
         const sumAmount = (list) => list.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0);
