@@ -1218,7 +1218,7 @@ function accountingExport(data, rows) {
   );
 }
 
-async function accountingWorkbook(data, rows, signatureImage) {
+async function accountingWorkbook(data, rows, signatureImage, highlightId = "") {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const workbook = new ExcelJS.Workbook();
   workbook.creator = data.settings.companyName || "N&M LOGISTIC";
@@ -1342,9 +1342,11 @@ async function accountingWorkbook(data, rows, signatureImage) {
       `$${unitMoney(row.companyUnitPrice)}`,
       `$${money(row.companyTotalAmount)}`
     ];
+    const isHighlighted = highlightId && row.id === highlightId;
     styleRange(rowNumber, rowNumber, 1, 10, {
       font: baseFont,
-      alignment: { horizontal: "center", vertical: "middle", wrapText: false }
+      alignment: { horizontal: "center", vertical: "middle", wrapText: false },
+      ...(isHighlighted ? { fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFE066" } } } : {})
     });
     worksheet.getCell(rowNumber, 7).alignment = { horizontal: "left", vertical: "middle", wrapText: false };
   });
@@ -1630,7 +1632,7 @@ function buildPdf(pages, images = []) {
   return Buffer.from(pdf);
 }
 
-function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer, header, preparedBy, signatureImage }) {
+function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer, header, preparedBy, signatureImage, highlightIndex = -1 }) {
   const pageWidth = PDF_PAGE_WIDTH;
   const pageHeight = PDF_PAGE_HEIGHT;
   const margin = PDF_PAGE_MARGIN;
@@ -1679,7 +1681,9 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
     let y = tableTop - headerHeight;
     chunk.forEach((row, index) => {
       y -= rowHeight;
-      const fill = index % 2 === 0 ? [1, 1, 1] : [0.97, 0.98, 0.99];
+      const absoluteIndex = pageIndex * rowsPerPage + index;
+      const isHighlighted = highlightIndex >= 0 && absoluteIndex === highlightIndex;
+      const fill = isHighlighted ? [1, 0.96, 0.2] : index % 2 === 0 ? [1, 1, 1] : [0.97, 0.98, 0.99];
       commands.push(drawRect(tableX, y, tableWidth, rowHeight, fill, [0.89, 0.92, 0.96]));
       let cellX = tableX;
       tableColumns.forEach((column) => {
@@ -1763,7 +1767,7 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
   return buildPdf(pages, signatureImage ? [signatureImage] : []);
 }
 
-function statementPdf(data, rows, signatureImage) {
+function statementPdf(data, rows, signatureImage, highlightId = "") {
   const statement = data.statements.find((item) => item.id === rows[0]?.statementId);
   const totalQty = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
   const totalAmount = rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0);
@@ -1802,6 +1806,7 @@ function statementPdf(data, rows, signatureImage) {
     { key: "unit", label: "Unit Price", width: 72, align: "right" },
     { key: "amount", label: "Total Amount", width: 96, align: "right", bold: true }
   ];
+  const highlightIndex = highlightId ? rows.findIndex((r) => r.id === highlightId) : -1;
   return tablePdf({
     title: `Statement ${statement?.statementNumber || ""} - ${monthLabel(statement?.month)}`,
     subtitle: `${truckTypeLabel(statement?.truckType) || ""} | ${statement?.status || ""} | ${rows.length}/30 rows | From: ${data.settings.fromName || "Nhep Manith"} | To: ${data.settings.toName || "SLP"} | Date: ${formatShortDate(statement?.statementDate || "")}`,
@@ -1826,7 +1831,8 @@ function statementPdf(data, rows, signatureImage) {
     totalsLabel: "TOTAL",
     footer: true,
     preparedBy: { name: "Nhep Manith", date: formatShortDate(statement?.statementDate || "") },
-    signatureImage
+    signatureImage,
+    highlightIndex
   });
 }
 
@@ -2509,6 +2515,7 @@ async function api(req, res, url) {
       ? data.statements.find((item) => item.id === query.statementId)
       : null;
     const fileName = statementExportFileName(statement, rows);
+    const highlightId = normalizeText(query.highlightId);
     const sigPath = path.join(__dirname, "signature.jpg");
     let sigBuffer = null;
     if (existsSync(sigPath)) {
@@ -2521,9 +2528,9 @@ async function api(req, res, url) {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${fileName}.pdf"`
       });
-      return res.end(statementPdf(data, rows, sigBuffer));
+      return res.end(statementPdf(data, rows, sigBuffer, highlightId));
     }
-    const workbookBuffer = await accountingWorkbook(data, rows, sigBuffer?.buffer);
+    const workbookBuffer = await accountingWorkbook(data, rows, sigBuffer?.buffer, highlightId);
     res.writeHead(200, {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${fileName}.xlsx"`
