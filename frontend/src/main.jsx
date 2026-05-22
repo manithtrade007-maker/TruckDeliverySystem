@@ -1699,7 +1699,7 @@ function App() {
   return (
     <div className="min-h-screen text-slate-900">
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 shadow-sm shadow-slate-900/5 backdrop-blur">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3">
             <img src="/api/logo" alt="N&M" className="h-11 w-11 rounded-2xl object-cover" onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "grid"; }} />
             <div className="hidden h-11 w-11 place-items-center rounded-2xl bg-slate-950 text-sm font-black text-white">NM</div>
@@ -1708,7 +1708,7 @@ function App() {
               <p className="text-xs font-black uppercase tracking-wide text-slate-500">{data.settings.companyName || "N&M LOGISTIC"}</p>
             </div>
           </div>
-          <nav className="flex w-full gap-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-1 lg:w-auto">
+          <nav className="hidden lg:flex w-full gap-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-1 lg:w-auto">
             {navItems.map(([key, label]) => (
               <button
                 key={key}
@@ -1747,7 +1747,7 @@ function App() {
       )}
 
       {page === "dashboard" ? (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead
             title="Dashboard"
             meta="Monthly revenue, driver payment, margin, and activity."
@@ -1835,7 +1835,7 @@ function App() {
           </Panel>
         </main>
       ) : page === "data-entry" ? (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           {!selectedViewStatement && !selectedStatement && !showStatementWorkspace && (
           <Panel className="lg:col-span-2">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -1869,8 +1869,8 @@ function App() {
           )}
 
           {!selectedViewStatement && entryActionTruckType && (
-            <div className="fixed inset-0 z-30 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
-              <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
+            <div className="fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-slate-950/40 sm:p-4 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
                 <div className="mb-4">
                   <h3 className="text-xl font-black tracking-tight">
                     {entryActionTruckType === "With Crane" ? "Crane Entry" : "No Crane Entry"}
@@ -2338,7 +2338,7 @@ function App() {
           )}
         </main>
       ) : page === "reports" ? (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead
             title="Driver Payment"
             meta="Month-end salary, deductions, and net pay by truck."
@@ -2573,7 +2573,7 @@ function App() {
           .sort((a, b) => b.month.localeCompare(a.month));
 
         return (
-          <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+          <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
             <PageHead
               title="Payments"
               meta="Track which statements are sent to the company and what has been received."
@@ -2726,7 +2726,7 @@ function App() {
           </main>
         );
       })() : page === "prices" ? (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead title="Price Comparison" meta="Compare company price vs driver price side by side for all locations." />
 
           <Panel>
@@ -2882,7 +2882,7 @@ function App() {
           </Panel>
         </main>
       ) : (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
 
           <Panel>
@@ -3598,8 +3598,8 @@ function App() {
         </div>
       )}
       {deleteModal.statement && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:p-4">
+          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-white shadow-xl">
             <div className="px-6 py-5 border-b border-red-100 bg-red-50 rounded-t-2xl">
               <h3 className="text-base font-black text-red-700">Delete Statement</h3>
               <p className="mt-1 text-sm text-slate-600">
@@ -3634,8 +3634,8 @@ function App() {
       )}
 
       {assignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:p-4">
+          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-white shadow-xl">
             <div className="px-6 py-5 border-b border-slate-100">
               <h3 className="text-base font-black">Assign Statement to Payment Month</h3>
               <p className="mt-1 text-sm text-slate-500">Statement <strong>{assignModal.statementNumber}</strong> — {monthName(assignModal.month)}</p>
@@ -3658,6 +3658,35 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Bottom navigation — mobile only */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-sm pb-safe">
+        <div className="flex items-center justify-around mx-auto px-1 h-16">
+          {navItems.map(([key, label]) => {
+            const isActive = page === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setPage(key)}
+                className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 px-1 rounded-xl transition min-w-0 ${
+                  isActive ? "text-teal-700" : "text-slate-400 active:text-slate-700"
+                }`}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round">
+                  {key === "dashboard" && <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>}
+                  {key === "data-entry" && <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>}
+                  {key === "reports" && <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>}
+                  {key === "payments" && <><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></>}
+                  {key === "prices" && <><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></>}
+                  {key === "setup" && <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>}
+                </svg>
+                <span className="text-[10px] font-black leading-none truncate">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
