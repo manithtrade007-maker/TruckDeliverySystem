@@ -1031,12 +1031,10 @@ function App() {
   }
 
   async function deleteStatement(statement) {
-    const ok = window.confirm(
-      statement.status === "Draft"
-        ? `Delete draft Statement ${statement.statementNumber}? This will also delete all delivery rows inside it.`
-        : `Statement ${statement.statementNumber} is ${statement.status}. Finished/exported statements are protected and cannot be deleted.`
-    );
-    if (!ok) return;
+    const msg = statement.status === "Draft"
+      ? `Delete draft Statement ${statement.statementNumber}? This will also delete all delivery rows inside it.`
+      : `Delete Statement ${statement.statementNumber} (${statement.status})?\n\nThis will permanently delete the statement and all its delivery rows. This cannot be undone.`;
+    if (!window.confirm(msg)) return;
     try {
       await api(`/api/statements/${statement.id}`, { method: "DELETE" });
       if (selectedStatementId === statement.id) {

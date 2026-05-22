@@ -2079,10 +2079,9 @@ async function api(req, res, url) {
     await updateData((data) => {
       const statement = data.statements.find((item) => item.id === id);
       if (!statement) throw new Error("Statement not found.");
-      if (statement.status !== "Draft") throw new Error("Only draft statements can be deleted. Reopen the statement first if you really need to change it.");
       data.statements = data.statements.filter((item) => item.id !== id);
       data.deliveries = data.deliveries.filter((item) => item.statementId !== id);
-      addActivity(data, `Deleted draft statement ${statement.statementNumber}.`, "statement");
+      addActivity(data, `Deleted statement ${statement.statementNumber} (${statement.status}).`, "statement");
       return { ok: true };
     });
     return sendJson(res, 200, { ok: true });
