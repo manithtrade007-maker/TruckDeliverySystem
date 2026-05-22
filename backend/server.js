@@ -338,6 +338,7 @@ function normalizeDataShape(data) {
   data.trucks ||= [];
   data.prices ||= [];
   data.activity ||= [];
+  data.truckDeductions ||= [];
   data.prices = data.prices.map((price) => ({
     ...price,
     effectiveDate: price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`
@@ -416,6 +417,13 @@ function createSchema(database) {
       type TEXT,
       createdAt TEXT
     );
+    CREATE TABLE IF NOT EXISTS truck_deductions (
+      truckNo TEXT NOT NULL,
+      month TEXT NOT NULL,
+      loanDeduction REAL NOT NULL DEFAULT 0,
+      garageFee REAL NOT NULL DEFAULT 0,
+      PRIMARY KEY (truckNo, month)
+    );
   `);
 }
 
@@ -424,7 +432,7 @@ function writeDataToDb(data) {
   const normalized = normalizeDataShape(structuredClone(data));
   database.exec("BEGIN");
   try {
-    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity;");
+    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions;");
     const insertSetting = database.prepare("INSERT INTO settings (key, value) VALUES (?, ?)");
     for (const [key, value] of Object.entries(normalized.settings)) insertSetting.run(key, JSON.stringify(value));
 
@@ -457,6 +465,9 @@ function writeDataToDb(data) {
 
     const insertActivity = database.prepare("INSERT INTO activity (id, message, type, createdAt) VALUES (?, ?, ?, ?)");
     for (const activity of normalized.activity) insertActivity.run(activity.id, activity.message, activity.type || "info", activity.createdAt || "");
+
+    const insertDeduction = database.prepare("INSERT INTO truck_deductions (truckNo, month, loanDeduction, garageFee) VALUES (?, ?, ?, ?)");
+    for (const d of (normalized.truckDeductions || [])) insertDeduction.run(d.truckNo, d.month, toNumber(d.loanDeduction), toNumber(d.garageFee));
     database.exec("COMMIT");
   } catch (error) {
     database.exec("ROLLBACK");
@@ -502,7 +513,8 @@ async function readData() {
     prices: database.prepare("SELECT id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active FROM prices ORDER BY truckType, toLocation, effectiveDate").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all(),
     deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
-    activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all()
+    activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
+    truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all()
   });
 }
 
@@ -1090,7 +1102,11 @@ function excelTable(title, rows, columns, summaryColumns = [], options = {}) {
           return `<td style="height:${totalRowHeight}; mso-height-source:userset;"></td>`;
         })
         .join("")}
-    </tr>`
+    </tr>${(options.extraTotalRows || []).map((extra) => `
+    <tr class="total-row" style="height:${totalRowHeight}; mso-height-source:userset;">
+      <td colspan="${columns.length - 1}" style="height:${totalRowHeight}; mso-height-source:userset;">${extra.bold ? `<strong>${htmlEscape(extra.label)}</strong>` : htmlEscape(extra.label)}</td>
+      <td class="right" style="height:${totalRowHeight}; mso-height-source:userset;">${extra.bold ? `<strong>${htmlEscape(extra.value)}</strong>` : htmlEscape(extra.value)}</td>
+    </tr>`).join("")}`
         : ""
     }
   </table>`;
@@ -1421,13 +1437,18 @@ async function accountingWorkbook(data, rows, signatureImage) {
   return Buffer.from(buffer);
 }
 
-function salaryExport(data, rows, query = {}) {
+function salaryExport(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
   const truck = data.trucks.find((item) => item.truckNo === query.truckNo) || {};
   const truckNo = query.truckNo || rows[0]?.truckNo || "All Trucks";
   const truckType = truckTypeLabel(rows[0]?.truckType || truck.truckType || query.truckType || "No Data");
   const driverName = rows[0]?.driverName || truck.driverName || "-";
   const reportMonth = monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
   const totalDriverAmount = rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0);
+  const netPay = totalDriverAmount - loanDeduction - garageFee;
+  const extraTotalRows = [];
+  if (loanDeduction > 0) extraTotalRows.push({ label: "Loan Deduction", value: `- $ ${money(loanDeduction)}` });
+  if (garageFee > 0) extraTotalRows.push({ label: "Garage Fee", value: `- $ ${money(garageFee)}` });
+  if (extraTotalRows.length > 0) extraTotalRows.push({ label: "Net Pay", value: `$ ${money(netPay)}`, bold: true });
   const headerHtml = (pageIndex, pages) => `
     <tr>
       <td class="title" colspan="8">${htmlEscape(data.settings.companyName || "N&M LOGISTIC")}</td>
@@ -1460,8 +1481,54 @@ function salaryExport(data, rows, query = {}) {
       { key: "truckSalaryAmount", label: "Driver Amount", type: "money", align: "right" }
     ],
     ["qtyTon", "truckSalaryAmount"],
-    { headerHtml }
+    { headerHtml, extraTotalRows }
   );
+}
+
+function salaryPdf(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
+  const truck = data.trucks.find((item) => item.truckNo === query.truckNo) || {};
+  const truckNo = query.truckNo || rows[0]?.truckNo || "All Trucks";
+  const truckType = rows[0]?.truckType || truck.truckType || "";
+  const driverName = rows[0]?.driverName || truck.driverName || "-";
+  const reportMonth = monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
+  const totalDriverAmount = rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0);
+  const netPay = totalDriverAmount - loanDeduction - garageFee;
+  const columns = [
+    { key: "no", label: "No", width: 32, align: "center" },
+    { key: "date", label: "Delivery Date", width: 80 },
+    { key: "invoice", label: "Invoice No", width: 100 },
+    { key: "from", label: "From", width: 96 },
+    { key: "to", label: "To", width: 160 },
+    { key: "qty", label: "QTY(T)", width: 88, align: "right", bold: true },
+    { key: "unitPrice", label: "Driver Price", width: 80, align: "right" },
+    { key: "driverAmount", label: "Driver Amount", width: 96, align: "right", bold: true }
+  ];
+  const extraTotals = [];
+  if (loanDeduction > 0) extraTotals.push({ label: "Loan Deduction", value: `- $ ${money(loanDeduction)}` });
+  if (garageFee > 0) extraTotals.push({ label: "Garage Fee", value: `- $ ${money(garageFee)}` });
+  if (extraTotals.length > 0) extraTotals.push({ label: "Net Pay", value: `$ ${money(netPay)}`, bold: true, fill: [0.94, 0.99, 0.95] });
+  return tablePdf({
+    title: `Driver Verification - ${truckNo}`,
+    subtitle: `${truckTypeLabel(truckType)} | Driver: ${driverName} | Month: ${reportMonth} | Gross Pay: $ ${money(totalDriverAmount)}`,
+    columns,
+    rows: rows.map((row, index) => ({
+      no: index + 1,
+      date: formatShortDate(row.deliveryDate),
+      invoice: row.invoiceNo,
+      from: row.fromLocation,
+      to: row.toLocation,
+      qty: `${Number(row.qtyTon || 0).toFixed(5)}T`,
+      unitPrice: `$ ${unitMoney(row.truckSalaryUnitPrice)}`,
+      driverAmount: `$ ${money(row.truckSalaryAmount)}`
+    })),
+    totals: {
+      qty: `${rows.reduce((s, r) => s + toNumber(r.qtyTon), 0).toFixed(5)}T`,
+      driverAmount: `$ ${money(totalDriverAmount)}`
+    },
+    totalsLabel: "TOTAL",
+    extraTotals,
+    footer: false
+  });
 }
 
 function monthlyTruckPerformance(data, month) {
@@ -1636,7 +1703,7 @@ function buildPdf(pages, images = []) {
   return Buffer.from(pdf);
 }
 
-function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer, header, preparedBy, signatureImage }) {
+function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, extraTotals, footer, header, preparedBy, signatureImage }) {
   const pageWidth = PDF_PAGE_WIDTH;
   const pageHeight = PDF_PAGE_HEIGHT;
   const margin = PDF_PAGE_MARGIN;
@@ -1719,6 +1786,16 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, footer,
           commands.push(drawText(totals[column.key] || "", cellX + 3, y + 6, { size: 6.8, bold: true, width: column.width - 6, align: column.align || "left" }));
           cellX += column.width;
         });
+      }
+    }
+    if (isLastPage && extraTotals?.length) {
+      const lastColWidth = tableColumns[tableColumns.length - 1].width;
+      const labelWidth = tableWidth - lastColWidth;
+      for (const extra of extraTotals) {
+        y -= rowHeight;
+        commands.push(drawRect(tableX, y, tableWidth, rowHeight, extra.fill || [0.97, 0.98, 0.99], [0.89, 0.92, 0.96]));
+        commands.push(drawText(extra.label, tableX + 3, y + 6, { size: 6.8, bold: extra.bold, width: labelWidth - 6 }));
+        commands.push(drawText(extra.value || "", tableX + labelWidth + 3, y + 6, { size: 6.8, bold: extra.bold, width: lastColWidth - 6, align: "right" }));
       }
     }
     if (isLastPage && footer) {
@@ -2549,18 +2626,41 @@ async function api(req, res, url) {
     return res.end(workbookBuffer);
   }
 
+  if (req.method === "POST" && url.pathname === "/api/truck-deductions") {
+    const { truckNo, month, loanDeduction, garageFee } = await readBody(req);
+    if (!truckNo || !month) throw new Error("truckNo and month are required.");
+    await updateData((data) => {
+      data.truckDeductions ||= [];
+      const index = data.truckDeductions.findIndex((d) => d.truckNo === truckNo && d.month === month);
+      const record = { truckNo, month, loanDeduction: toNumber(loanDeduction), garageFee: toNumber(garageFee) };
+      if (index >= 0) data.truckDeductions[index] = record;
+      else data.truckDeductions.push(record);
+    });
+    return sendJson(res, 200, { ok: true });
+  }
+
   if (req.method === "GET" && url.pathname === "/api/export/salary") {
     const rows = filteredDeliveries(data, query);
     if (!query.truckType && !query.truckNo && new Set(rows.map((row) => row.truckType)).size > 1) {
       throw new Error("Please export Crane and No Crane salary reports separately, or select one truck.");
     }
+    const format = normalizeText(query.format || "xls");
+    const loanDeduction = toNumber(query.loanDeduction);
+    const garageFee = toNumber(query.garageFee);
     const truckTypeName = query.truckNo || query.truckType || rows[0]?.truckType || "all";
     const fileName = `driver-payment-${slug(truckTypeName)}-${slug(monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7)))}`;
+    if (format === "pdf") {
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${fileName}.pdf"`
+      });
+      return res.end(salaryPdf(data, rows, query, loanDeduction, garageFee));
+    }
     res.writeHead(200, {
       "Content-Type": "application/vnd.ms-excel; charset=utf-8",
       "Content-Disposition": `attachment; filename="${fileName}.xls"`
     });
-    return res.end(salaryExport(data, rows, query));
+    return res.end(salaryExport(data, rows, query, loanDeduction, garageFee));
   }
 
   if (req.method === "GET" && url.pathname === "/api/export/dashboard") {
