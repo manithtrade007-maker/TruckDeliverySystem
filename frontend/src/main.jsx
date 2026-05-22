@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
@@ -225,16 +225,17 @@ function Button({ variant = "primary", className = "", ...props }) {
   return <button className={`${base} ${styles} ${className}`} {...props} />;
 }
 
-function Input({ type, ...props }) {
+const Input = React.forwardRef(function Input({ type, ...props }, ref) {
   return (
     <input
+      ref={ref}
       type={type}
       className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none"
       {...(type === "date" ? { lang: "en-GB" } : {})}
       {...props}
     />
   );
-}
+});
 
 function Select({ children, ...props }) {
   return (
@@ -317,6 +318,8 @@ function App() {
     toLocation: "",
     qtyTon: ""
   });
+  const invoiceInputRef = useRef(null);
+  const deliveryFormRef = useRef(null);
   const [filters, setFilters] = useState({ month: currentMonth(), statementNumber: "" });
   const [setupSection, setSetupSection] = useState("trucks");
   const [setupLocationSearch, setSetupLocationSearch] = useState("");
@@ -1034,6 +1037,7 @@ function App() {
       resetDeliveryForm(deliveryForm.deliveryDate);
       await loadData();
       flash(wasEditing ? "Delivery row updated." : statementRows.length + 1 >= 30 ? "Statement reached 30 rows. Create the next statement." : "Delivery saved.");
+      requestAnimationFrame(() => invoiceInputRef.current?.focus());
     } catch (err) {
       flash(err.message, "error");
     }
@@ -1047,6 +1051,10 @@ function App() {
       truckNo: row.truckNo,
       toLocation: row.toLocation,
       qtyTon: row.qtyTon
+    });
+    requestAnimationFrame(() => {
+      deliveryFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      invoiceInputRef.current?.focus();
     });
   }
 
@@ -1851,10 +1859,11 @@ function App() {
                     Statement {selectedStatement.statementNumber} - {truckTypeLabel(selectedStatement.truckType)} - {statementRows.length}/30 rows
                   </span>
                 </div>
-                <form className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
+                <form ref={deliveryFormRef} className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
                   <Field label="Delivery Date"><Input type="date" required disabled={!canEditRows} value={deliveryForm.deliveryDate} onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })} /></Field>
                   <Field label="Invoice No">
                     <Input
+                      ref={invoiceInputRef}
                       required
                       disabled={!canEditRows}
                       inputMode="numeric"
