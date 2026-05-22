@@ -216,7 +216,11 @@ async function api(path, options = {}) {
       ...(token ? { "Authorization": `Bearer ${token}` } : {})
     }
   });
-  if (response.status === 401) { setToken(""); window.location.reload(); return; }
+  if (response.status === 401) {
+    setToken("");
+    window.dispatchEvent(new CustomEvent("auth-logout"));
+    throw new Error("Session expired. Please sign in again.");
+  }
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Request failed.");
   return data;
@@ -935,8 +939,14 @@ function App() {
   }
 
   useEffect(() => {
-    loadData().catch((err) => flash(err.message, "error"));
+    const handleAuthLogout = () => setLoggedIn(false);
+    window.addEventListener("auth-logout", handleAuthLogout);
+    return () => window.removeEventListener("auth-logout", handleAuthLogout);
   }, []);
+
+  useEffect(() => {
+    if (loggedIn) loadData().catch((err) => flash(err.message, "error"));
+  }, [loggedIn]);
 
   useEffect(() => {
     const edits = {};
