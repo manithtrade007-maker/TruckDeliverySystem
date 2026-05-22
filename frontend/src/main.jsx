@@ -230,7 +230,7 @@ const Input = React.forwardRef(function Input({ type, className = "", ...props }
     <input
       ref={ref}
       type={type}
-      className={`min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-yellow-500 focus:bg-yellow-100 focus:ring-4 focus:ring-yellow-300 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
+      className={`min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
       {...(type === "date" ? { lang: "en-GB" } : {})}
       {...props}
     />
@@ -321,6 +321,7 @@ function App() {
   });
   const invoiceInputRef = useRef(null);
   const deliveryFormRef = useRef(null);
+  const [activeField, setActiveField] = useState("");
   const [filters, setFilters] = useState({ month: currentMonth(), statementNumber: "" });
   const [setupSection, setSetupSection] = useState("trucks");
   const [setupLocationSearch, setSetupLocationSearch] = useState("");
@@ -1069,6 +1070,7 @@ function App() {
 
   function resetDeliveryForm(deliveryDate = today()) {
     setDeliveryForm({ id: "", deliveryDate, invoiceNo: "", truckNo: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", qtyTon: "" });
+    setActiveField("");
   }
 
   async function deleteDelivery(row) {
@@ -1869,7 +1871,7 @@ function App() {
                   </span>
                 </div>
                 <form ref={deliveryFormRef} className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
-                  <Field label="Delivery Date"><Input type="date" required disabled={!canEditRows} value={deliveryForm.deliveryDate} onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })} /></Field>
+                  <Field label="Delivery Date"><Input type="date" required disabled={!canEditRows} style={activeField === "deliveryDate" ? { backgroundColor: "#fef08a" } : {}} onFocus={() => setActiveField("deliveryDate")} onBlur={() => setActiveField("")} value={deliveryForm.deliveryDate} onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })} /></Field>
                   <Field label="Invoice No">
                     <Input
                       ref={invoiceInputRef}
@@ -1879,6 +1881,9 @@ function App() {
                       maxLength="10"
                       pattern="[0-9]{10}"
                       placeholder="10 digit number"
+                      style={activeField === "invoiceNo" ? { backgroundColor: "#fef08a" } : {}}
+                      onFocus={() => setActiveField("invoiceNo")}
+                      onBlur={() => setActiveField("")}
                       value={deliveryForm.invoiceNo}
                       onChange={(e) => setDeliveryForm({ ...deliveryForm, invoiceNo: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                     />
@@ -1889,6 +1894,9 @@ function App() {
                       required
                       disabled={!canEditRows}
                       placeholder="Type truck"
+                      style={activeField === "truckNo" ? { backgroundColor: "#fef08a" } : {}}
+                      onFocus={() => setActiveField("truckNo")}
+                      onBlur={() => setActiveField("")}
                       value={deliveryForm.truckNo}
                       onChange={(e) => setDeliveryForm({ ...deliveryForm, truckNo: e.target.value.toUpperCase(), toLocation: "" })}
                     />
@@ -1902,6 +1910,9 @@ function App() {
                       required
                       disabled={!canEditRows}
                       placeholder="Type location"
+                      style={activeField === "toLocation" ? { backgroundColor: "#fef08a" } : {}}
+                      onFocus={() => setActiveField("toLocation")}
+                      onBlur={() => setActiveField("")}
                       value={deliveryForm.toLocation}
                       onChange={(e) => setDeliveryForm({ ...deliveryForm, toLocation: e.target.value })}
                     />
@@ -1914,6 +1925,9 @@ function App() {
                       <Select
                         required
                         disabled={!canEditRows}
+                        style={activeField === "fromLocation" ? { backgroundColor: "#fef08a" } : {}}
+                        onFocus={() => setActiveField("fromLocation")}
+                        onBlur={() => setActiveField("")}
                         value={deliveryForm.fromLocation}
                         onChange={(e) => setDeliveryForm({ ...deliveryForm, fromLocation: e.target.value })}
                       >
@@ -1922,7 +1936,7 @@ function App() {
                       </Select>
                     </Field>
                   )}
-                  <Field label="QTY(T)"><Input type="number" step="any" min="0" required disabled={!canEditRows} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} /></Field>
+                  <Field label="QTY(T)"><Input type="number" step="any" min="0" required disabled={!canEditRows} style={activeField === "qtyTon" ? { backgroundColor: "#fef08a" } : {}} onFocus={() => setActiveField("qtyTon")} onBlur={() => setActiveField("")} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} /></Field>
                   <Field label="Unit Price"><Input disabled value={selectedPrice ? `$${unitMoney(selectedPrice.companyUnitPrice)}` : ""} readOnly /></Field>
                   {(duplicateInvoice || truckMissing || truckTypeMismatch || missingPrice) && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 md:col-span-4">
