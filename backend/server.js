@@ -813,6 +813,7 @@ function enrichDelivery(data, input) {
   const toLocation = normalizeText(input.toLocation);
   const qtyTon = toNumber(input.qtyTon);
   const fromLocation = normalizeText(input.fromLocation || data.settings.defaultFromLocation);
+  const priceFromLocation = normalizeText(data.settings.defaultFromLocation) || fromLocation;
   const statement = data.statements.find((item) => item.id === statementId);
   const truck = data.trucks.find((item) => item.truckNo === truckNo && item.active !== false);
 
@@ -841,13 +842,13 @@ function enrichDelivery(data, input) {
   if (duplicate) throw new Error("Invoice number already exists.");
 
   const price = findEffectivePrice(data, {
-    fromLocation,
+    fromLocation: priceFromLocation,
     toLocation,
     truckType: truck.truckType,
     deliveryDate
   });
   if (!price) {
-    throw new Error(`No effective price found for ${fromLocation} to ${toLocation} (${truckTypeLabel(truck.truckType)}) on ${deliveryDate}.`);
+    throw new Error(`No active price found for ${toLocation} (${truckTypeLabel(truck.truckType)}) on ${deliveryDate}.`);
   }
 
   const companyUnitPrice = toNumber(price.companyUnitPrice);
