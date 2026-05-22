@@ -412,11 +412,16 @@ function App() {
   const statementCounts = useMemo(() => {
     const month = filters.month || statementForm.month || currentMonth();
     const rows = visibleStatements.filter((statement) => statement.month === month);
+    const craneRows = rows.filter((statement) => statement.truckType === "With Crane");
+    const noCraneRows = rows.filter((statement) => statement.truckType === "Without Crane");
     return {
       month,
-      withCrane: rows.filter((statement) => statement.truckType === "With Crane").length,
-      withoutCrane: rows.filter((statement) => statement.truckType === "Without Crane").length,
-      total: rows.length
+      withCrane: craneRows.length,
+      withoutCrane: noCraneRows.length,
+      total: rows.length,
+      craneAmount: craneRows.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0),
+      noCraneAmount: noCraneRows.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0),
+      totalAmount: rows.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0),
     };
   }, [visibleStatements, filters.month, statementForm.month]);
 
@@ -1839,10 +1844,11 @@ function App() {
                       <div className="flex-1">
                         <div className="text-xs font-black uppercase tracking-wide text-teal-700">Crane Statements</div>
                         <div className="text-2xl font-black text-teal-950">{statementCounts.withCrane}</div>
+                        <div className="text-xs font-bold text-teal-600 mt-0.5">${statementCounts.craneAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-black text-teal-700">{total > 0 ? Math.round(craneFrac * 100) : 0}%</div>
-                        <div className="text-xs font-bold text-teal-500">of total</div>
+                        <div className="text-xs font-bold text-teal-500">of count</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 rounded-xl bg-sky-50 border border-sky-100 px-4 py-3">
@@ -1850,11 +1856,16 @@ function App() {
                       <div className="flex-1">
                         <div className="text-xs font-black uppercase tracking-wide text-blue-700">No Crane Statements</div>
                         <div className="text-2xl font-black text-blue-950">{statementCounts.withoutCrane}</div>
+                        <div className="text-xs font-bold text-blue-600 mt-0.5">${statementCounts.noCraneAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-black text-blue-600">{total > 0 ? Math.round(nocrFrac * 100) : 0}%</div>
-                        <div className="text-xs font-bold text-blue-400">of total</div>
+                        <div className="text-xs font-bold text-blue-400">of count</div>
                       </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200 px-4 py-2.5">
+                      <div className="text-xs font-black uppercase tracking-wide text-slate-600">Total Revenue</div>
+                      <div className="text-xl font-black text-slate-900">${statementCounts.totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     </div>
                   </div>
                 </div>
