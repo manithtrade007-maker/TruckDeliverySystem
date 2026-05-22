@@ -304,6 +304,8 @@ function App() {
   const [assignModal, setAssignModal] = useState(null);
   const [assignMonth, setAssignMonth] = useState(currentMonth());
   const [paymentsViewMonth, setPaymentsViewMonth] = useState(currentMonth());
+  const [quickForm, setQuickForm] = useState({ statementNumber: "", month: currentMonth(), manualAmount: "" });
+  const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [entryTruckType, setEntryTruckType] = useState("With Crane");
   const [entryActionTruckType, setEntryActionTruckType] = useState("");
   const [showStatementWorkspace, setShowStatementWorkspace] = useState(false);
@@ -1467,6 +1469,21 @@ function App() {
     }
   }
 
+  async function saveQuickStatement(e) {
+    e.preventDefault();
+    try {
+      await api("/api/statements/quick", {
+        method: "POST",
+        body: JSON.stringify(quickForm)
+      });
+      setQuickForm({ statementNumber: "", month: quickForm.month, manualAmount: "" });
+      await loadData();
+      flash(`Statement ${quickForm.statementNumber} added.`);
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   async function assignPayment(statementId, paymentMonth) {
     try {
       await api(`/api/statements/${encodeURIComponent(statementId)}/assign-payment`, {
@@ -1846,6 +1863,55 @@ function App() {
           })()}
 
           {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
+            <Panel className="lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black tracking-tight">Historical Quick Entry</h3>
+                  <p className="text-xs font-bold text-slate-500 mt-0.5">For past statements before this system — enter statement number, month, and amount directly.</p>
+                </div>
+                <Button type="button" variant="secondary" onClick={() => setShowQuickEntry((v) => !v)}>
+                  {showQuickEntry ? "Hide" : "Add Past Statement"}
+                </Button>
+              </div>
+              {showQuickEntry && (
+                <form onSubmit={saveQuickStatement} className="mt-4 grid gap-3 md:grid-cols-4 border-t border-slate-100 pt-4">
+                  <Field label="Statement Number">
+                    <Input
+                      type="number"
+                      placeholder="e.g. 1531"
+                      required
+                      value={quickForm.statementNumber}
+                      onChange={(e) => setQuickForm({ ...quickForm, statementNumber: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Month">
+                    <Input
+                      type="month"
+                      required
+                      value={quickForm.month}
+                      onChange={(e) => setQuickForm({ ...quickForm, month: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Amount ($)">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      placeholder="e.g. 2914.60"
+                      required
+                      value={quickForm.manualAmount}
+                      onChange={(e) => setQuickForm({ ...quickForm, manualAmount: e.target.value })}
+                    />
+                  </Field>
+                  <Field label=" ">
+                    <Button type="submit">Save Statement</Button>
+                  </Field>
+                </form>
+              )}
+            </Panel>
+          )}
+
+          {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
             <Panel id="all-statements-panel" className="lg:col-span-2">
               <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <h2 className="text-lg font-black tracking-tight">All Statements</h2>
@@ -1869,11 +1935,15 @@ function App() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <strong className="block text-sm font-black">Statement {statement.statementNumber} - {monthName(statement.month)}</strong>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
-                          {truckTypeLabel(statement.truckType)}
-                        </span>
+                        {statement.isManual ? (
+                          <span className="rounded-full px-2 py-0.5 text-xs font-black bg-orange-100 text-orange-700">Manual</span>
+                        ) : (
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
+                            {truckTypeLabel(statement.truckType)}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-xs text-slate-500">{statement.month} | {statement.status} | {statement.rowCount}/30 rows | ${money(statement.companyTotalAmount)}</span>
+                      <span className="text-xs text-slate-500">{statement.month} | {statement.status} | {statement.isManual ? "Manual entry" : `${statement.rowCount}/30 rows`} | ${money(statement.companyTotalAmount)}</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>

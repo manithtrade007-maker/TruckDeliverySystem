@@ -387,6 +387,8 @@ function createSchema(database) {
       truckType TEXT NOT NULL,
       status TEXT NOT NULL,
       paymentMonth TEXT,
+      isManual INTEGER NOT NULL DEFAULT 0,
+      manualAmount REAL NOT NULL DEFAULT 0,
       createdAt TEXT,
       updatedAt TEXT
     );
@@ -454,11 +456,11 @@ function writeDataToDb(data) {
     }
 
     const insertStatement = database.prepare(`
-      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, paymentMonth, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const statement of normalized.statements) {
-      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.paymentMonth || null, statement.createdAt || "", statement.updatedAt || "");
+      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.paymentMonth || null, statement.isManual ? 1 : 0, toNumber(statement.manualAmount), statement.createdAt || "", statement.updatedAt || "");
     }
 
     const insertDelivery = database.prepare(`
@@ -497,6 +499,8 @@ async function ensureDataStore() {
   createSchema(database);
   try { database.exec("ALTER TABLE deliveries ADD COLUMN highlighted INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
   try { database.exec("ALTER TABLE statements ADD COLUMN paymentMonth TEXT"); } catch (_) {}
+  try { database.exec("ALTER TABLE statements ADD COLUMN isManual INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+  try { database.exec("ALTER TABLE statements ADD COLUMN manualAmount REAL NOT NULL DEFAULT 0"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
   const hasRows = database.prepare(`
     SELECT
@@ -522,7 +526,7 @@ async function readData() {
     settings,
     trucks: database.prepare("SELECT truckNo, truckType, driverName, phone, active FROM trucks ORDER BY truckNo").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     prices: database.prepare("SELECT id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active FROM prices ORDER BY truckType, toLocation, effectiveDate").all().map((row) => ({ ...row, active: Boolean(row.active) })),
-    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, paymentMonth, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all(),
+    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all().map((r) => ({ ...r, isManual: Boolean(r.isManual) })),
     deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
     truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
@@ -931,7 +935,7 @@ function statementsWithCounts(data) {
         ...statement,
         rowCount: rows.length,
         totalQtyTon: roundMoney(rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0)),
-        companyTotalAmount: roundMoney(rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0)),
+        companyTotalAmount: statement.isManual ? toNumber(statement.manualAmount) : roundMoney(rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0)),
         truckSalaryAmount: roundMoney(rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0))
       };
     })
@@ -2082,6 +2086,37 @@ async function api(req, res, url) {
       return { ok: true };
     });
     return sendJson(res, 200, { ok: true });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/statements/quick") {
+    const body = await readBody(req);
+    const month = normalizeText(body.month);
+    const statementNumber = Number(body.statementNumber);
+    const manualAmount = toNumber(body.manualAmount);
+    if (!month) throw new Error("Month is required.");
+    if (!Number.isInteger(statementNumber) || statementNumber <= 0) throw new Error("Statement number must be a positive number.");
+    if (manualAmount <= 0) throw new Error("Amount must be greater than zero.");
+    const statement = await updateData((data) => {
+      const duplicate = data.statements.some((s) => s.month === month && Number(s.statementNumber) === statementNumber);
+      if (duplicate) throw new Error("Statement number already exists in this month.");
+      const now = new Date().toISOString();
+      const newStatement = {
+        id: crypto.randomUUID(),
+        month,
+        statementNumber,
+        statementDate: `${month}-01`,
+        truckType: "With Crane",
+        status: "Finished",
+        paymentMonth: null,
+        isManual: true,
+        manualAmount,
+        createdAt: now,
+        updatedAt: now
+      };
+      data.statements.push(newStatement);
+      return newStatement;
+    });
+    return sendJson(res, 200, statement);
   }
 
   if (req.method === "POST" && url.pathname.startsWith("/api/statements/") && url.pathname.endsWith("/assign-payment")) {
