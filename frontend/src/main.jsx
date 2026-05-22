@@ -1908,19 +1908,21 @@ function App() {
                       {locations.map((location) => <option key={location} value={location} />)}
                     </datalist>
                   </Field>
-                  <Field label="From Location">
-                    <Input
-                      list="delivery-from-options"
-                      required
-                      disabled={!canEditRows}
-                      placeholder="From location"
-                      value={deliveryForm.fromLocation}
-                      onChange={(e) => setDeliveryForm({ ...deliveryForm, fromLocation: e.target.value })}
-                    />
-                    <datalist id="delivery-from-options">
-                      {fromLocations.map((loc) => <option key={loc} value={loc} />)}
-                    </datalist>
-                  </Field>
+                  {isEditingDelivery && (
+                    <Field label="From Location">
+                      <Input
+                        list="delivery-from-options"
+                        required
+                        disabled={!canEditRows}
+                        placeholder="From location"
+                        value={deliveryForm.fromLocation}
+                        onChange={(e) => setDeliveryForm({ ...deliveryForm, fromLocation: e.target.value })}
+                      />
+                      <datalist id="delivery-from-options">
+                        {fromLocations.map((loc) => <option key={loc} value={loc} />)}
+                      </datalist>
+                    </Field>
+                  )}
                   <Field label="QTY(T)"><Input type="number" step="any" min="0" required disabled={!canEditRows} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} /></Field>
                   <Field label="Unit Price"><Input disabled value={selectedPrice ? `$${unitMoney(selectedPrice.companyUnitPrice)}` : ""} readOnly /></Field>
                   {(duplicateInvoice || truckMissing || truckTypeMismatch || missingPrice) && (
