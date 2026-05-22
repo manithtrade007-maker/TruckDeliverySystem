@@ -1053,6 +1053,7 @@ function App() {
   function editDelivery(row) {
     setDeliveryForm({
       id: row.id,
+      createdAt: row.createdAt,
       deliveryDate: row.deliveryDate,
       invoiceNo: row.invoiceNo,
       truckNo: row.truckNo,
