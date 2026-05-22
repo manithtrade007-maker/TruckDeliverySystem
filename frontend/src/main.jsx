@@ -301,6 +301,9 @@ function App() {
   const [reportMonth, setReportMonth] = useState(currentMonth());
   const [reportTruckNo, setReportTruckNo] = useState("");
   const [deductionEdits, setDeductionEdits] = useState({});
+  const [assignModal, setAssignModal] = useState(null);
+  const [assignMonth, setAssignMonth] = useState(currentMonth());
+  const [paymentsViewMonth, setPaymentsViewMonth] = useState(currentMonth());
   const [entryTruckType, setEntryTruckType] = useState("With Crane");
   const [entryActionTruckType, setEntryActionTruckType] = useState("");
   const [showStatementWorkspace, setShowStatementWorkspace] = useState(false);
@@ -1464,6 +1467,29 @@ function App() {
     }
   }
 
+  async function assignPayment(statementId, paymentMonth) {
+    try {
+      await api(`/api/statements/${encodeURIComponent(statementId)}/assign-payment`, {
+        method: "POST",
+        body: JSON.stringify({ paymentMonth })
+      });
+      await loadData();
+      setAssignModal(null);
+      flash(paymentMonth ? `Statement assigned to ${monthLabel(paymentMonth)} payment.` : "Statement removed from payment.");
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
+  async function togglePaymentReceived(month) {
+    try {
+      await api("/api/payment-months/toggle", { method: "POST", body: JSON.stringify({ month }) });
+      await loadData();
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
   function exportSalary(truck, format = "xls") {
     const d = getDeduction(truck.truckNo);
     const params = new URLSearchParams({
@@ -1489,6 +1515,7 @@ function App() {
     ["dashboard", "Dashboard"],
     ["data-entry", "Data Entry"],
     ["reports", "Reports"],
+    ["payments", "Payments"],
     ["prices", "Prices"],
     ["setup", "Setup"]
   ];
@@ -1852,6 +1879,9 @@ function App() {
                       <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>
                       <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "xls")} disabled={statement.rowCount < 1}>Excel</Button>
                       <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "pdf")} disabled={statement.rowCount < 1}>PDF</Button>
+                      <Button type="button" variant="secondary" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
+                        {statement.paymentMonth ? `Payment: ${monthLabel(statement.paymentMonth)}` : "Assign Payment"}
+                      </Button>
                       <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
                       <Button type="button" variant="danger" onClick={() => deleteStatement(statement)}>Delete</Button>
                     </div>
@@ -2258,7 +2288,165 @@ function App() {
             </div>
           )}
         </main>
-      ) : page === "prices" ? (
+      ) : page === "payments" ? (() => {
+        const allStatements = data.statements || [];
+        const allPaymentMonths = data.paymentMonths || [];
+
+        // Section 1: all statements created in the selected calendar month
+        const createdThisMonth = allStatements
+          .filter((s) => s.month === paymentsViewMonth)
+          .sort((a, b) => Number(a.statementNumber) - Number(b.statementNumber));
+
+        // Section 2: statements assigned to selected payment month
+        const assignedToMonth = allStatements
+          .filter((s) => s.paymentMonth === paymentsViewMonth)
+          .sort((a, b) => Number(a.statementNumber) - Number(b.statementNumber));
+        const paymentMonthRecord = allPaymentMonths.find((pm) => pm.month === paymentsViewMonth);
+        const isReceived = paymentMonthRecord?.received || false;
+
+        // Section 3: all assigned statements where payment month not yet received
+        const outstanding = allStatements
+          .filter((s) => s.paymentMonth && !allPaymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received))
+          .sort((a, b) => (a.paymentMonth || "").localeCompare(b.paymentMonth || "") || Number(a.statementNumber) - Number(b.statementNumber));
+
+        const sumAmount = (list) => list.reduce((sum, s) => sum + toNumber(s.companyTotalAmount), 0);
+
+        const StatementRow = ({ s, index, showPaymentMonth }) => (
+          <tr key={s.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50 text-sm">
+            <td className="px-3 py-2 text-center text-slate-500">{index + 1}</td>
+            {showPaymentMonth && <td className="px-3 py-2 font-bold text-slate-600">{monthLabel(s.paymentMonth)}</td>}
+            <td className="px-3 py-2 font-bold text-slate-600">{monthName(s.month)}</td>
+            <td className="px-3 py-2 font-black tabular-nums">{s.statementNumber}</td>
+            <td className="px-3 py-2 text-right font-black tabular-nums">$ {money(s.companyTotalAmount)}</td>
+          </tr>
+        );
+
+        return (
+          <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
+            <PageHead
+              title="Payments"
+              meta="Track which statements are sent to the company and what has been received."
+              action={(
+                <Field label="Payment Month">
+                  <Input type="month" value={paymentsViewMonth} onChange={(e) => setPaymentsViewMonth(e.target.value)} />
+                </Field>
+              )}
+            />
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              {/* File 1 — Statements created this month */}
+              <Panel>
+                <h3 className="mb-3 text-base font-black tracking-tight">Statements Created — {monthLabel(paymentsViewMonth)}</h3>
+                <p className="mb-3 text-xs font-bold text-slate-500">All statements you created in this calendar month.</p>
+                {createdThisMonth.length === 0 ? (
+                  <p className="text-sm font-bold text-slate-400 text-center py-6">No statements for this month.</p>
+                ) : (
+                  <div className="overflow-auto rounded-xl border border-slate-200">
+                    <table className="w-full border-collapse bg-white text-sm">
+                      <thead className="bg-slate-900 text-white text-xs">
+                        <tr>
+                          <th className="px-3 py-2 text-center">N</th>
+                          <th className="px-3 py-2 text-left">Month</th>
+                          <th className="px-3 py-2 text-left">Statement</th>
+                          <th className="px-3 py-2 text-right">Income</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {createdThisMonth.map((s, i) => <StatementRow key={s.id} s={s} index={i} />)}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-slate-100 font-black text-sm border-t-2 border-slate-300">
+                          <td className="px-3 py-2" colSpan="3">$ Total</td>
+                          <td className="px-3 py-2 text-right tabular-nums">$ {money(sumAmount(createdThisMonth))}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </Panel>
+
+              {/* File 2 — Company pays this month */}
+              <Panel>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h3 className="text-base font-black tracking-tight">Company Pays — {monthLabel(paymentsViewMonth)}</h3>
+                  {assignedToMonth.length > 0 && (
+                    <button
+                      onClick={() => togglePaymentReceived(paymentsViewMonth)}
+                      className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black transition ${isReceived ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+                    >
+                      {isReceived ? "✓ Received" : "Mark Received"}
+                    </button>
+                  )}
+                </div>
+                <p className="mb-3 text-xs font-bold text-slate-500">Statements assigned to this payment month.</p>
+                {assignedToMonth.length === 0 ? (
+                  <p className="text-sm font-bold text-slate-400 text-center py-6">No statements assigned to this payment month yet.</p>
+                ) : (
+                  <div className="overflow-auto rounded-xl border border-slate-200">
+                    <table className="w-full border-collapse bg-white text-sm">
+                      <thead className="bg-slate-900 text-white text-xs">
+                        <tr>
+                          <th className="px-3 py-2 text-center">N</th>
+                          <th className="px-3 py-2 text-left">Month</th>
+                          <th className="px-3 py-2 text-left">Statement</th>
+                          <th className="px-3 py-2 text-right">Income</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {assignedToMonth.map((s, i) => (
+                          <tr key={s.id} className={`border-b border-slate-100 text-sm ${i === assignedToMonth.length - 1 ? "bg-yellow-100" : i % 2 === 0 ? "bg-white" : "bg-slate-50"}`}>
+                            <td className="px-3 py-2 text-center text-slate-500">{i + 1}</td>
+                            <td className="px-3 py-2 font-bold text-slate-600">{monthName(s.month)}</td>
+                            <td className="px-3 py-2 font-black tabular-nums">{s.statementNumber}</td>
+                            <td className="px-3 py-2 text-right font-black tabular-nums">$ {money(s.companyTotalAmount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-slate-100 font-black text-sm border-t-2 border-slate-300">
+                          <td className="px-3 py-2" colSpan="3">$ Total</td>
+                          <td className="px-3 py-2 text-right tabular-nums">$ {money(sumAmount(assignedToMonth))}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </Panel>
+
+              {/* File 3 — Outstanding */}
+              <Panel>
+                <h3 className="mb-3 text-base font-black tracking-tight">Outstanding — Not Received Yet</h3>
+                <p className="mb-3 text-xs font-bold text-slate-500">All assigned statements the company has not paid yet.</p>
+                {outstanding.length === 0 ? (
+                  <p className="text-sm font-bold text-emerald-600 text-center py-6">All clear — no outstanding payments.</p>
+                ) : (
+                  <div className="overflow-auto rounded-xl border border-slate-200">
+                    <table className="w-full border-collapse bg-white text-sm">
+                      <thead className="bg-slate-900 text-white text-xs">
+                        <tr>
+                          <th className="px-3 py-2 text-center">N</th>
+                          <th className="px-3 py-2 text-left">Pay Month</th>
+                          <th className="px-3 py-2 text-left">Statement</th>
+                          <th className="px-3 py-2 text-right">Income</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {outstanding.map((s, i) => <StatementRow key={s.id} s={s} index={i} showPaymentMonth />)}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-red-50 font-black text-sm border-t-2 border-red-200">
+                          <td className="px-3 py-2 text-red-700" colSpan="3">$ Total Outstanding</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-red-700">$ {money(sumAmount(outstanding))}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </Panel>
+            </div>
+          </main>
+        );
+      })() : page === "prices" ? (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4">
           <PageHead title="Price Comparison" meta="Compare company price vs driver price side by side for all locations." />
 
@@ -3060,6 +3248,31 @@ function App() {
             </div>
             <div className="px-5 py-3 border-t text-right">
               <button className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium" onClick={() => setEmptyPriceResult(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {assignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl">
+            <div className="px-6 py-5 border-b border-slate-100">
+              <h3 className="text-base font-black">Assign Statement to Payment Month</h3>
+              <p className="mt-1 text-sm text-slate-500">Statement <strong>{assignModal.statementNumber}</strong> — {monthName(assignModal.month)}</p>
+            </div>
+            <div className="px-6 py-5 grid gap-4">
+              <Field label="Payment Month">
+                <Input type="month" value={assignMonth} onChange={(e) => setAssignMonth(e.target.value)} />
+              </Field>
+              <p className="text-xs text-slate-500">The statement will be listed under this payment month in the Payments page.</p>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 flex justify-between gap-2">
+              {assignModal.paymentMonth && (
+                <Button type="button" variant="danger" onClick={() => assignPayment(assignModal.id, null)}>Remove Assignment</Button>
+              )}
+              <div className="flex gap-2 ml-auto">
+                <Button type="button" variant="secondary" onClick={() => setAssignModal(null)}>Cancel</Button>
+                <Button type="button" onClick={() => assignPayment(assignModal.id, assignMonth)}>Assign</Button>
+              </div>
             </div>
           </div>
         </div>

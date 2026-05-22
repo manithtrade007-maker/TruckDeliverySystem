@@ -339,6 +339,7 @@ function normalizeDataShape(data) {
   data.prices ||= [];
   data.activity ||= [];
   data.truckDeductions ||= [];
+  data.paymentMonths ||= [];
   data.prices = data.prices.map((price) => ({
     ...price,
     effectiveDate: price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`
@@ -385,10 +386,15 @@ function createSchema(database) {
       statementDate TEXT NOT NULL,
       truckType TEXT NOT NULL,
       status TEXT NOT NULL,
+      paymentMonth TEXT,
       createdAt TEXT,
       updatedAt TEXT
     );
     CREATE UNIQUE INDEX IF NOT EXISTS statements_month_number_idx ON statements(month, statementNumber);
+    CREATE TABLE IF NOT EXISTS payment_months (
+      month TEXT PRIMARY KEY,
+      received INTEGER NOT NULL DEFAULT 0
+    );
     CREATE TABLE IF NOT EXISTS deliveries (
       id TEXT PRIMARY KEY,
       statementId TEXT NOT NULL,
@@ -432,7 +438,7 @@ function writeDataToDb(data) {
   const normalized = normalizeDataShape(structuredClone(data));
   database.exec("BEGIN");
   try {
-    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions;");
+    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions; DELETE FROM payment_months;");
     const insertSetting = database.prepare("INSERT INTO settings (key, value) VALUES (?, ?)");
     for (const [key, value] of Object.entries(normalized.settings)) insertSetting.run(key, JSON.stringify(value));
 
@@ -448,11 +454,11 @@ function writeDataToDb(data) {
     }
 
     const insertStatement = database.prepare(`
-      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, paymentMonth, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const statement of normalized.statements) {
-      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.createdAt || "", statement.updatedAt || "");
+      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.paymentMonth || null, statement.createdAt || "", statement.updatedAt || "");
     }
 
     const insertDelivery = database.prepare(`
@@ -468,6 +474,9 @@ function writeDataToDb(data) {
 
     const insertDeduction = database.prepare("INSERT INTO truck_deductions (truckNo, month, loanDeduction, garageFee) VALUES (?, ?, ?, ?)");
     for (const d of (normalized.truckDeductions || [])) insertDeduction.run(d.truckNo, d.month, toNumber(d.loanDeduction), toNumber(d.garageFee));
+
+    const insertPaymentMonth = database.prepare("INSERT INTO payment_months (month, received) VALUES (?, ?)");
+    for (const pm of (normalized.paymentMonths || [])) insertPaymentMonth.run(pm.month, pm.received ? 1 : 0);
     database.exec("COMMIT");
   } catch (error) {
     database.exec("ROLLBACK");
@@ -487,6 +496,8 @@ async function ensureDataStore() {
   const database = getDb();
   createSchema(database);
   try { database.exec("ALTER TABLE deliveries ADD COLUMN highlighted INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+  try { database.exec("ALTER TABLE statements ADD COLUMN paymentMonth TEXT"); } catch (_) {}
+  try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
   const hasRows = database.prepare(`
     SELECT
       (SELECT COUNT(*) FROM trucks) +
@@ -511,10 +522,11 @@ async function readData() {
     settings,
     trucks: database.prepare("SELECT truckNo, truckType, driverName, phone, active FROM trucks ORDER BY truckNo").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     prices: database.prepare("SELECT id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active FROM prices ORDER BY truckType, toLocation, effectiveDate").all().map((row) => ({ ...row, active: Boolean(row.active) })),
-    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all(),
+    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, paymentMonth, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all(),
     deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
-    truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all()
+    truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
+    paymentMonths: database.prepare("SELECT month, received FROM payment_months").all().map((r) => ({ ...r, received: Boolean(r.received) }))
   });
 }
 
@@ -2068,6 +2080,35 @@ async function api(req, res, url) {
       data.deliveries = data.deliveries.filter((item) => item.statementId !== id);
       addActivity(data, `Deleted draft statement ${statement.statementNumber}.`, "statement");
       return { ok: true };
+    });
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (req.method === "POST" && url.pathname.startsWith("/api/statements/") && url.pathname.endsWith("/assign-payment")) {
+    const id = decodeURIComponent(url.pathname.split("/")[3]);
+    const { paymentMonth } = await readBody(req);
+    await updateData((data) => {
+      const statement = data.statements.find((item) => item.id === id);
+      if (!statement) throw new Error("Statement not found.");
+      statement.paymentMonth = paymentMonth || null;
+      if (paymentMonth) {
+        data.paymentMonths ||= [];
+        if (!data.paymentMonths.find((pm) => pm.month === paymentMonth)) {
+          data.paymentMonths.push({ month: paymentMonth, received: false });
+        }
+      }
+    });
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/payment-months/toggle") {
+    const { month } = await readBody(req);
+    if (!month) throw new Error("month is required.");
+    await updateData((data) => {
+      data.paymentMonths ||= [];
+      const pm = data.paymentMonths.find((item) => item.month === month);
+      if (pm) pm.received = !pm.received;
+      else data.paymentMonths.push({ month, received: true });
     });
     return sendJson(res, 200, { ok: true });
   }
