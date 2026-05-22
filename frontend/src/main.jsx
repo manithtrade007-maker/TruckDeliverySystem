@@ -230,7 +230,7 @@ const Input = React.forwardRef(function Input({ type, className = "", ...props }
     <input
       ref={ref}
       type={type}
-      className={`min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-yellow-400 focus:bg-yellow-50 focus:ring-4 focus:ring-yellow-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
+      className={`min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-yellow-500 focus:bg-yellow-100 focus:ring-4 focus:ring-yellow-300 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
       {...(type === "date" ? { lang: "en-GB" } : {})}
       {...props}
     />
@@ -640,7 +640,7 @@ function App() {
     const periodMap = new Map();
     for (const d of deliveriesInMonth) {
       const price = data.prices
-        .filter((p) => p.active !== false && p.fromLocation === (d.fromLocation || data.settings.defaultFromLocation) && locationBaseKey(p.toLocation) === locationBaseKey(d.toLocation) && p.truckType === d.truckType)
+        .filter((p) => p.active !== false && p.fromLocation === (data.settings.defaultFromLocation || d.fromLocation) && locationBaseKey(p.toLocation) === locationBaseKey(d.toLocation) && p.truckType === d.truckType)
         .filter((p) => priceEffectiveDate(p) <= d.deliveryDate)
         .sort((a, b) => priceEffectiveDate(b).localeCompare(priceEffectiveDate(a)))[0];
       const effectiveKey = price ? priceEffectiveDate(price) : "unknown";
