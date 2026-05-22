@@ -2449,7 +2449,9 @@ function App() {
               {/* File 2 — Company pays this month */}
               <Panel>
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <h3 className="text-base font-black tracking-tight">Company Pays — {monthName(paymentsViewMonth)}</h3>
+                  <h3 className="text-base font-black tracking-tight">
+                    Company Have to Pay on 05/{paymentsViewMonth ? paymentsViewMonth.replace("-", "/") : ""}
+                  </h3>
                   {assignedToMonth.length > 0 && (
                     <button
                       onClick={() => togglePaymentReceived(paymentsViewMonth)}
@@ -2506,13 +2508,13 @@ function App() {
                       <thead className="bg-slate-900 text-white text-xs">
                         <tr>
                           <th className="px-3 py-2 text-center">N</th>
-                          <th className="px-3 py-2 text-left">Pay Month</th>
+                          <th className="px-3 py-2 text-left">Statement Month</th>
                           <th className="px-3 py-2 text-left">Statement</th>
                           <th className="px-3 py-2 text-right">Income</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {outstanding.map((s, i) => <StatementRow key={s.id} s={s} index={i} showPaymentMonth />)}
+                        {outstanding.map((s, i) => <StatementRow key={s.id} s={s} index={i} />)}
                       </tbody>
                       <tfoot>
                         <tr className="bg-red-50 font-black text-sm border-t-2 border-red-200">
