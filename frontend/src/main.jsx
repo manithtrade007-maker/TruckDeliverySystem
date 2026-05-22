@@ -2450,7 +2450,11 @@ function App() {
               <Panel>
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <h3 className="text-base font-black tracking-tight">
-                    Company Have to Pay on 05/{paymentsViewMonth ? paymentsViewMonth.replace("-", "/") : ""}
+                    {(() => {
+                      if (!paymentsViewMonth) return "Company Have to Pay";
+                      const [yr, mo] = paymentsViewMonth.split("-");
+                      return `Company Have to Pay on 05/${mo}/${yr.slice(2)}`;
+                    })()}
                   </h3>
                   {assignedToMonth.length > 0 && (
                     <button
