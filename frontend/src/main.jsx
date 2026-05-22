@@ -2309,7 +2309,7 @@ function App() {
           .filter((s) => s.paymentMonth && !allPaymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received))
           .sort((a, b) => (a.paymentMonth || "").localeCompare(b.paymentMonth || "") || Number(a.statementNumber) - Number(b.statementNumber));
 
-        const sumAmount = (list) => list.reduce((sum, s) => sum + toNumber(s.companyTotalAmount), 0);
+        const sumAmount = (list) => list.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0);
 
         const StatementRow = ({ s, index, showPaymentMonth }) => (
           <tr key={s.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50 text-sm">
