@@ -202,11 +202,21 @@ function groupPriceHistory(prices) {
     .sort((a, b) => a.toLocation.localeCompare(b.toLocation));
 }
 
+function getToken() { return localStorage.getItem("auth_token") || ""; }
+function setToken(t) { if (t) localStorage.setItem("auth_token", t); else localStorage.removeItem("auth_token"); }
+
 async function api(path, options = {}) {
+  const token = getToken();
+  const { headers: extraHeaders, ...rest } = options;
   const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...options
+    ...rest,
+    headers: {
+      "Content-Type": "application/json",
+      ...(extraHeaders || {}),
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    }
   });
+  if (response.status === 401) { setToken(""); window.location.reload(); return; }
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Request failed.");
   return data;
@@ -292,7 +302,81 @@ function PageHead({ title, meta, action }) {
   );
 }
 
+function LoginPage({ onLogin }) {
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Login failed."); return; }
+      setToken(data.token);
+      onLogin();
+    } catch {
+      setError("Cannot connect to server.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg shadow-teal-900/40">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-black text-white tracking-tight">N&M Logistic</h1>
+          <p className="mt-1 text-sm font-bold text-slate-400">Truck Delivery System</p>
+        </div>
+        <div className="rounded-2xl bg-white/10 backdrop-blur border border-white/10 p-6 shadow-2xl">
+          <h2 className="mb-5 text-base font-black text-white">Sign in to your account</h2>
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <div className="grid gap-1.5">
+              <label className="text-xs font-black uppercase tracking-wide text-slate-300">Username</label>
+              <input
+                type="text" autoComplete="username" autoFocus required
+                value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })}
+                className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold text-white placeholder-slate-400 outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20"
+                placeholder="Enter username"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <label className="text-xs font-black uppercase tracking-wide text-slate-300">Password</label>
+              <input
+                type="password" autoComplete="current-password" required
+                value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold text-white placeholder-slate-400 outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20"
+                placeholder="Enter password"
+              />
+            </div>
+            {error && <p className="rounded-lg bg-red-500/20 border border-red-500/30 px-3 py-2 text-xs font-black text-red-300">{error}</p>}
+            <button
+              type="submit" disabled={loading}
+              className="mt-1 w-full rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-teal-900/30 hover:bg-teal-500 disabled:opacity-60 transition"
+            >
+              {loading ? "Signing in…" : "Sign In"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [loggedIn, setLoggedIn] = useState(Boolean(getToken()));
   const [page, setPage] = useState("dashboard");
   const [data, setData] = useState({ settings: {}, trucks: [], prices: [], statements: [], deliveries: [] });
   const [selectedStatementId, setSelectedStatementId] = useState("");
@@ -1547,6 +1631,14 @@ function App() {
     ["setup", "Setup"]
   ];
 
+  async function logout() {
+    try { await api("/api/auth/logout", { method: "POST" }); } catch {}
+    setToken("");
+    setLoggedIn(false);
+  }
+
+  if (!loggedIn) return <LoginPage onLogin={() => setLoggedIn(true)} />;
+
   return (
     <div className="min-h-screen text-slate-900">
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 shadow-sm shadow-slate-900/5 backdrop-blur">
@@ -1575,9 +1667,19 @@ function App() {
               </button>
             ))}
           </nav>
-          <Button className="lg:min-w-[190px]" onClick={exportStatement} disabled={!selectedStatement || statementRows.length < 1}>
-            Export Statement
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button className="lg:min-w-[190px]" onClick={exportStatement} disabled={!selectedStatement || statementRows.length < 1}>
+              Export Statement
+            </Button>
+            <button
+              type="button" onClick={logout} title="Sign out"
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 

@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import ExcelJS from "exceljs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,6 +23,14 @@ const appUsername = process.env.APP_USERNAME || "";
 const appPassword = process.env.APP_PASSWORD || "";
 let saveQueue = Promise.resolve();
 let mutationQueue = Promise.resolve();
+
+// Session store: token → expiresAt
+const sessions = new Map();
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+// Rate limiting: ip → { count, resetAt }
+const loginAttempts = new Map();
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
 const PDF_PAGE_WIDTH = 595; // A4 portrait width in points
 const PDF_PAGE_HEIGHT = 842; // A4 portrait height in points
 const PDF_PAGE_MARGIN = 0;
@@ -620,24 +629,60 @@ function isAuthEnabled() {
   return Boolean(appUsername && appPassword);
 }
 
+function safeEqual(a, b) {
+  try {
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  } catch {
+    return false;
+  }
+}
+
+function createSession() {
+  const token = randomBytes(32).toString("hex");
+  sessions.set(token, Date.now() + SESSION_TTL_MS);
+  return token;
+}
+
+function isValidSession(token) {
+  if (!token) return false;
+  const expiresAt = sessions.get(token);
+  if (!expiresAt) return false;
+  if (Date.now() > expiresAt) { sessions.delete(token); return false; }
+  return true;
+}
+
+function getClientIp(req) {
+  return (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
+}
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry) return false;
+  if (now > entry.resetAt) { loginAttempts.delete(ip); return false; }
+  return entry.count >= MAX_LOGIN_ATTEMPTS;
+}
+
+function recordFailedLogin(ip) {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_LOCKOUT_MS });
+  } else {
+    entry.count += 1;
+  }
+}
+
 function isAuthorized(req) {
   if (!isAuthEnabled()) return true;
   const header = req.headers.authorization || "";
-  if (!header.startsWith("Basic ")) return false;
-  const decoded = Buffer.from(header.slice(6), "base64").toString("utf8");
-  const separatorIndex = decoded.indexOf(":");
-  if (separatorIndex < 0) return false;
-  const username = decoded.slice(0, separatorIndex);
-  const password = decoded.slice(separatorIndex + 1);
-  return username === appUsername && password === appPassword;
+  if (!header.startsWith("Bearer ")) return false;
+  return isValidSession(header.slice(7));
 }
 
 function requestAuth(res) {
-  res.writeHead(401, {
-    "Content-Type": "text/plain; charset=utf-8",
-    "WWW-Authenticate": 'Basic realm="Truck Delivery System"'
-  });
-  res.end("Login required.");
+  res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
+  res.end(JSON.stringify({ error: "Login required." }));
 }
 
 async function readBody(req) {
@@ -2809,6 +2854,35 @@ const server = createServer(async (req, res) => {
       res.writeHead(404);
       return res.end();
     }
+    // Login endpoint — public, no auth required
+    if (req.method === "POST" && url.pathname === "/api/auth/login") {
+      const body = await readBody(req);
+      const ip = getClientIp(req);
+      if (isRateLimited(ip)) {
+        res.writeHead(429, { "Content-Type": "application/json; charset=utf-8" });
+        return res.end(JSON.stringify({ error: "Too many failed attempts. Try again in 15 minutes." }));
+      }
+      if (!isAuthEnabled()) {
+        return sendJson(res, 200, { token: "no-auth" });
+      }
+      const validUser = safeEqual(body.username || "", appUsername);
+      const validPass = safeEqual(body.password || "", appPassword);
+      if (!validUser || !validPass) {
+        recordFailedLogin(ip);
+        res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
+        return res.end(JSON.stringify({ error: "Incorrect username or password." }));
+      }
+      loginAttempts.delete(ip);
+      return sendJson(res, 200, { token: createSession() });
+    }
+
+    // Logout endpoint — invalidates session token
+    if (req.method === "POST" && url.pathname === "/api/auth/logout") {
+      const header = req.headers.authorization || "";
+      if (header.startsWith("Bearer ")) sessions.delete(header.slice(7));
+      return sendJson(res, 200, { ok: true });
+    }
+
     if (!isAuthorized(req)) return requestAuth(res);
     if (url.pathname.startsWith("/api/")) return await api(req, res, url);
     return await staticFile(req, res, url);
