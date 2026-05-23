@@ -231,6 +231,32 @@ async function api(path, options = {}) {
   return data;
 }
 
+async function downloadFile(url) {
+  const token = getToken();
+  const response = await fetch(url, token ? { headers: { "Authorization": `Bearer ${token}` } } : {});
+  if (response.status === 401) {
+    setToken("");
+    window.dispatchEvent(new CustomEvent("auth-logout"));
+    throw new Error("Session expired. Please sign in again.");
+  }
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Download failed.");
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("content-disposition") || "";
+  const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+  const filename = match ? match[1].replace(/['"]/g, "").trim() : "export";
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(objectUrl);
+}
+
 function Button({ variant = "primary", className = "", ...props }) {
   const base =
     "inline-flex min-h-10 items-center justify-center rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none";
@@ -999,6 +1025,10 @@ function App() {
   }, [loggedIn]);
 
   useEffect(() => {
+    if (page === "setup") loadStaffUsers();
+  }, [page]);
+
+  useEffect(() => {
     if (setupSection === "users") loadStaffUsers();
   }, [setupSection]);
 
@@ -1513,7 +1543,7 @@ function App() {
   }
 
   function downloadBackup() {
-    window.location.href = "/api/backup/download";
+    downloadFile("/api/backup/download").catch((err) => flash(err.message, "error"));
   }
 
   async function recalculateAllPrices() {
@@ -1707,16 +1737,16 @@ function App() {
       loanDeduction: d.loanDeduction,
       garageFee: d.garageFee
     });
-    window.location.href = `/api/export/salary?${params}`;
+    downloadFile(`/api/export/salary?${params}`).catch((err) => flash(err.message, "error"));
   }
 
   function exportStatement() {
     if (!selectedStatement) return;
-    window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedStatement.id)}&truckType=${encodeURIComponent(selectedStatement.truckType)}`;
+    downloadFile(`/api/export/accounting?statementId=${encodeURIComponent(selectedStatement.id)}&truckType=${encodeURIComponent(selectedStatement.truckType)}`).catch((err) => flash(err.message, "error"));
   }
 
   function exportStatementFile(statement, format = "xls") {
-    window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(statement.id)}&truckType=${encodeURIComponent(statement.truckType)}&format=${encodeURIComponent(format)}`;
+    downloadFile(`/api/export/accounting?statementId=${encodeURIComponent(statement.id)}&truckType=${encodeURIComponent(statement.truckType)}&format=${encodeURIComponent(format)}`).catch((err) => flash(err.message, "error"));
   }
 
   const navItems = [
@@ -1870,8 +1900,8 @@ function App() {
               </div>
               {isAdmin && (
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" onClick={() => { window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=xls`; }}>Export Excel</Button>
-                  <Button type="button" variant="secondary" onClick={() => { window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=pdf`; }}>Export PDF</Button>
+                  <Button type="button" onClick={() => downloadFile(`/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=xls`).catch((err) => flash(err.message, "error"))}>Export Excel</Button>
+                  <Button type="button" variant="secondary" onClick={() => downloadFile(`/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=pdf`).catch((err) => flash(err.message, "error"))}>Export PDF</Button>
                 </div>
               )}
             </div>
@@ -2039,7 +2069,7 @@ function App() {
                   <Button
                     type="button"
                     onClick={() => {
-                      window.location.href = `/api/export/accounting?statementId=${encodeURIComponent(selectedViewStatement.id)}&truckType=${encodeURIComponent(selectedViewStatement.truckType)}`;
+                      downloadFile(`/api/export/accounting?statementId=${encodeURIComponent(selectedViewStatement.id)}&truckType=${encodeURIComponent(selectedViewStatement.truckType)}`).catch((err) => flash(err.message, "error"));
                     }}
                     disabled={viewStatementRows.length < 1}
                   >
@@ -3020,22 +3050,45 @@ function App() {
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
 
+          {/* System overview */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: "Total Trucks", value: data.trucks.length, sub: `${data.trucks.filter((t) => t.active !== false).length} active`, tone: "border-teal-200 bg-teal-50 text-teal-950 text-teal-700" },
+              { label: "Crane Locations", value: activeCompanyPriceCounts.withCrane, sub: "active prices", tone: "border-sky-200 bg-sky-50 text-sky-950 text-sky-600" },
+              { label: "No-Crane Locations", value: activeCompanyPriceCounts.withoutCrane, sub: "active prices", tone: "border-amber-200 bg-amber-50 text-amber-950 text-amber-600" },
+              { label: "Staff Users", value: staffUsers.length, sub: "can do data entry", tone: "border-slate-200 bg-white text-slate-900 text-slate-500" },
+            ].map(({ label, value, sub, tone }) => {
+              const [border, bg, textVal, textSub] = tone.split(" ");
+              return (
+                <div key={label} className={`rounded-2xl border p-4 shadow-sm ${border} ${bg}`}>
+                  <div className="text-[10px] font-black uppercase tracking-wider opacity-50">{label}</div>
+                  <div className={`mt-1 text-2xl font-black ${textVal}`}>{value}</div>
+                  <div className={`mt-0.5 text-xs font-bold ${textSub}`}>{sub}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Tab strip with icons */}
           <Panel>
-            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 md:grid-cols-5">
+            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 sm:grid-cols-5">
               {[
-                ["trucks", "Truck Master"],
-                ["company", "Company Price"],
-                ["driver", "Driver Price"],
-                ["bulk", "Bulk Price Update"],
-                ["users", "User Management"]
-              ].map(([key, label]) => (
+                ["trucks", "Truck Master", <><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></>],
+                ["company", "Company Price", <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>],
+                ["driver", "Driver Price", <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="16" y1="11" x2="22" y2="11"/><line x1="19" y1="8" x2="19" y2="14"/></>],
+                ["bulk", "Bulk Update", <><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>],
+                ["users", "Users", <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>],
+              ].map(([key, label, iconPaths]) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setSetupSection(key)}
-                  className={`rounded-xl px-4 py-3 text-left text-sm font-black transition ${setupSection === key ? "bg-teal-700 text-white shadow-sm" : "bg-white text-slate-700 hover:text-slate-950"}`}
+                  className={`flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-black transition ${setupSection === key ? "bg-teal-700 text-white shadow-sm" : "bg-white text-slate-600 hover:text-slate-950"}`}
                 >
-                  {label}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                    {iconPaths}
+                  </svg>
+                  <span className="truncate">{label}</span>
                 </button>
               ))}
             </div>
@@ -3059,27 +3112,62 @@ function App() {
                   )}
                 </div>
               </form>
-              <div className="mt-4 grid max-h-[620px] gap-2 overflow-auto pr-1">
-                {["With Crane", "Without Crane"].map((truckType) => (
-                  <div key={truckType} className="grid gap-2">
-                    <h3 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-500">{truckTypeLabel(truckType)}</h3>
-                    {data.trucks.filter((truck) => truck.truckType === truckType).map((truck) => (
-                      <div key={truck.truckNo} className="grid gap-3 rounded-2xl border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <strong className="block text-sm">{truck.truckNo}</strong>
-                            {truck.active === false && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-black text-slate-500">Inactive</span>}
-                          </div>
-                          <span className="text-xs text-slate-500">{truck.driverName || "No driver"} {truck.phone ? `| ${truck.phone}` : ""}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button type="button" variant="secondary" onClick={() => setTruckForm(truck)}>Edit</Button>
-                          <Button type="button" variant="danger" onClick={() => deleteTruck(truck)}>Delete</Button>
-                        </div>
+              <div className="mt-4 grid gap-5 max-h-[640px] overflow-auto pr-1">
+                {["With Crane", "Without Crane"].map((truckType) => {
+                  const isCrane = truckType === "With Crane";
+                  const trucks = data.trucks.filter((t) => t.truckType === truckType);
+                  return (
+                    <div key={truckType}>
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${isCrane ? "bg-teal-500" : "bg-sky-500"}`} />
+                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                          {truckTypeLabel(truckType)} — {trucks.length} trucks
+                        </h3>
                       </div>
-                    ))}
-                  </div>
-                ))}
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {trucks.map((truck) => {
+                          const isActive = truck.active !== false;
+                          return (
+                            <div key={truck.truckNo} className={`overflow-hidden rounded-2xl border shadow-sm ${isActive ? "border-slate-200" : "border-slate-100 opacity-60"}`}>
+                              <div className={`flex items-center justify-between px-4 py-3 ${isCrane ? "bg-teal-700" : "bg-sky-700"}`}>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-base font-black tracking-tight text-white">{truck.truckNo}</span>
+                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${isCrane ? "bg-teal-500/40 text-white" : "bg-sky-500/40 text-white"}`}>
+                                    {isCrane ? "CRANE" : "NO CRANE"}
+                                  </span>
+                                </div>
+                                {!isActive && (
+                                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black text-white">Inactive</span>
+                                )}
+                              </div>
+                              <div className="bg-white px-4 py-3">
+                                <div className="flex items-center gap-2 text-sm font-black text-slate-700">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                  {truck.driverName || <span className="font-bold text-slate-400">No driver assigned</span>}
+                                </div>
+                                {truck.phone && (
+                                  <div className="mt-1 flex items-center gap-2 text-xs font-bold text-slate-500">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                    {truck.phone}
+                                  </div>
+                                )}
+                                <div className="mt-3 flex gap-2">
+                                  <Button type="button" variant="secondary" onClick={() => setTruckForm(truck)}>Edit</Button>
+                                  <Button type="button" variant="danger" onClick={() => deleteTruck(truck)}>Delete</Button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {trucks.length === 0 && (
+                          <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-400">
+                            No {truckTypeLabel(truckType).toLowerCase()} trucks yet.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </Panel>
           )}
@@ -3365,21 +3453,29 @@ function App() {
           {setupSection === "company" && (
             <Panel>
               <h2 className="mb-3 text-lg font-bold">Company Price</h2>
-              <form className="grid gap-3 md:grid-cols-7" onSubmit={savePrice}>
-                <Input placeholder="From Location" required value={priceForm.fromLocation} onChange={(e) => setPriceForm({ ...priceForm, fromLocation: e.target.value })} />
-                <Input placeholder="To Location" required value={priceForm.toLocation} onChange={(e) => setPriceForm({ ...priceForm, toLocation: e.target.value })} />
-                <Select value={priceForm.truckType} onChange={(e) => setPriceForm({ ...priceForm, truckType: e.target.value })}>
-                  <option value="With Crane">Crane</option>
-                  <option value="Without Crane">No Crane</option>
-                </Select>
-                <Input type="date" required value={priceForm.effectiveDate || today()} onChange={(e) => setPriceForm({ ...priceForm, effectiveDate: e.target.value })} />
-                <Input type="number" step="0.1" placeholder="KM" value={priceForm.distanceKm} onChange={(e) => setPriceForm({ ...priceForm, distanceKm: e.target.value })} />
-                <Input type="number" step="0.001" placeholder="Company Price" required value={priceForm.companyUnitPrice} onChange={(e) => setPriceForm({ ...priceForm, companyUnitPrice: e.target.value })} />
-                <div className="flex gap-2">
-                  <Button type="submit">{priceForm.id ? "Save Company Price" : "Add Company Price"}</Button>
-                  {priceForm.id && (
-                    <Button type="button" variant="secondary" onClick={() => setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: priceForm.truckType, distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: today() })}>Cancel</Button>
-                  )}
+              <form className="grid gap-3" onSubmit={savePrice}>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Field label="From Location"><Input placeholder="From Location" required value={priceForm.fromLocation} onChange={(e) => setPriceForm({ ...priceForm, fromLocation: e.target.value })} /></Field>
+                  <Field label="To Location"><Input placeholder="To Location" required value={priceForm.toLocation} onChange={(e) => setPriceForm({ ...priceForm, toLocation: e.target.value })} /></Field>
+                  <Field label="Truck Type">
+                    <Select value={priceForm.truckType} onChange={(e) => setPriceForm({ ...priceForm, truckType: e.target.value })}>
+                      <option value="With Crane">Crane</option>
+                      <option value="Without Crane">No Crane</option>
+                    </Select>
+                  </Field>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <Field label="Effective Date"><Input type="date" required value={priceForm.effectiveDate || today()} onChange={(e) => setPriceForm({ ...priceForm, effectiveDate: e.target.value })} /></Field>
+                  <Field label="Distance (KM)"><Input type="number" step="0.1" placeholder="e.g. 25.5" value={priceForm.distanceKm} onChange={(e) => setPriceForm({ ...priceForm, distanceKm: e.target.value })} /></Field>
+                  <Field label="Company Price ($)"><Input type="number" step="0.001" placeholder="e.g. 7.500" required value={priceForm.companyUnitPrice} onChange={(e) => setPriceForm({ ...priceForm, companyUnitPrice: e.target.value })} /></Field>
+                  <Field label=" ">
+                    <div className="flex gap-2">
+                      <Button type="submit">{priceForm.id ? "Save" : "Add Price"}</Button>
+                      {priceForm.id && (
+                        <Button type="button" variant="secondary" onClick={() => setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: priceForm.truckType, distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: today() })}>Cancel</Button>
+                      )}
+                    </div>
+                  </Field>
                 </div>
               </form>
               <div className="mt-4 max-w-2xl">
@@ -3438,21 +3534,29 @@ function App() {
           {setupSection === "driver" && (
             <Panel>
               <h2 className="mb-3 text-lg font-bold">Driver Price</h2>
-              <form className="grid gap-3 md:grid-cols-7" onSubmit={saveDriverPrice}>
-                <Input placeholder="From Location" required value={driverPriceForm.fromLocation} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, fromLocation: e.target.value })} />
-                <Input placeholder="To Location" required value={driverPriceForm.toLocation} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, toLocation: e.target.value })} />
-                <Select value={driverPriceForm.truckType} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckType: e.target.value })}>
-                  <option value="With Crane">Crane</option>
-                  <option value="Without Crane">No Crane</option>
-                </Select>
-                <Input type="date" required value={driverPriceForm.effectiveDate || today()} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, effectiveDate: e.target.value })} />
-                <Input type="number" step="0.1" placeholder="KM" value={driverPriceForm.distanceKm} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, distanceKm: e.target.value })} />
-                <Input type="number" step="0.001" placeholder="Driver Price" required value={driverPriceForm.truckSalaryUnitPrice} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckSalaryUnitPrice: e.target.value })} />
-                <div className="flex gap-2">
-                  <Button type="submit">{driverPriceForm.id ? "Save Driver Price" : "Add Driver Price"}</Button>
-                  {driverPriceForm.id && (
-                    <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: driverPriceForm.truckType, distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: today() })}>Cancel</Button>
-                  )}
+              <form className="grid gap-3" onSubmit={saveDriverPrice}>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Field label="From Location"><Input placeholder="From Location" required value={driverPriceForm.fromLocation} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, fromLocation: e.target.value })} /></Field>
+                  <Field label="To Location"><Input placeholder="To Location" required value={driverPriceForm.toLocation} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, toLocation: e.target.value })} /></Field>
+                  <Field label="Truck Type">
+                    <Select value={driverPriceForm.truckType} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckType: e.target.value })}>
+                      <option value="With Crane">Crane</option>
+                      <option value="Without Crane">No Crane</option>
+                    </Select>
+                  </Field>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <Field label="Effective Date"><Input type="date" required value={driverPriceForm.effectiveDate || today()} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, effectiveDate: e.target.value })} /></Field>
+                  <Field label="Distance (KM)"><Input type="number" step="0.1" placeholder="e.g. 25.5" value={driverPriceForm.distanceKm} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, distanceKm: e.target.value })} /></Field>
+                  <Field label="Driver Price ($)"><Input type="number" step="0.001" placeholder="e.g. 6.500" required value={driverPriceForm.truckSalaryUnitPrice} onChange={(e) => setDriverPriceForm({ ...driverPriceForm, truckSalaryUnitPrice: e.target.value })} /></Field>
+                  <Field label=" ">
+                    <div className="flex gap-2">
+                      <Button type="submit">{driverPriceForm.id ? "Save" : "Add Price"}</Button>
+                      {driverPriceForm.id && (
+                        <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: driverPriceForm.truckType, distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: today() })}>Cancel</Button>
+                      )}
+                    </div>
+                  </Field>
                 </div>
               </form>
               <div className="mt-4 max-w-2xl">
