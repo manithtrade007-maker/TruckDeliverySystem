@@ -2299,35 +2299,61 @@ function App() {
                 </Field>
               </div>
               <div className="mt-4 grid max-h-[520px] gap-2 overflow-auto pr-1">
-                {filteredStatements.map((statement) => (
-                  <div key={statement.id} className={`grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border p-3 transition ${statement.id === selectedStatementId ? "border-teal-700 bg-teal-50 shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <strong className="block text-sm font-black">Statement {statement.statementNumber} - {monthName(statement.month)}</strong>
-                        {statement.isManual ? (
-                          <span className="rounded-full px-2 py-0.5 text-xs font-black bg-orange-100 text-orange-700">Manual</span>
-                        ) : (
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
-                            {truckTypeLabel(statement.truckType)}
-                          </span>
+                {filteredStatements.map((statement) => {
+                  const statusBadge = statement.isManual
+                    ? { label: "Manual", cls: "bg-orange-100 text-orange-700" }
+                    : statement.status === "Draft"
+                    ? { label: "Draft", cls: "bg-amber-100 text-amber-800" }
+                    : statement.status === "Exported"
+                    ? { label: "Exported", cls: "bg-sky-100 text-sky-800" }
+                    : statement.status === "Finished"
+                    ? { label: "Finished", cls: "bg-emerald-100 text-emerald-800" }
+                    : { label: statement.status, cls: "bg-slate-100 text-slate-600" };
+                  const typeBadge = !statement.isManual && (
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
+                      {truckTypeLabel(statement.truckType)}
+                    </span>
+                  );
+                  return (
+                    <div key={statement.id} className={`grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border p-3 transition ${statement.id === selectedStatementId ? "border-teal-700 bg-teal-50 shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <strong className="text-sm font-black">Statement {statement.statementNumber} - {monthName(statement.month)}</strong>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statusBadge.cls}`}>{statusBadge.label}</span>
+                          {typeBadge}
+                        </div>
+                        <span className="text-xs text-slate-500">{statement.month} | {statement.isManual ? "Manual entry" : `${statement.rowCount}/30 rows`} | ${money(statement.companyTotalAmount)}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>
+                        {isAdmin && statement.rowCount > 0 && (
+                          <div className="relative group">
+                            <Button type="button" variant="secondary">
+                              Export ▾
+                            </Button>
+                            <div className="absolute right-0 top-full z-20 mt-1 hidden group-hover:flex flex-col rounded-xl border border-slate-200 bg-white shadow-lg min-w-[120px] overflow-hidden">
+                              <button type="button" onClick={() => exportStatementFile(statement, "xls")} className="px-4 py-2.5 text-sm font-bold text-left text-slate-700 hover:bg-slate-50">Excel (.xlsx)</button>
+                              <button type="button" onClick={() => exportStatementFile(statement, "pdf")} className="px-4 py-2.5 text-sm font-bold text-left text-slate-700 hover:bg-slate-50 border-t border-slate-100">PDF</button>
+                            </div>
+                          </div>
+                        )}
+                        {isAdmin && (
+                          <Button type="button" variant="secondary" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
+                            {statement.paymentMonth ? `Pay: ${monthName(statement.paymentMonth)}` : "Pay Month"}
+                          </Button>
+                        )}
+                        <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
+                        {isAdmin && (
+                          <button type="button" onClick={() => deleteStatement(statement)}
+                            className="flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-red-600 hover:bg-red-100 transition"
+                            title="Delete statement">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                          </button>
                         )}
                       </div>
-                      <span className="text-xs text-slate-500">{statement.month} | {statement.status} | {statement.isManual ? "Manual entry" : `${statement.rowCount}/30 rows`} | ${money(statement.companyTotalAmount)}</span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>
-                      {isAdmin && <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "xls")} disabled={statement.rowCount < 1}>Excel</Button>}
-                      {isAdmin && <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "pdf")} disabled={statement.rowCount < 1}>PDF</Button>}
-                      {isAdmin && (
-                        <Button type="button" variant="secondary" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
-                          {statement.paymentMonth ? `Payment: ${monthName(statement.paymentMonth)}` : "Assign Payment"}
-                        </Button>
-                      )}
-                      <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
-                      {isAdmin && <Button type="button" variant="danger" onClick={() => deleteStatement(statement)}>Delete</Button>}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Panel>
           )}
@@ -2417,6 +2443,11 @@ function App() {
                       value={deliveryForm.invoiceNo}
                       onChange={(e) => setDeliveryForm({ ...deliveryForm, invoiceNo: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                     />
+                    <div className="mt-1 flex justify-end">
+                      <span className={`text-[11px] font-black tabular-nums ${deliveryForm.invoiceNo.length === 10 ? "text-emerald-600" : deliveryForm.invoiceNo.length > 0 ? "text-amber-600" : "text-slate-400"}`}>
+                        {deliveryForm.invoiceNo.length}/10
+                      </span>
+                    </div>
                   </Field>
                   <Field label="Truck No">
                     <Input
@@ -2466,7 +2497,14 @@ function App() {
                       </Select>
                     </Field>
                   )}
-                  <Field label="QTY(T)"><Input type="number" step="any" min="0" required disabled={!canEditRows} style={activeField === "qtyTon" ? { backgroundColor: "#fef08a" } : {}} onFocus={() => setActiveField("qtyTon")} onBlur={() => setActiveField("")} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} /></Field>
+                  <Field label="QTY(T)">
+                    <Input type="number" step="any" min="0" required disabled={!canEditRows} style={activeField === "qtyTon" ? { backgroundColor: "#fef08a" } : {}} onFocus={() => setActiveField("qtyTon")} onBlur={() => setActiveField("")} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} />
+                    {selectedPrice && Number(deliveryForm.qtyTon) > 0 && (
+                      <div className="mt-1 text-[11px] font-black text-teal-700">
+                        {Number(deliveryForm.qtyTon).toFixed(3)}T × ${unitMoney(selectedPrice.companyUnitPrice)} = <span className="text-teal-900">${money(Number(deliveryForm.qtyTon) * Number(selectedPrice.companyUnitPrice))}</span>
+                      </div>
+                    )}
+                  </Field>
                   <Field label="Unit Price"><Input disabled value={selectedPrice ? `$${unitMoney(selectedPrice.companyUnitPrice)}` : ""} readOnly /></Field>
                   {(duplicateInvoice || truckMissing || truckTypeMismatch || missingPrice) && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 md:col-span-4">
@@ -2498,7 +2536,6 @@ function App() {
             <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
               <h2 className="text-lg font-black tracking-tight">Current Statement Rows</h2>
               <div className="flex flex-wrap items-center gap-3 text-sm font-black text-slate-600">
-                <span>Rows: {statementRows.length} / 30</span>
                 <span>QTY: {totals.qty.toFixed(4)}T</span>
                 <span>Total: ${money(totals.amount)}</span>
                 {statementRows.some((r) => r.highlighted) && (
@@ -2506,6 +2543,25 @@ function App() {
                 )}
               </div>
             </div>
+            {(() => {
+              const count = statementRows.length;
+              const pct = Math.round((count / 30) * 100);
+              const barColor = count >= 29 ? "bg-red-500" : count >= 25 ? "bg-amber-400" : "bg-teal-500";
+              const textColor = count >= 29 ? "text-red-700" : count >= 25 ? "text-amber-700" : "text-slate-500";
+              return (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-xs font-black ${textColor}`}>
+                      {count} / 30 rows {count >= 29 ? "— Full! Start a new statement." : count >= 25 ? "— Almost full" : ""}
+                    </span>
+                    <span className="text-xs font-bold text-slate-400">{pct}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-300 ${barColor}`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })()}
             <div className="overflow-auto rounded-xl border border-slate-200">
               <table className="w-full min-w-[1100px] border-collapse bg-white text-sm">
                 <thead className="bg-slate-900 text-white">
