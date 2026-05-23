@@ -3621,134 +3621,96 @@ function App() {
           )}
 
           {setupSection === "users" && (
-            <Panel>
-              <h2 className="mb-4 text-lg font-bold">User Management</h2>
-              <p className="mb-4 text-sm font-bold text-slate-500">Staff users can do data entry but cannot access Payments, Prices, Setup, or export reports.</p>
-              <form onSubmit={createStaffUser} className="mb-6 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-black uppercase tracking-wide text-slate-500">Add New User</p>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Field label="Username"><Input value={newUserForm.username} onChange={(e) => setNewUserForm({ ...newUserForm, username: e.target.value })} required placeholder="e.g. sokheng" /></Field>
-                  <Field label="Password"><Input type="password" value={newUserForm.password} onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })} required placeholder="Min 6 characters" /></Field>
-                  <Field label="Role">
-                    <select value={newUserForm.role} onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
-                      <option value="staff">Staff</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </Field>
-                </div>
-                <div><Button type="submit">Create User</Button></div>
-              </form>
-              {staffUsers.length === 0 ? (
-                <p className="text-sm font-bold text-slate-400 text-center py-4">No staff users yet.</p>
-              ) : (
-                <div className="overflow-auto rounded-xl border border-slate-200">
-                  <table className="w-full border-collapse bg-white text-sm">
-                    <thead className="bg-slate-900 text-white text-xs">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Username</th>
-                        <th className="px-4 py-3 text-left">Role</th>
-                        <th className="px-4 py-3 text-left">Created</th>
-                        <th className="px-4 py-3 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {staffUsers.map((u) => (
-                        <tr key={u.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
-                          <td className="px-4 py-3 font-black">{u.username}</td>
-                          <td className="px-4 py-3">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-black ${u.role === "admin" ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600"}`}>{u.role}</span>
-                          </td>
-                          <td className="px-4 py-3 text-slate-500 text-xs">{u.createdAt?.slice(0, 10)}</td>
-                          <td className="px-4 py-3 text-right">
-                            {editPasswordId === u.id ? (
-                              <div className="flex items-center gap-2 justify-end">
-                                <input type="password" value={editPasswordValue} onChange={(e) => setEditPasswordValue(e.target.value)} placeholder="New password" className="h-8 rounded-lg border border-slate-200 px-2 text-sm outline-none focus:border-teal-500 w-36" />
-                                <Button type="button" onClick={() => saveStaffPassword(u.id)}>Save</Button>
-                                <Button type="button" variant="secondary" onClick={() => { setEditPasswordId(null); setEditPasswordValue(""); }}>Cancel</Button>
-                              </div>
-                            ) : (
-                              <div className="flex gap-2 justify-end">
-                                <Button type="button" variant="secondary" onClick={() => { setEditPasswordId(u.id); setEditPasswordValue(""); }}>Change Password</Button>
-                                <Button type="button" variant="danger" onClick={() => deleteStaffUser(u.id)}>Delete</Button>
-                              </div>
-                            )}
-                          </td>
+            <>
+              <Panel>
+                <h2 className="mb-4 text-lg font-bold">User Management</h2>
+                <p className="mb-4 text-sm font-bold text-slate-500">Staff users can do data entry but cannot access Payments, Prices, Setup, or export reports.</p>
+                <form onSubmit={createStaffUser} className="mb-6 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-slate-500">Add New User</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Field label="Username"><Input value={newUserForm.username} onChange={(e) => setNewUserForm({ ...newUserForm, username: e.target.value })} required placeholder="e.g. sokheng" /></Field>
+                    <Field label="Password"><Input type="password" value={newUserForm.password} onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })} required placeholder="Min 6 characters" /></Field>
+                    <Field label="Role">
+                      <select value={newUserForm.role} onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </Field>
+                  </div>
+                  <div><Button type="submit">Create User</Button></div>
+                </form>
+                {staffUsers.length === 0 ? (
+                  <p className="text-sm font-bold text-slate-400 text-center py-4">No staff users yet.</p>
+                ) : (
+                  <div className="overflow-auto rounded-xl border border-slate-200">
+                    <table className="w-full border-collapse bg-white text-sm">
+                      <thead className="bg-slate-900 text-white text-xs">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Username</th>
+                          <th className="px-4 py-3 text-left">Role</th>
+                          <th className="px-4 py-3 text-left">Created</th>
+                          <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {staffUsers.map((u) => (
+                          <tr key={u.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                            <td className="px-4 py-3 font-black">{u.username}</td>
+                            <td className="px-4 py-3">
+                              <span className={`rounded-full px-2 py-0.5 text-xs font-black ${u.role === "admin" ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600"}`}>{u.role}</span>
+                            </td>
+                            <td className="px-4 py-3 text-slate-500 text-xs">{u.createdAt?.slice(0, 10)}</td>
+                            <td className="px-4 py-3 text-right">
+                              {editPasswordId === u.id ? (
+                                <div className="flex items-center gap-2 justify-end">
+                                  <input type="password" value={editPasswordValue} onChange={(e) => setEditPasswordValue(e.target.value)} placeholder="New password" className="h-8 rounded-lg border border-slate-200 px-2 text-sm outline-none focus:border-teal-500 w-36" />
+                                  <Button type="button" onClick={() => saveStaffPassword(u.id)}>Save</Button>
+                                  <Button type="button" variant="secondary" onClick={() => { setEditPasswordId(null); setEditPasswordValue(""); }}>Cancel</Button>
+                                </div>
+                              ) : (
+                                <div className="flex gap-2 justify-end">
+                                  <Button type="button" variant="secondary" onClick={() => { setEditPasswordId(u.id); setEditPasswordValue(""); }}>Change Password</Button>
+                                  <Button type="button" variant="danger" onClick={() => deleteStaffUser(u.id)}>Delete</Button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Panel>
+
+              {isAdmin && (
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <Panel>
+                    <h2 className="mb-3 text-lg font-bold">Settings</h2>
+                    <form className="grid gap-3" onSubmit={saveSettings}>
+                      <Field label="Company"><Input value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} /></Field>
+                      <Field label="Default From Location"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
+                      <Field label="VIP Delete Password" hint="Required to delete any statement. Leave blank to allow deletion without a password.">
+                        <Input type="password" value={settingsForm.deletePassword} onChange={(e) => setSettingsForm({ ...settingsForm, deletePassword: e.target.value })} placeholder="Set a password…" />
+                      </Field>
+                      <div><Button type="submit">Save Settings</Button></div>
+                    </form>
+                  </Panel>
+
+                  <Panel>
+                    <h2 className="mb-3 text-lg font-bold">Data Backup</h2>
+                    <p className="text-sm font-bold text-slate-500">
+                      Automatic backup runs before the first data change each day.
+                    </p>
+                    <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-500">
+                      Latest: {backupFiles[0] || "No backup yet"}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button type="button" onClick={createManualBackup}>Create Backup</Button>
+                      <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
+                    </div>
+                  </Panel>
                 </div>
               )}
-            </Panel>
-          )}
-
-          {isAdmin && (
-            <>
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Panel>
-                  <h2 className="mb-3 text-lg font-bold">Settings</h2>
-                  <form className="grid gap-3" onSubmit={saveSettings}>
-                    <Field label="Company"><Input value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} /></Field>
-                    <Field label="Default From Location"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
-                    <Field label="VIP Delete Password" hint="Required to delete any statement. Leave blank to allow deletion without a password.">
-                      <Input type="password" value={settingsForm.deletePassword} onChange={(e) => setSettingsForm({ ...settingsForm, deletePassword: e.target.value })} placeholder="Set a password…" />
-                    </Field>
-                    <div><Button type="submit">Save Settings</Button></div>
-                  </form>
-                </Panel>
-
-                <Panel>
-                  <h2 className="mb-3 text-lg font-bold">Data Backup</h2>
-                  <p className="text-sm font-bold text-slate-500">
-                    Automatic backup runs before the first data change each day.
-                  </p>
-                  <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-500">
-                    Latest: {backupFiles[0] || "No backup yet"}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button type="button" onClick={createManualBackup}>Create Backup</Button>
-                    <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
-                  </div>
-                </Panel>
-              </div>
-
-              <Panel>
-                <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-                  <div>
-                    <h2 className="text-lg font-bold">Tools</h2>
-                    <p className="mt-1 text-sm font-bold text-slate-500">
-                      Check for missing prices or re-apply driver prices after a bulk update.
-                    </p>
-                  </div>
-                  <div className="flex gap-2 flex-wrap justify-end">
-                    <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
-                    <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
-                  </div>
-                </div>
-
-                <div className="mt-4 border-t border-slate-100 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvancedTools((v) => !v)}
-                    className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition"
-                  >
-                    <span className={`inline-block transition-transform ${showAdvancedTools ? "rotate-90" : ""}`}>▶</span>
-                    Advanced Tools
-                  </button>
-                  {showAdvancedTools && (
-                    <div className="mt-3 grid gap-3">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Use only when troubleshooting — these operations affect all data.</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Deliveries</Button>
-                        <Button type="button" variant="secondary" onClick={fixLocationNames}>Fix Location Names</Button>
-                        <Button type="button" variant="secondary" onClick={normalizeLocationSpacing}>Fix Location Spacing</Button>
-                        <Button type="button" variant="secondary" onClick={deleteNonstandardFormatPrices}>Delete Non-Standard Prices</Button>
-                        <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Panel>
             </>
           )}
 
