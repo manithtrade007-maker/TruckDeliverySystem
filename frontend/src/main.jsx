@@ -792,7 +792,7 @@ function App() {
       const d = priceEffectiveDate(p);
       if (d <= todayStr) seen.add(d);
     }
-    return [...seen].sort((a, b) => b.localeCompare(a));
+    return [...seen].sort((a, b) => a.localeCompare(b));
   }, [data.prices]);
 
   const priceCompareProvinces = useMemo(() => {
@@ -2939,24 +2939,37 @@ function App() {
                   Active prices as of <span className="text-slate-700">{formatDate(priceCompareDate)}</span>. Red margin = driver cost exceeds company income.
                 </p>
               </div>
-              <div className="flex gap-3 flex-wrap text-sm font-black">
+              <div className="flex gap-3 flex-wrap items-center text-sm font-black">
                 <span className="rounded-full bg-teal-50 px-3 py-1 text-teal-800">Crane {priceCompareRows.filter((r) => r.crane).length}</span>
                 <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-800">No Crane {priceCompareRows.filter((r) => r.noCrane).length}</span>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Total {priceCompareRows.length}</span>
+                <button type="button" onClick={diagnoseEmptyPrices}
+                  className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1 text-amber-800 hover:bg-amber-100 transition">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Check Coverage
+                </button>
               </div>
             </div>
 
             <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
               <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">View price list as of date</p>
               <div className="flex flex-wrap gap-2">
-                {priceCompareDates.map((d) => (
-                  <button key={d} type="button"
-                    onClick={() => setPriceCompareDate(d)}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-semibold border transition ${d === priceCompareDate ? "bg-teal-600 text-white border-teal-600" : "bg-white text-slate-600 border-slate-300 hover:border-teal-400 hover:text-teal-700"}`}>
-                    {formatDate(d)}
-                    {d === today() && <span className="ml-1 text-xs opacity-70">(today)</span>}
-                  </button>
-                ))}
+                {priceCompareDates.map((d, i) => {
+                  const isLatest = i === priceCompareDates.length - 1;
+                  const isSelected = d === priceCompareDate;
+                  return (
+                    <button key={d} type="button"
+                      onClick={() => setPriceCompareDate(d)}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold border transition ${isSelected ? "bg-teal-600 text-white border-teal-600" : "bg-white text-slate-600 border-slate-300 hover:border-teal-400 hover:text-teal-700"}`}>
+                      {formatDate(d)}
+                      {isLatest && (
+                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black leading-none ${isSelected ? "bg-white/30 text-white" : "bg-emerald-100 text-emerald-800"}`}>
+                          Active
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
