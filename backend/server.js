@@ -582,7 +582,38 @@ async function ensureDailyBackup(data) {
   const todayKey = timestampForFile().slice(0, 10);
   const files = await readdir(backupDir).catch(() => []);
   const alreadyBackedUp = files.some((file) => file.startsWith(`backup-auto-${todayKey}`));
-  if (!alreadyBackedUp) await createBackup(data, "auto");
+  if (!alreadyBackedUp) {
+    await createBackup(data, "auto");
+    sendBackupToTelegram(data, "Daily Auto Backup").catch(() => {});
+  }
+}
+
+function getTelegramConfig() {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  return token && chatId ? { token, chatId } : null;
+}
+
+async function sendBackupToTelegram(data, label = "Manual Backup") {
+  const cfg = getTelegramConfig();
+  if (!cfg) return { ok: false, reason: "not_configured" };
+  const filename = `nm-logistic-backup-${timestampForFile()}.json`;
+  const content = JSON.stringify(data, null, 2);
+  const caption = [
+    `N&M Logistic — ${label}`,
+    `Date: ${new Date().toISOString().slice(0, 10)}`,
+    `Statements: ${(data.statements || []).length} | Deliveries: ${(data.deliveries || []).length} | Trucks: ${(data.trucks || []).length}`,
+  ].join("\n");
+  const form = new FormData();
+  form.append("chat_id", cfg.chatId);
+  form.append("caption", caption);
+  form.append("document", new Blob([content], { type: "application/json" }), filename);
+  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.description || `Telegram API error ${res.status}`);
+  }
+  return { ok: true };
 }
 
 function validateRestoreData(data) {
@@ -2110,9 +2141,23 @@ async function api(req, res, url, role = "admin") {
     const result = await updateData(async (data) => {
       addActivity(data, "Created manual data backup.", "backup");
       const fileName = await createBackup(data, "manual");
+      sendBackupToTelegram(data, "Manual Backup").catch(() => {});
       return { fileName };
     });
     return sendJson(res, 200, result);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/backup/send-telegram") {
+    requireAdmin();
+    const cfg = getTelegramConfig();
+    if (!cfg) return sendJson(res, 400, { error: "Telegram is not configured. Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to environment variables." });
+    await sendBackupToTelegram(data, "Manual Send");
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/telegram/status") {
+    requireAdmin();
+    return sendJson(res, 200, { configured: Boolean(getTelegramConfig()) });
   }
 
   if (req.method === "GET" && url.pathname === "/api/backup/list") {

@@ -517,6 +517,7 @@ function App() {
   const [editPasswordId, setEditPasswordId] = useState(null);
   const [editPasswordValue, setEditPasswordValue] = useState("");
   const [backupFiles, setBackupFiles] = useState([]);
+  const [telegramConfigured, setTelegramConfigured] = useState(null);
   const [emptyPriceResult, setEmptyPriceResult] = useState(null);
   const [bulkLocationFilter, setBulkLocationFilter] = useState("");
   const [priceCompareDate, setPriceCompareDate] = useState(() => today());
@@ -1007,6 +1008,7 @@ function App() {
     setPriceForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
     setDeliveryForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
     loadBackups().catch(() => {});
+    checkTelegramStatus().catch(() => {});
   }
 
   async function loadBackups() {
@@ -1544,6 +1546,24 @@ function App() {
 
   function downloadBackup() {
     downloadFile("/api/backup/download").catch((err) => flash(err.message, "error"));
+  }
+
+  async function sendToTelegram() {
+    try {
+      await api("/api/backup/send-telegram", { method: "POST" });
+      flash("Backup sent to Telegram successfully.");
+    } catch (err) {
+      flash(err.message, "error");
+    }
+  }
+
+  async function checkTelegramStatus() {
+    try {
+      const result = await api("/api/telegram/status");
+      setTelegramConfigured(result.configured);
+    } catch {
+      setTelegramConfigured(false);
+    }
   }
 
   async function recalculateAllPrices() {
@@ -3710,9 +3730,24 @@ function App() {
                   </Panel>
 
                   <Panel>
-                    <h2 className="mb-3 text-lg font-bold">Data Backup</h2>
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <h2 className="text-lg font-bold">Data Backup</h2>
+                      {telegramConfigured === true && (
+                        <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-black text-emerald-700">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+                          Telegram Active
+                        </span>
+                      )}
+                      {telegramConfigured === false && (
+                        <span className="flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-2.5 py-1 text-xs font-black text-slate-500">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+                          Telegram Not Set Up
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm font-bold text-slate-500">
                       Automatic backup runs before the first data change each day.
+                      {telegramConfigured === true && " Backup is also sent automatically to Telegram."}
                     </p>
                     <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-500">
                       Latest: {backupFiles[0] || "No backup yet"}
@@ -3720,6 +3755,15 @@ function App() {
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button type="button" onClick={createManualBackup}>Create Backup</Button>
                       <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
+                      {telegramConfigured === true && (
+                        <Button type="button" variant="secondary" onClick={sendToTelegram}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{display:"inline",marginRight:4,verticalAlign:"middle"}}><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+                          Send to Telegram
+                        </Button>
+                      )}
+                      {telegramConfigured === false && (
+                        <p className="w-full mt-1 text-xs text-slate-400">To enable Telegram backup, add <code className="bg-slate-100 px-1 rounded">TELEGRAM_BOT_TOKEN</code> and <code className="bg-slate-100 px-1 rounded">TELEGRAM_CHAT_ID</code> to your Render environment variables.</p>
+                      )}
                     </div>
                   </Panel>
                 </div>
