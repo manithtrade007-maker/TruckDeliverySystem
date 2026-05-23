@@ -3117,23 +3117,40 @@ async function api(req, res, url, role = "admin") {
       totalsLabel: "Total",
     });
 
-    // Extract pages from the individual PDFs and merge into pdfPages
-    // Parse page count from generated PDFs by re-using tablePdf directly through buildPdf
-    // We built pdfPages with the summary page; now append statement and delivery pages
-    // Since tablePdf returns a Buffer, we need a different approach: call buildPdf with combined pages
-    // Instead, output them as separate PDFs in the ZIP
-    const stmtPdfBuf = stPdf;
-    const dlPdfBuf = dlPdf;
     const summaryPdfBuf = buildPdf(pdfPages);
+
+    // ── Signature image (shared across all per-statement exports) ────────────
+    const sigPath = path.join(__dirname, "signature.jpg");
+    let sigBuffer = null;
+    if (existsSync(sigPath)) {
+      const raw = await readFile(sigPath);
+      const info = readJpegInfo(raw);
+      if (info) sigBuffer = { buffer: raw, width: info.width, height: info.height, components: info.components };
+    }
+
+    // ── Per-statement files ──────────────────────────────────────────────────
+    const stmtFiles = [];
+    for (const stmt of monthStmts) {
+      const stRows = data.deliveries.filter((d) => d.statementId === stmt.id);
+      if (stRows.length === 0) continue;
+      const stName = `st-${stmt.statementNumber}-${safeMonth}`;
+      const [stXls, stPdfBuf] = await Promise.all([
+        accountingWorkbook(data, stRows, sigBuffer?.buffer),
+        Promise.resolve(statementPdf(data, stRows, sigBuffer)),
+      ]);
+      stmtFiles.push({ name: `statements/${stName}.xlsx`, data: stXls });
+      stmtFiles.push({ name: `statements/${stName}.pdf`, data: stPdfBuf });
+    }
 
     const zipBuf = buildZip([
       { name: `nm-logistic-${safeMonth}.xlsx`, data: xlsBuffer },
       { name: `nm-logistic-${safeMonth}-summary.pdf`, data: summaryPdfBuf },
-      { name: `nm-logistic-${safeMonth}-statements.pdf`, data: stmtPdfBuf },
-      { name: `nm-logistic-${safeMonth}-deliveries.pdf`, data: dlPdfBuf },
+      { name: `nm-logistic-${safeMonth}-statements.pdf`, data: stPdf },
+      { name: `nm-logistic-${safeMonth}-deliveries.pdf`, data: dlPdf },
+      ...stmtFiles,
     ]);
 
-    const zipName = `nm-logistic-bundle-${safeMonth}.zip`;
+    const zipName = `nm-logistic-summary-${safeMonth}.zip`;
     res.writeHead(200, {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${zipName}"`
