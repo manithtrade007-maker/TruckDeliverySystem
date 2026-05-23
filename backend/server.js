@@ -616,6 +616,21 @@ async function sendBackupToTelegram(data, label = "Manual Backup") {
   return { ok: true };
 }
 
+async function sendFileToTelegram(fileBuffer, filename, caption, mimeType = "application/zip") {
+  const cfg = getTelegramConfig();
+  if (!cfg) throw new Error("Telegram is not configured.");
+  const form = new FormData();
+  form.append("chat_id", cfg.chatId);
+  form.append("caption", caption);
+  form.append("document", new Blob([fileBuffer], { type: mimeType }), filename);
+  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.description || `Telegram API error ${res.status}`);
+  }
+  return { ok: true };
+}
+
 function validateRestoreData(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Backup file is not valid.");
   if (!data.settings || typeof data.settings !== "object") throw new Error("Backup is missing settings.");
@@ -2216,6 +2231,94 @@ async function api(req, res, url, role = "admin") {
   if (req.method === "GET" && url.pathname === "/api/telegram/status") {
     requireAdmin();
     return sendJson(res, 200, { configured: Boolean(getTelegramConfig()) });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/export/monthly-bundle-telegram") {
+    requireAdmin();
+    if (!getTelegramConfig()) return sendJson(res, 400, { error: "Telegram is not configured." });
+    const month = normalizeText(query.month) || currentLocalDate().slice(0, 7);
+    const monthStart = `${month}-01`;
+    const [y2, m2] = month.split("-").map(Number);
+    const monthEnd = `${month}-${String(new Date(y2, m2, 0).getDate()).padStart(2, "0")}`;
+    const monthStmts2 = data.statements.filter((s) => s.month === month);
+    const monthDeliveries2 = data.deliveries.filter((d) => d.deliveryDate >= monthStart && d.deliveryDate <= monthEnd);
+    const safeMonth2 = numericMonthFilePart(month);
+    const label2 = monthLabel(month);
+    const companyName2 = data.settings.companyName || "N&M LOGISTIC";
+
+    // Re-use the same generation logic (summary Excel + PDFs + per-statement files)
+    const wb2 = new ExcelJS.Workbook();
+    wb2.creator = companyName2;
+    const totalRevenue2 = monthDeliveries2.reduce((s, d) => s + toNumber(d.companyTotalAmount), 0);
+    const totalDriver2 = monthDeliveries2.reduce((s, d) => s + toNumber(d.truckSalaryAmount), 0);
+    const totalQty2 = monthDeliveries2.reduce((s, d) => s + toNumber(d.qtyTon), 0);
+    const margin2 = totalRevenue2 - totalDriver2;
+    const outstanding2 = monthStmts2.filter((s) => !data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received));
+    const activeTrucks2 = new Set(monthDeliveries2.map((d) => d.truckNo)).size;
+    const thinBorder2 = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+    const dash2 = wb2.addWorksheet("Dashboard");
+    dash2.columns = [{ key: "a", width: 30 }, { key: "b", width: 20 }, { key: "c", width: 30 }, { key: "d", width: 20 }];
+    dash2.mergeCells("A1:D1");
+    const h1 = dash2.getCell("A1"); h1.value = companyName2; h1.font = { name: "Arial", size: 14, bold: true }; h1.alignment = { horizontal: "center" };
+    dash2.getRow(1).height = 28;
+    dash2.mergeCells("A2:D2");
+    const h2 = dash2.getCell("A2"); h2.value = `Monthly Summary — ${label2}`; h2.font = { name: "Arial", size: 10, bold: true }; h2.alignment = { horizontal: "center" };
+    [["Total Revenue", `$ ${money(totalRevenue2)}`, "Driver Salary", `$ ${money(totalDriver2)}`],
+     ["Gross Margin", `$ ${money(margin2)}`, "Total Tonnage", `${totalQty2.toFixed(3)} T`],
+     ["Statements", String(monthStmts2.length), "Deliveries", String(monthDeliveries2.length)],
+     ["Active Trucks", String(activeTrucks2), "Outstanding", String(outstanding2.length)]].forEach((row, i) => {
+      const r = i + 4; dash2.getRow(r).height = 22;
+      [1, 3].forEach((col, j) => {
+        const lc = dash2.getCell(r, col); lc.value = row[j * 2]; lc.font = { name: "Arial", size: 10, bold: true }; lc.border = thinBorder2;
+        const vc = dash2.getCell(r, col + 1); vc.value = row[j * 2 + 1]; vc.font = { name: "Arial", size: 10 }; vc.border = thinBorder2;
+      });
+    });
+    const xlsBuf2 = Buffer.from(await wb2.xlsx.writeBuffer());
+
+    const sigPath2 = path.join(__dirname, "signature.jpg");
+    let sigBuf2 = null;
+    if (existsSync(sigPath2)) {
+      const raw2 = await readFile(sigPath2);
+      const info2 = readJpegInfo(raw2);
+      if (info2) sigBuf2 = { buffer: raw2, width: info2.width, height: info2.height, components: info2.components };
+    }
+
+    const stFiles2 = [];
+    for (const stmt of monthStmts2) {
+      const stRows2 = data.deliveries.filter((d) => d.statementId === stmt.id);
+      if (stRows2.length === 0) continue;
+      const stName2 = `st-${stmt.statementNumber}-${safeMonth2}`;
+      stFiles2.push({ name: `statements/${stName2}.xlsx`, data: await accountingWorkbook(data, stRows2, sigBuf2?.buffer) });
+      stFiles2.push({ name: `statements/${stName2}.pdf`, data: statementPdf(data, stRows2, sigBuf2) });
+    }
+
+    const sortedDl2 = [...monthDeliveries2].sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate));
+    const dlPdf2 = tablePdf({
+      title: `${label2} — Deliveries`, subtitle: `${companyName2} | ${monthDeliveries2.length} rows`,
+      columns: [
+        { key: "no", label: "No", width: 26, align: "center" }, { key: "date", label: "Date", width: 60 },
+        { key: "inv", label: "Invoice", width: 74 }, { key: "truck", label: "Truck", width: 55 },
+        { key: "to", label: "To Location", width: 120 }, { key: "qty", label: "QTY(T)", width: 68, align: "right" },
+        { key: "cTot", label: "Co. Total", width: 70, align: "right", bold: true }, { key: "dTot", label: "Dr. Total", width: 70, align: "right" },
+      ],
+      rows: sortedDl2.map((d, i) => ({ no: i + 1, date: formatShortDate(d.deliveryDate), inv: d.invoiceNo, truck: d.truckNo, to: d.toLocation, qty: `${Number(d.qtyTon || 0).toFixed(3)}T`, cTot: `$ ${money(d.companyTotalAmount)}`, dTot: `$ ${money(d.truckSalaryAmount)}` })),
+      totals: { qty: `${totalQty2.toFixed(3)}T`, cTot: `$ ${money(totalRevenue2)}`, dTot: `$ ${money(totalDriver2)}` }, totalsLabel: "Total",
+    });
+
+    const zipBuf2 = buildZip([
+      { name: `nm-logistic-${safeMonth2}.xlsx`, data: xlsBuf2 },
+      { name: `nm-logistic-${safeMonth2}-deliveries.pdf`, data: dlPdf2 },
+      ...stFiles2,
+    ]);
+
+    const zipFilename2 = `nm-logistic-summary-${safeMonth2}.zip`;
+    const caption2 = [
+      `N&M Logistic — Monthly Bundle`,
+      `Month: ${label2}`,
+      `Statements: ${monthStmts2.length} | Deliveries: ${monthDeliveries2.length} | Revenue: $ ${money(totalRevenue2)}`,
+    ].join("\n");
+    await sendFileToTelegram(zipBuf2, zipFilename2, caption2);
+    return sendJson(res, 200, { ok: true });
   }
 
   if (req.method === "GET" && url.pathname === "/api/backup/list") {

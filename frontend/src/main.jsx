@@ -1850,14 +1850,24 @@ function App() {
                 <Input type="month" value={reportMonth} onChange={(event) => { setReportMonth(event.target.value); setReportTruckNo(""); }} />
               </Field>
               {isAdmin && (
-                <button type="button"
-                  onClick={() => downloadFile(`/api/export/monthly-bundle?month=${encodeURIComponent(reportMonth)}`).catch((err) => flash(err.message, "error"))}
-                  className="flex items-center gap-2 rounded-xl border border-teal-300 bg-teal-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-teal-700 transition mb-0.5">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  Monthly Bundle
-                </button>
+                <div className="flex gap-2 mb-0.5">
+                  <button type="button"
+                    onClick={() => downloadFile(`/api/export/monthly-bundle?month=${encodeURIComponent(reportMonth)}`).catch((err) => flash(err.message, "error"))}
+                    className="flex items-center gap-2 rounded-xl border border-teal-300 bg-teal-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-teal-700 transition">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Monthly Bundle
+                  </button>
+                  {telegramConfigured && (
+                    <button type="button"
+                      onClick={() => api(`/api/export/monthly-bundle-telegram?month=${encodeURIComponent(reportMonth)}`, { method: "POST" }).then(() => flash("Monthly bundle sent to Telegram.")).catch((err) => flash(err.message, "error"))}
+                      className="flex items-center gap-2 rounded-xl border border-sky-300 bg-sky-500 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-sky-600 transition">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+                      Send to Telegram
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
