@@ -1708,6 +1708,64 @@ function dashboardExport(rows, month) {
   );
 }
 
+// ── Minimal ZIP builder (no external dependency) ──────────────────────────────
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[i] = c;
+  }
+  return t;
+})();
+
+function crc32(buf) {
+  let c = 0xFFFFFFFF;
+  for (const b of buf) c = (c >>> 8) ^ CRC_TABLE[(c ^ b) & 0xFF];
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function buildZip(files) {
+  const locals = [];
+  const centrals = [];
+  let offset = 0;
+  for (const { name, data } of files) {
+    const nameBuf = Buffer.from(name, "utf8");
+    const crc = crc32(data);
+    const size = data.length;
+    const local = Buffer.alloc(30 + nameBuf.length);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4); local.writeUInt16LE(0, 6); local.writeUInt16LE(0, 8);
+    local.writeUInt16LE(0, 10); local.writeUInt16LE(0, 12);
+    local.writeUInt32LE(crc, 14); local.writeUInt32LE(size, 18); local.writeUInt32LE(size, 22);
+    local.writeUInt16LE(nameBuf.length, 26); local.writeUInt16LE(0, 28);
+    nameBuf.copy(local, 30);
+    const central = Buffer.alloc(46 + nameBuf.length);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4); central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0, 8); central.writeUInt16LE(0, 10);
+    central.writeUInt16LE(0, 12); central.writeUInt16LE(0, 14);
+    central.writeUInt32LE(crc, 16); central.writeUInt32LE(size, 20); central.writeUInt32LE(size, 24);
+    central.writeUInt16LE(nameBuf.length, 28); central.writeUInt16LE(0, 30);
+    central.writeUInt16LE(0, 32); central.writeUInt16LE(0, 34);
+    central.writeUInt16LE(0, 36); central.writeUInt32LE(0, 38);
+    central.writeUInt32LE(offset, 42);
+    nameBuf.copy(central, 46);
+    locals.push(local, data);
+    centrals.push(central);
+    offset += local.length + size;
+  }
+  const cd = Buffer.concat(centrals);
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(0, 4); eocd.writeUInt16LE(0, 6);
+  eocd.writeUInt16LE(files.length, 8); eocd.writeUInt16LE(files.length, 10);
+  eocd.writeUInt32LE(cd.length, 12); eocd.writeUInt32LE(offset, 16);
+  eocd.writeUInt16LE(0, 20);
+  return Buffer.concat([...locals, cd, eocd]);
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 function pdfEscape(value) {
   return String(value ?? "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
@@ -2828,6 +2886,259 @@ async function api(req, res, url, role = "admin") {
       return { ok: true };
     });
     return sendJson(res, 200, { ok: true });
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/export/monthly-bundle") {
+    const month = normalizeText(query.month) || currentLocalDate().slice(0, 7);
+    const monthStart = `${month}-01`;
+    const [y, m] = month.split("-").map(Number);
+    const monthEnd = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+    const monthStmts = data.statements.filter((s) => s.month === month);
+    const monthDeliveries = data.deliveries.filter((d) => d.deliveryDate >= monthStart && d.deliveryDate <= monthEnd);
+    const label = monthLabel(month);
+    const companyName = data.settings.companyName || "N&M LOGISTIC";
+    const safeMonth = numericMonthFilePart(month);
+
+    // ── Excel workbook ──────────────────────────────────────────────────────
+    const wb = new ExcelJS.Workbook();
+    wb.creator = companyName;
+    wb.created = new Date();
+
+    const thinBorder = {
+      top: { style: "thin", color: { argb: "FF333333" } },
+      left: { style: "thin", color: { argb: "FF333333" } },
+      bottom: { style: "thin", color: { argb: "FF333333" } },
+      right: { style: "thin", color: { argb: "FF333333" } }
+    };
+    const baseFont = { name: "Arial", size: 10 };
+    const boldFont = { name: "Arial", size: 10, bold: true };
+    const titleFont = { name: "Arial", size: 14, bold: true };
+    const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } };
+    const headerFont = { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } };
+    const subFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } };
+
+    // Sheet 1: Dashboard
+    const dash = wb.addWorksheet("Dashboard");
+    dash.columns = [
+      { key: "a", width: 30 }, { key: "b", width: 20 },
+      { key: "c", width: 30 }, { key: "d", width: 20 }
+    ];
+    const totalRevenue = monthDeliveries.reduce((s, d) => s + toNumber(d.companyTotalAmount), 0);
+    const totalDriver = monthDeliveries.reduce((s, d) => s + toNumber(d.truckSalaryAmount), 0);
+    const totalQty = monthDeliveries.reduce((s, d) => s + toNumber(d.qtyTon), 0);
+    const margin = totalRevenue - totalDriver;
+    const outstanding = monthStmts.filter((s) => !data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received));
+    const outstandingAmt = outstanding.reduce((s, st) => {
+      const rows = monthDeliveries.filter((d) => d.statementId === st.id);
+      return s + rows.reduce((rs, d) => rs + toNumber(d.companyTotalAmount), 0);
+    }, 0);
+    const activeTrucks = new Set(monthDeliveries.map((d) => d.truckNo)).size;
+
+    const setCell = (ws, row, col, value, options = {}) => {
+      const cell = ws.getCell(row, col);
+      cell.value = value;
+      if (options.font) cell.font = options.font;
+      if (options.fill) cell.fill = options.fill;
+      if (options.alignment) cell.alignment = options.alignment;
+      if (options.border) cell.border = options.border;
+      return cell;
+    };
+
+    dash.mergeCells("A1:D1");
+    setCell(dash, 1, 1, companyName, { font: titleFont, alignment: { horizontal: "center", vertical: "middle" } });
+    dash.getRow(1).height = 28;
+    dash.mergeCells("A2:D2");
+    setCell(dash, 2, 1, `Monthly Summary Report — ${label}`, { font: boldFont, alignment: { horizontal: "center", vertical: "middle" } });
+    dash.getRow(2).height = 20;
+
+    const kpis = [
+      ["Total Revenue", `$ ${money(totalRevenue)}`, "Total Driver Salary", `$ ${money(totalDriver)}`],
+      ["Gross Margin", `$ ${money(margin)}`, "Total Tonnage", `${totalQty.toFixed(3)} T`],
+      ["Total Statements", String(monthStmts.length), "Total Deliveries", String(monthDeliveries.length)],
+      ["Active Trucks", String(activeTrucks), "Outstanding Payments", `${outstanding.length} stmt / $ ${money(outstandingAmt)}`],
+    ];
+    dash.getRow(3).height = 8;
+    kpis.forEach((row, i) => {
+      const r = i + 4;
+      dash.getRow(r).height = 22;
+      [1, 3].forEach((col, j) => {
+        setCell(dash, r, col, row[j * 2], { font: boldFont, fill: subFill, border: thinBorder, alignment: { vertical: "middle" } });
+        setCell(dash, r, col + 1, row[j * 2 + 1], { font: baseFont, border: thinBorder, alignment: { vertical: "middle" } });
+      });
+    });
+
+    // Sheet 2: Statements
+    const stSheet = wb.addWorksheet("Statements");
+    stSheet.columns = [
+      { key: "no", width: 6 }, { key: "stNo", width: 14 }, { key: "date", width: 14 },
+      { key: "type", width: 16 }, { key: "status", width: 14 }, { key: "payMonth", width: 14 },
+      { key: "paid", width: 12 }, { key: "amount", width: 16 }
+    ];
+    const stHeaders = ["No", "Stmt No", "Date", "Truck Type", "Status", "Payment Month", "Paid", "Total Amount"];
+    stSheet.getRow(1).values = stHeaders;
+    stSheet.getRow(1).height = 20;
+    for (let c = 1; c <= stHeaders.length; c++) {
+      const cell = stSheet.getCell(1, c);
+      cell.font = headerFont; cell.fill = headerFill;
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = thinBorder;
+    }
+    monthStmts.forEach((s, i) => {
+      const r = i + 2;
+      stSheet.getRow(r).height = 18;
+      const totalAmt = monthDeliveries.filter((d) => d.statementId === s.id).reduce((sum, d) => sum + toNumber(d.companyTotalAmount), 0);
+      const isPaid = data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received);
+      const vals = [i + 1, s.statementNumber, formatShortDate(s.statementDate), truckTypeLabel(s.truckType), s.status || "", s.paymentMonth || "", isPaid ? "Yes" : "No", `$ ${money(totalAmt)}`];
+      vals.forEach((v, ci) => {
+        const cell = stSheet.getCell(r, ci + 1);
+        cell.value = v; cell.font = baseFont; cell.border = thinBorder;
+        cell.alignment = { horizontal: ci === 0 ? "center" : "left", vertical: "middle" };
+        if (i % 2 === 1) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+      });
+    });
+
+    // Sheet 3: Deliveries
+    const dlSheet = wb.addWorksheet("Deliveries");
+    dlSheet.columns = [
+      { key: "no", width: 5 }, { key: "date", width: 13 }, { key: "inv", width: 13 },
+      { key: "truck", width: 10 }, { key: "type", width: 12 }, { key: "from", width: 14 },
+      { key: "to", width: 22 }, { key: "qty", width: 12 }, { key: "cUp", width: 11 },
+      { key: "cTot", width: 13 }, { key: "dUp", width: 11 }, { key: "dTot", width: 13 }
+    ];
+    const dlHeaders = ["No", "Date", "Invoice No", "Truck", "Type", "From", "To", "QTY(T)", "Co. Price", "Co. Total", "Dr. Price", "Dr. Total"];
+    dlSheet.getRow(1).values = dlHeaders;
+    dlSheet.getRow(1).height = 20;
+    for (let c = 1; c <= dlHeaders.length; c++) {
+      const cell = dlSheet.getCell(1, c);
+      cell.font = headerFont; cell.fill = headerFill;
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = thinBorder;
+    }
+    const sortedDeliveries = [...monthDeliveries].sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate));
+    sortedDeliveries.forEach((d, i) => {
+      const r = i + 2;
+      dlSheet.getRow(r).height = 18;
+      const vals = [i + 1, formatShortDate(d.deliveryDate), d.invoiceNo, d.truckNo, truckTypeLabel(d.truckType), d.fromLocation, d.toLocation,
+        Number(d.qtyTon || 0).toFixed(5), `$ ${unitMoney(d.companyUnitPrice)}`, `$ ${money(d.companyTotalAmount)}`,
+        `$ ${unitMoney(d.truckSalaryUnitPrice)}`, `$ ${money(d.truckSalaryAmount)}`];
+      vals.forEach((v, ci) => {
+        const cell = dlSheet.getCell(r, ci + 1);
+        cell.value = v; cell.font = baseFont; cell.border = thinBorder;
+        cell.alignment = { horizontal: ci === 0 || ci === 7 || ci === 8 || ci === 9 || ci === 10 || ci === 11 ? "right" : "left", vertical: "middle" };
+        if (i % 2 === 1) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+      });
+    });
+
+    const xlsBuffer = Buffer.from(await wb.xlsx.writeBuffer());
+
+    // ── PDF ─────────────────────────────────────────────────────────────────
+    const W = PDF_PAGE_WIDTH;
+    const H = PDF_PAGE_HEIGHT;
+    const M = 30;
+    const TW = W - M * 2;
+
+    // Page 1: Summary dashboard
+    const summaryCommands = [];
+    summaryCommands.push(drawRect(M, H - 60, TW, 50, [0.06, 0.09, 0.16]));
+    summaryCommands.push(drawText(companyName, M + 8, H - 26, { size: 16, bold: true, color: [1, 1, 1], width: TW - 16 }));
+    summaryCommands.push(drawText(`Monthly Summary Report — ${label}`, M + 8, H - 44, { size: 9, color: [0.7, 0.75, 0.85], width: TW - 16 }));
+
+    const kpiDefs = [
+      { label: "Total Revenue", value: `$ ${money(totalRevenue)}`, fill: [0.94, 0.99, 0.97] },
+      { label: "Total Driver Salary", value: `$ ${money(totalDriver)}`, fill: [1, 0.97, 0.93] },
+      { label: "Gross Margin", value: `$ ${money(margin)}`, fill: margin >= 0 ? [0.94, 0.99, 0.97] : [1, 0.94, 0.94] },
+      { label: "Total Tonnage", value: `${totalQty.toFixed(3)} T`, fill: [0.97, 0.97, 1] },
+      { label: "Statements", value: String(monthStmts.length), fill: [0.97, 0.98, 0.99] },
+      { label: "Deliveries", value: String(monthDeliveries.length), fill: [0.97, 0.98, 0.99] },
+      { label: "Active Trucks", value: String(activeTrucks), fill: [0.97, 0.98, 0.99] },
+      { label: "Outstanding", value: `${outstanding.length} / $ ${money(outstandingAmt)}`, fill: outstanding.length > 0 ? [1, 0.94, 0.94] : [0.94, 0.99, 0.97] },
+    ];
+    const cardW = (TW - 10) / 4;
+    const cardH = 60;
+    kpiDefs.forEach((kpi, i) => {
+      const col = i % 4;
+      const row = Math.floor(i / 4);
+      const cx = M + col * (cardW + 3.3);
+      const cy = H - 90 - row * (cardH + 8) - cardH;
+      summaryCommands.push(drawRect(cx, cy, cardW, cardH, kpi.fill, [0.85, 0.88, 0.92]));
+      summaryCommands.push(drawText(kpi.label, cx + 6, cy + cardH - 14, { size: 7, bold: true, color: [0.39, 0.46, 0.56], width: cardW - 12 }));
+      summaryCommands.push(drawText(kpi.value, cx + 6, cy + 14, { size: 13, bold: true, width: cardW - 12 }));
+    });
+    const pdfPages = [{ commands: summaryCommands, width: W, height: H }];
+
+    // Statements table pages
+    const stPdf = tablePdf({
+      title: `${label} — Statements`,
+      subtitle: `${companyName} | ${monthStmts.length} statements`,
+      columns: [
+        { key: "no", label: "No", width: 30, align: "center" },
+        { key: "stNo", label: "Stmt No", width: 60, align: "center" },
+        { key: "date", label: "Date", width: 80 },
+        { key: "type", label: "Type", width: 80 },
+        { key: "status", label: "Status", width: 70 },
+        { key: "payMonth", label: "Pay Month", width: 80 },
+        { key: "paid", label: "Paid", width: 50, align: "center" },
+        { key: "amount", label: "Total Amount", width: 95, align: "right", bold: true },
+      ],
+      rows: monthStmts.map((s, i) => {
+        const totalAmt = monthDeliveries.filter((d) => d.statementId === s.id).reduce((sum, d) => sum + toNumber(d.companyTotalAmount), 0);
+        const isPaid = data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received);
+        return { no: i + 1, stNo: s.statementNumber, date: formatShortDate(s.statementDate), type: truckTypeLabel(s.truckType), status: s.status || "", payMonth: s.paymentMonth || "-", paid: isPaid ? "Yes" : "No", amount: `$ ${money(totalAmt)}` };
+      }),
+      totals: { amount: `$ ${money(monthStmts.reduce((sum, s) => sum + monthDeliveries.filter((d) => d.statementId === s.id).reduce((rs, d) => rs + toNumber(d.companyTotalAmount), 0), 0))}` },
+      totalsLabel: "Total",
+    });
+
+    // Deliveries table pages
+    const dlPdf = tablePdf({
+      title: `${label} — Deliveries`,
+      subtitle: `${companyName} | ${monthDeliveries.length} delivery rows`,
+      columns: [
+        { key: "no", label: "No", width: 26, align: "center" },
+        { key: "date", label: "Date", width: 60 },
+        { key: "inv", label: "Invoice", width: 74 },
+        { key: "truck", label: "Truck", width: 55 },
+        { key: "type", label: "Type", width: 55 },
+        { key: "to", label: "To Location", width: 120 },
+        { key: "qty", label: "QTY(T)", width: 68, align: "right" },
+        { key: "cUp", label: "Co. Price", width: 60, align: "right" },
+        { key: "cTot", label: "Co. Total", width: 66, align: "right", bold: true },
+        { key: "dUp", label: "Dr. Price", width: 60, align: "right" },
+        { key: "dTot", label: "Dr. Total", width: 66, align: "right" },
+      ],
+      rows: sortedDeliveries.map((d, i) => ({
+        no: i + 1, date: formatShortDate(d.deliveryDate), inv: d.invoiceNo,
+        truck: d.truckNo, type: truckTypeLabel(d.truckType), to: d.toLocation,
+        qty: `${Number(d.qtyTon || 0).toFixed(3)}T`,
+        cUp: `$ ${unitMoney(d.companyUnitPrice)}`, cTot: `$ ${money(d.companyTotalAmount)}`,
+        dUp: `$ ${unitMoney(d.truckSalaryUnitPrice)}`, dTot: `$ ${money(d.truckSalaryAmount)}`,
+      })),
+      totals: { qty: `${totalQty.toFixed(3)}T`, cTot: `$ ${money(totalRevenue)}`, dTot: `$ ${money(totalDriver)}` },
+      totalsLabel: "Total",
+    });
+
+    // Extract pages from the individual PDFs and merge into pdfPages
+    // Parse page count from generated PDFs by re-using tablePdf directly through buildPdf
+    // We built pdfPages with the summary page; now append statement and delivery pages
+    // Since tablePdf returns a Buffer, we need a different approach: call buildPdf with combined pages
+    // Instead, output them as separate PDFs in the ZIP
+    const stmtPdfBuf = stPdf;
+    const dlPdfBuf = dlPdf;
+    const summaryPdfBuf = buildPdf(pdfPages);
+
+    const zipBuf = buildZip([
+      { name: `nm-logistic-${safeMonth}.xlsx`, data: xlsBuffer },
+      { name: `nm-logistic-${safeMonth}-summary.pdf`, data: summaryPdfBuf },
+      { name: `nm-logistic-${safeMonth}-statements.pdf`, data: stmtPdfBuf },
+      { name: `nm-logistic-${safeMonth}-deliveries.pdf`, data: dlPdfBuf },
+    ]);
+
+    const zipName = `nm-logistic-bundle-${safeMonth}.zip`;
+    res.writeHead(200, {
+      "Content-Type": "application/zip",
+      "Content-Disposition": `attachment; filename="${zipName}"`
+    });
+    return res.end(zipBuf);
   }
 
   if (req.method === "GET" && url.pathname === "/api/export/accounting") {

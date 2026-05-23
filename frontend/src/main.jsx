@@ -1845,9 +1845,21 @@ function App() {
                 {new Date(reportMonth + "-01").toLocaleString("default", { month: "long", year: "numeric" })} overview
               </p>
             </div>
-            <Field label="Report Month">
-              <Input type="month" value={reportMonth} onChange={(event) => { setReportMonth(event.target.value); setReportTruckNo(""); }} />
-            </Field>
+            <div className="flex flex-wrap items-end gap-3">
+              <Field label="Report Month">
+                <Input type="month" value={reportMonth} onChange={(event) => { setReportMonth(event.target.value); setReportTruckNo(""); }} />
+              </Field>
+              {isAdmin && (
+                <button type="button"
+                  onClick={() => downloadFile(`/api/export/monthly-bundle?month=${encodeURIComponent(reportMonth)}`).catch((err) => flash(err.message, "error"))}
+                  className="flex items-center gap-2 rounded-xl border border-teal-300 bg-teal-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-teal-700 transition mb-0.5">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Monthly Bundle
+                </button>
+              )}
+            </div>
           </div>
 
           {/* KPI cards */}
