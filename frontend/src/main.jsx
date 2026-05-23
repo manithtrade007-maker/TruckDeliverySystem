@@ -3443,71 +3443,75 @@ function App() {
             </Panel>
           )}
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Panel>
-              <h2 className="mb-3 text-lg font-bold">Settings</h2>
-              <form className="grid gap-3" onSubmit={saveSettings}>
-                <Field label="Company"><Input value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} /></Field>
-                <Field label="Default From Location"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
-                <Field label="VIP Delete Password" hint="Required to delete any statement. Leave blank to allow deletion without a password.">
-                  <Input type="password" value={settingsForm.deletePassword} onChange={(e) => setSettingsForm({ ...settingsForm, deletePassword: e.target.value })} placeholder="Set a password…" />
-                </Field>
-                <div><Button type="submit">Save Settings</Button></div>
-              </form>
-            </Panel>
+          {isAdmin && (
+            <>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Panel>
+                  <h2 className="mb-3 text-lg font-bold">Settings</h2>
+                  <form className="grid gap-3" onSubmit={saveSettings}>
+                    <Field label="Company"><Input value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} /></Field>
+                    <Field label="Default From Location"><Input value={settingsForm.defaultFromLocation} onChange={(e) => setSettingsForm({ ...settingsForm, defaultFromLocation: e.target.value })} /></Field>
+                    <Field label="VIP Delete Password" hint="Required to delete any statement. Leave blank to allow deletion without a password.">
+                      <Input type="password" value={settingsForm.deletePassword} onChange={(e) => setSettingsForm({ ...settingsForm, deletePassword: e.target.value })} placeholder="Set a password…" />
+                    </Field>
+                    <div><Button type="submit">Save Settings</Button></div>
+                  </form>
+                </Panel>
 
-            <Panel>
-              <h2 className="mb-3 text-lg font-bold">Data Backup</h2>
-              <p className="text-sm font-bold text-slate-500">
-                Automatic backup runs before the first data change each day.
-              </p>
-              <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-500">
-                Latest: {backupFiles[0] || "No backup yet"}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button type="button" onClick={createManualBackup}>Create Backup</Button>
-                <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
+                <Panel>
+                  <h2 className="mb-3 text-lg font-bold">Data Backup</h2>
+                  <p className="text-sm font-bold text-slate-500">
+                    Automatic backup runs before the first data change each day.
+                  </p>
+                  <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-500">
+                    Latest: {backupFiles[0] || "No backup yet"}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button type="button" onClick={createManualBackup}>Create Backup</Button>
+                    <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
+                  </div>
+                </Panel>
               </div>
-            </Panel>
-          </div>
 
-          <Panel>
-            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <h2 className="text-lg font-bold">Tools</h2>
-                <p className="mt-1 text-sm font-bold text-slate-500">
-                  Check for missing prices or re-apply driver prices after a bulk update.
-                </p>
-              </div>
-              <div className="flex gap-2 flex-wrap justify-end">
-                <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
-                <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
-              </div>
-            </div>
-
-            <div className="mt-4 border-t border-slate-100 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowAdvancedTools((v) => !v)}
-                className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition"
-              >
-                <span className={`inline-block transition-transform ${showAdvancedTools ? "rotate-90" : ""}`}>▶</span>
-                Advanced Tools
-              </button>
-              {showAdvancedTools && (
-                <div className="mt-3 grid gap-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Use only when troubleshooting — these operations affect all data.</p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Deliveries</Button>
-                    <Button type="button" variant="secondary" onClick={fixLocationNames}>Fix Location Names</Button>
-                    <Button type="button" variant="secondary" onClick={normalizeLocationSpacing}>Fix Location Spacing</Button>
-                    <Button type="button" variant="secondary" onClick={deleteNonstandardFormatPrices}>Delete Non-Standard Prices</Button>
-                    <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
+              <Panel>
+                <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div>
+                    <h2 className="text-lg font-bold">Tools</h2>
+                    <p className="mt-1 text-sm font-bold text-slate-500">
+                      Check for missing prices or re-apply driver prices after a bulk update.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    <Button type="button" variant="secondary" onClick={diagnoseEmptyPrices}>Check Empty Prices</Button>
+                    <Button type="button" variant="secondary" onClick={recalculateAllPrices}>Recalculate Driver Prices</Button>
                   </div>
                 </div>
-              )}
-            </div>
-          </Panel>
+
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvancedTools((v) => !v)}
+                    className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition"
+                  >
+                    <span className={`inline-block transition-transform ${showAdvancedTools ? "rotate-90" : ""}`}>▶</span>
+                    Advanced Tools
+                  </button>
+                  {showAdvancedTools && (
+                    <div className="mt-3 grid gap-3">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Use only when troubleshooting — these operations affect all data.</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="secondary" onClick={diagnoseDriverPrices}>Diagnose $0 Deliveries</Button>
+                        <Button type="button" variant="secondary" onClick={fixLocationNames}>Fix Location Names</Button>
+                        <Button type="button" variant="secondary" onClick={normalizeLocationSpacing}>Fix Location Spacing</Button>
+                        <Button type="button" variant="secondary" onClick={deleteNonstandardFormatPrices}>Delete Non-Standard Prices</Button>
+                        <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Panel>
+            </>
+          )}
 
         </main>
       )}
