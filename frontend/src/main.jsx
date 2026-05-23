@@ -299,6 +299,32 @@ function KpiCard({ label, value, tone = "slate" }) {
   );
 }
 
+function MetricCard({ icon, label, value, sub, tone = "slate", onClick }) {
+  const tones = {
+    slate: { wrap: "border-slate-200 bg-white", icon: "bg-slate-100 text-slate-600", value: "text-slate-900", sub: "text-slate-500" },
+    teal:  { wrap: "border-teal-200 bg-gradient-to-br from-teal-50 to-white", icon: "bg-teal-100 text-teal-700", value: "text-teal-950", sub: "text-teal-600" },
+    amber: { wrap: "border-amber-200 bg-gradient-to-br from-amber-50 to-white", icon: "bg-amber-100 text-amber-700", value: "text-amber-950", sub: "text-amber-600" },
+    blue:  { wrap: "border-sky-200 bg-gradient-to-br from-sky-50 to-white", icon: "bg-sky-100 text-sky-700", value: "text-sky-950", sub: "text-sky-600" },
+    red:   { wrap: "border-red-200 bg-gradient-to-br from-red-50 to-white", icon: "bg-red-100 text-red-600", value: "text-red-900", sub: "text-red-500" },
+    emerald: { wrap: "border-emerald-200 bg-gradient-to-br from-emerald-50 to-white", icon: "bg-emerald-100 text-emerald-700", value: "text-emerald-950", sub: "text-emerald-600" },
+  };
+  const t = tones[tone] || tones.slate;
+  return (
+    <div className={`rounded-2xl border p-4 shadow-sm shadow-slate-900/5 ${t.wrap} ${onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`} onClick={onClick}>
+      <div className="flex items-start justify-between gap-3">
+        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${t.icon}`}>
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1 text-right">
+          <div className="text-[10px] font-black uppercase tracking-wider opacity-60">{label}</div>
+          <div className={`mt-0.5 text-xl font-black tracking-tight ${t.value}`}>{value}</div>
+          {sub && <div className={`mt-0.5 text-xs font-bold ${t.sub}`}>{sub}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PageHead({ title, meta, action }) {
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -505,7 +531,7 @@ function App() {
   const filteredStatements = useMemo(() => {
     const statementNumber = String(filters.statementNumber || "").trim();
     return visibleStatements
-      .filter((statement) => !filters.month || statement.month === filters.month)
+      .filter((statement) => statementNumber || !filters.month || statement.month === filters.month)
       .filter((statement) => !statementNumber || String(statement.statementNumber).includes(statementNumber))
       .sort((a, b) => b.month.localeCompare(a.month) || Number(b.statementNumber) - Number(a.statementNumber));
   }, [visibleStatements, filters]);
@@ -653,6 +679,18 @@ function App() {
   );
 
   const activeTruckCount = truckPerformance.filter((truck) => truck.trips > 0).length;
+
+  const dashOutstanding = useMemo(() => {
+    const allStatements = data.statements || [];
+    const allPaymentMonths = data.paymentMonths || [];
+    const thisMonth = currentMonth();
+    const list = allStatements.filter((s) =>
+      (s.paymentMonth && !allPaymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received)) ||
+      (!s.paymentMonth && s.month === thisMonth)
+    );
+    return { count: list.length, amount: list.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0) };
+  }, [data.statements, data.paymentMonths]);
+
   const selectedDriverPaymentSection = driverPaymentSections.find((truck) => truck.truckNo === reportTruckNo);
   const isEditingTruck = data.trucks.some((truck) => truck.truckNo === truckForm.truckNo);
   const setupLocationSearchKey = locationMatchKey(setupLocationSearch);
@@ -1747,34 +1785,89 @@ function App() {
       )}
 
       {page === "dashboard" ? (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
-          <PageHead
-            title="Dashboard"
-            meta="Monthly revenue, driver payment, margin, and activity."
-            action={(
-              <Field label="Report Month">
-                <Input
-                  type="month"
-                  value={reportMonth}
-                  onChange={(event) => {
-                    setReportMonth(event.target.value);
-                    setReportTruckNo("");
-                  }}
-                />
-              </Field>
-            )}
-          />
-
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <KpiCard label="Company Price" value={`$${money(monthlyTotals.companyAmount)}`} tone="teal" />
-            <KpiCard label="Driver Payment" value={`$${money(monthlyTotals.driverAmount)}`} tone="amber" />
-            <KpiCard label="Profit" value={`$${money(monthlyTotals.margin)}`} tone="blue" />
-            <KpiCard label="Trips / Active Trucks" value={`${monthlyTotals.trips} / ${activeTruckCount}`} tone="slate" />
+        <main className="mx-auto grid max-w-[1500px] gap-5 p-4 pb-20 lg:pb-4">
+          {/* Header */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-teal-600">N&M Logistic</p>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900">Dashboard</h2>
+              <p className="mt-1 text-sm font-bold text-slate-500">
+                {new Date(reportMonth + "-01").toLocaleString("default", { month: "long", year: "numeric" })} overview
+              </p>
+            </div>
+            <Field label="Report Month">
+              <Input type="month" value={reportMonth} onChange={(event) => { setReportMonth(event.target.value); setReportTruckNo(""); }} />
+            </Field>
           </div>
 
-          <Panel>
-            <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <h3 className="text-lg font-black tracking-tight">Truck Performance</h3>
+          {/* KPI cards */}
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              tone="teal"
+              label="Company Revenue"
+              value={`$${money(monthlyTotals.companyAmount)}`}
+              sub={`${monthlyTotals.trips} trips · ${monthlyTotals.qty.toFixed(2)}T`}
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>}
+            />
+            <MetricCard
+              tone="amber"
+              label="Driver Payment"
+              value={`$${money(monthlyTotals.driverAmount)}`}
+              sub={`${activeTruckCount} active truck${activeTruckCount !== 1 ? "s" : ""}`}
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
+            />
+            <MetricCard
+              tone="blue"
+              label="Profit"
+              value={`$${money(monthlyTotals.margin)}`}
+              sub={`${monthlyTotals.companyAmount > 0 ? ((monthlyTotals.margin / monthlyTotals.companyAmount) * 100).toFixed(1) : "0.0"}% margin`}
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>}
+            />
+            <MetricCard
+              tone={dashOutstanding.amount > 0 ? "red" : "emerald"}
+              label="Outstanding"
+              value={`$${money(dashOutstanding.amount)}`}
+              sub={dashOutstanding.count > 0 ? `${dashOutstanding.count} statement${dashOutstanding.count !== 1 ? "s" : ""} unpaid` : "All payments received"}
+              onClick={isAdmin ? () => setPage("payments") : undefined}
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>}
+            />
+          </div>
+
+          {/* Business snapshot */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-4 shadow-sm">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-teal-500"></span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-teal-600">Crane — {statementCounts.withCrane} statements</span>
+              </div>
+              <div className="text-2xl font-black text-teal-950">${money(statementCounts.craneAmount)}</div>
+              <div className="mt-1 text-xs font-bold text-teal-600">6 crane trucks</div>
+            </div>
+            <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-4 shadow-sm">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-sky-500"></span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-sky-600">No Crane — {statementCounts.withoutCrane} statements</span>
+              </div>
+              <div className="text-2xl font-black text-sky-950">${money(statementCounts.noCraneAmount)}</div>
+              <div className="mt-1 text-xs font-bold text-sky-600">3 no-crane trucks</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-slate-400"></span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Total Revenue</span>
+              </div>
+              <div className="text-2xl font-black text-slate-900">${money(statementCounts.totalAmount)}</div>
+              <div className="mt-1 text-xs font-bold text-slate-500">{statementCounts.total} statement{statementCounts.total !== 1 ? "s" : ""} this month</div>
+            </div>
+          </div>
+
+          {/* Truck performance cards */}
+          <div>
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-black tracking-tight">Truck Performance</h3>
+                <p className="text-xs font-bold text-slate-500">{new Date(reportMonth + "-01").toLocaleString("default", { month: "long", year: "numeric" })} — sorted by revenue</p>
+              </div>
               {isAdmin && (
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" onClick={() => { window.location.href = `/api/export/dashboard?month=${encodeURIComponent(reportMonth)}&format=xls`; }}>Export Excel</Button>
@@ -1782,56 +1875,98 @@ function App() {
                 </div>
               )}
             </div>
-            <div className="overflow-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[1100px] border-collapse bg-white text-sm">
-                <thead className="bg-slate-900 text-white">
-                  <tr>
-                    <th className="px-3 py-3 text-left font-black">Truck No</th>
-                    <th className="px-3 py-3 text-left font-black">Type</th>
-                    <th className="px-3 py-3 text-left font-black">Driver</th>
-                    <th className="px-3 py-3 text-center font-black">Working Days</th>
-                    <th className="px-3 py-3 text-center font-black">Trips</th>
-                    <th className="px-3 py-3 text-right font-black">QTY(T)</th>
-                    <th className="px-3 py-3 text-right font-black">Company Price</th>
-                    <th className="px-3 py-3 text-right font-black">Driver Payment</th>
-                    <th className="px-3 py-3 text-right font-black">Profit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {truckPerformance.map((truck) => (
-                    <tr key={truck.truckNo} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
-                      <td className="px-3 py-3 font-black">{truck.truckNo}</td>
-                      <td className="px-3 py-3">{truckTypeLabel(truck.truckType)}</td>
-                      <td className="px-3 py-3">{truck.driverName || "-"}</td>
-                      <td className="px-3 py-3 text-center">{truck.workingDays}</td>
-                      <td className="px-3 py-3 text-center">{truck.trips}</td>
-                      <td className="px-3 py-3 text-right font-bold">{truck.qty.toFixed(4)}T</td>
-                      <td className="px-3 py-3 text-right">$ {money(truck.companyAmount)}</td>
-                      <td className="px-3 py-3 text-right font-black">$ {money(truck.driverAmount)}</td>
-                      <td className="px-3 py-3 text-right">$ {money(truck.margin)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-
-          <Panel>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-black tracking-tight">News & Changes</h3>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-500">Latest activity</span>
-            </div>
-            <div className="grid gap-2">
-              {(data.activity || []).slice(0, 6).map((item) => (
-                <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="text-sm font-black text-slate-900">{item.message}</div>
-                  <div className="mt-1 text-xs font-bold text-slate-500">{formatDateTime(item.createdAt)}</div>
+            {(() => {
+              const maxCompany = Math.max(...truckPerformance.map((t) => t.companyAmount), 1);
+              return (
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {truckPerformance.map((truck) => {
+                    const isCrane = truck.truckType === "With Crane";
+                    const barPct = Math.round((truck.companyAmount / maxCompany) * 100);
+                    const hasTrips = truck.trips > 0;
+                    return (
+                      <div key={truck.truckNo} className={`rounded-2xl border bg-white shadow-sm overflow-hidden ${hasTrips ? "border-slate-200" : "border-slate-100 opacity-60"}`}>
+                        <div className={`px-4 py-3 flex items-center justify-between ${isCrane ? "bg-teal-700" : "bg-sky-700"}`}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-base font-black text-white tracking-tight">{truck.truckNo}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${isCrane ? "bg-teal-500/40 text-white" : "bg-sky-500/40 text-white"}`}>
+                              {isCrane ? "CRANE" : "NO CRANE"}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold text-white/70">{truck.driverName || "—"}</span>
+                        </div>
+                        <div className="px-4 pt-3 pb-2">
+                          <div className="grid grid-cols-3 gap-1 mb-3">
+                            {[["Days", truck.workingDays], ["Trips", truck.trips], ["QTY", `${truck.qty.toFixed(1)}T`]].map(([l, v]) => (
+                              <div key={l} className="text-center">
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">{l}</div>
+                                <div className="text-base font-black text-slate-800">{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mb-3 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${isCrane ? "bg-teal-500" : "bg-sky-500"}`} style={{ width: `${barPct}%` }} />
+                          </div>
+                          <div className="grid grid-cols-3 gap-1 text-center">
+                            <div>
+                              <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Revenue</div>
+                              <div className="text-sm font-black text-slate-800">${money(truck.companyAmount)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Driver</div>
+                              <div className="text-sm font-black text-slate-600">${money(truck.driverAmount)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Profit</div>
+                              <div className={`text-sm font-black ${truck.margin >= 0 ? "text-emerald-700" : "text-red-600"}`}>${money(truck.margin)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {truckPerformance.length === 0 && (
+                    <div className="col-span-3 rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
+                      No delivery data for this month.
+                    </div>
+                  )}
                 </div>
-              ))}
-              {(data.activity || []).length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm font-bold text-slate-500">No setup changes recorded yet.</div>
-              )}
+              );
+            })()}
+          </div>
+
+          {/* Activity timeline */}
+          <Panel>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-black tracking-tight">Recent Activity</h3>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">Latest changes</span>
             </div>
+            {(data.activity || []).length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-400">No activity recorded yet.</div>
+            ) : (
+              <div className="relative pl-6">
+                <div className="absolute left-2 top-0 bottom-0 w-px bg-slate-100" />
+                <div className="grid gap-4">
+                  {(data.activity || []).slice(0, 8).map((item, i) => {
+                    const msg = item.message || "";
+                    const isPrice = msg.toLowerCase().includes("price");
+                    const isTruck = msg.toLowerCase().includes("truck");
+                    const isBackup = msg.toLowerCase().includes("backup");
+                    const dotColor = isPrice ? "bg-amber-400" : isTruck ? "bg-sky-400" : isBackup ? "bg-purple-400" : "bg-teal-400";
+                    const borderColor = isPrice ? "border-amber-100" : isTruck ? "border-sky-100" : isBackup ? "border-purple-100" : "border-teal-100";
+                    const bgColor = isPrice ? "bg-amber-50" : isTruck ? "bg-sky-50" : isBackup ? "bg-purple-50" : "bg-teal-50";
+                    return (
+                      <div key={item.id} className="relative">
+                        <span className={`absolute -left-[18px] top-2 h-3 w-3 rounded-full border-2 border-white ${dotColor}`} />
+                        <div className={`rounded-xl border px-4 py-3 ${borderColor} ${bgColor}`}>
+                          <div className="text-sm font-black text-slate-900">{item.message}</div>
+                          <div className="mt-0.5 text-xs font-bold text-slate-500">{formatDateTime(item.createdAt)}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </Panel>
         </main>
       ) : page === "data-entry" ? (
