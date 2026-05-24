@@ -477,6 +477,7 @@ function App() {
     qtyTon: ""
   });
   const invoiceInputRef = useRef(null);
+  const truckInputRef = useRef(null);
   const deliveryFormRef = useRef(null);
   const [activeField, setActiveField] = useState("");
   const [filters, setFilters] = useState({ month: currentMonth(), statementNumber: "" });
@@ -2479,11 +2480,16 @@ function App() {
                       onFocus={() => setActiveField("invoiceNo")}
                       onBlur={() => setActiveField("")}
                       value={deliveryForm.invoiceNo}
-                      onChange={(e) => setDeliveryForm({ ...deliveryForm, invoiceNo: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setDeliveryForm({ ...deliveryForm, invoiceNo: val });
+                        if (val.length === 10) truckInputRef.current?.focus();
+                      }}
                     />
                   </Field>
                   <Field label="Truck No">
                     <Input
+                      ref={truckInputRef}
                       list="delivery-truck-options"
                       required
                       disabled={!canEditRows}
