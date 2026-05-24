@@ -2459,7 +2459,14 @@ function App() {
                 </div>
                 <form ref={deliveryFormRef} className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
                   <Field label="Delivery Date"><Input type="date" required disabled={!canEditRows} style={activeField === "deliveryDate" ? { backgroundColor: "#fef08a" } : {}} onFocus={() => setActiveField("deliveryDate")} onBlur={() => setActiveField("")} value={deliveryForm.deliveryDate} onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })} /></Field>
-                  <Field label="Invoice No">
+                  <Field label={
+                    <span className="flex items-center justify-between">
+                      <span>Invoice No</span>
+                      <span className={`normal-case tracking-normal tabular-nums ${deliveryForm.invoiceNo.length === 10 ? "text-emerald-600" : deliveryForm.invoiceNo.length > 0 ? "text-amber-600" : "text-slate-400"}`}>
+                        {deliveryForm.invoiceNo.length}/10
+                      </span>
+                    </span>
+                  }>
                     <Input
                       ref={invoiceInputRef}
                       required
@@ -2474,11 +2481,6 @@ function App() {
                       value={deliveryForm.invoiceNo}
                       onChange={(e) => setDeliveryForm({ ...deliveryForm, invoiceNo: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                     />
-                    <div className="mt-1 flex justify-end">
-                      <span className={`text-[11px] font-black tabular-nums ${deliveryForm.invoiceNo.length === 10 ? "text-emerald-600" : deliveryForm.invoiceNo.length > 0 ? "text-amber-600" : "text-slate-400"}`}>
-                        {deliveryForm.invoiceNo.length}/10
-                      </span>
-                    </div>
                   </Field>
                   <Field label="Truck No">
                     <Input
