@@ -710,6 +710,25 @@ function App() {
 
   const activeTruckCount = truckPerformance.filter((truck) => truck.trips > 0).length;
 
+  const statementSummaries = useMemo(() => {
+    const stmts = data.statements
+      .filter((s) => s.month === reportMonth && !(s.status === "Draft" && Number(s.rowCount || 0) === 0))
+      .sort((a, b) => Number(a.statementNumber) - Number(b.statementNumber));
+    const driverByStatement = {};
+    for (const row of data.deliveries) {
+      if (row.deliveryDate?.slice(0, 7) === reportMonth) {
+        driverByStatement[row.statementId] = (driverByStatement[row.statementId] || 0) + Number(row.truckSalaryAmount || 0);
+      }
+    }
+    return stmts.map((s) => ({
+      statementNumber: s.statementNumber,
+      truckType: s.truckType,
+      status: s.status,
+      companyRevenue: Number(s.companyTotalAmount || 0),
+      driverPayment: driverByStatement[s.id] || 0,
+    }));
+  }, [data.statements, data.deliveries, reportMonth]);
+
   const dashOutstanding = useMemo(() => {
     const allStatements = data.statements || [];
     const allPaymentMonths = data.paymentMonths || [];
@@ -1937,6 +1956,45 @@ function App() {
             </div>
           </div>
 
+          {/* Statement earnings list */}
+          {statementSummaries.length > 0 && (
+            <div>
+              <div className="mb-3">
+                <h3 className="text-lg font-black tracking-tight">Statement Earnings</h3>
+                <p className="text-xs font-bold text-slate-500">{new Date(reportMonth + "-01").toLocaleString("default", { month: "long", year: "numeric" })} — per statement breakdown</p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {statementSummaries.map((s) => {
+                  const isCrane = s.truckType === "With Crane";
+                  const profit = s.companyRevenue - s.driverPayment;
+                  return (
+                    <div key={s.statementNumber} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      <div className={`px-4 py-2 flex items-center gap-2 ${isCrane ? "bg-teal-700" : "bg-sky-700"}`}>
+                        <span className="font-black text-white text-sm">Statement {s.statementNumber}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${isCrane ? "bg-teal-500/40 text-white" : "bg-sky-500/40 text-white"}`}>{isCrane ? "CRANE" : "NO CRANE"}</span>
+                        <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-black ${s.status === "Finished" ? "bg-emerald-500/30 text-emerald-100" : "bg-amber-500/30 text-amber-100"}`}>{s.status}</span>
+                      </div>
+                      <div className="px-4 py-3 grid grid-cols-3 gap-2">
+                        <div>
+                          <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Revenue</div>
+                          <div className="text-sm font-black text-teal-700">${money(s.companyRevenue)}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Driver Pay</div>
+                          <div className="text-sm font-black text-amber-600">${money(s.driverPayment)}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Profit</div>
+                          <div className={`text-sm font-black ${profit >= 0 ? "text-blue-600" : "text-red-600"}`}>${money(profit)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Truck performance cards */}
           <div>
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -2496,7 +2554,12 @@ function App() {
                       placeholder="Type truck"
                       style={activeField === "truckNo" ? { backgroundColor: "#fef08a" } : {}}
                       onFocus={() => setActiveField("truckNo")}
-                      onBlur={() => setActiveField("")}
+                      onBlur={() => {
+                        setActiveField("");
+                        if (deliveryForm.truckNo && (truckMissing || truckTypeMismatch)) {
+                          setTimeout(() => truckInputRef.current?.focus(), 0);
+                        }
+                      }}
                       value={deliveryForm.truckNo}
                       onChange={(e) => setDeliveryForm({ ...deliveryForm, truckNo: e.target.value.toUpperCase(), toLocation: "" })}
                     />
