@@ -1924,7 +1924,7 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, extraTo
       commands.push(drawText(title, margin, titleY, { size: 12, bold: true, width: tableWidth }));
       if (subtitle) commands.push(drawText(subtitle, margin, subtitleY, { size: 7.5, bold: true, color: [0.39, 0.46, 0.56], width: tableWidth }));
     }
-    commands.push(drawRect(tableX, tableTop - headerHeight, tableWidth, headerHeight, [0.06, 0.09, 0.16], [0.06, 0.09, 0.16]));
+    commands.push(drawRect(tableX, tableTop - headerHeight, tableWidth, headerHeight, [0.35, 0.40, 0.47], [0.35, 0.40, 0.47]));
     let x = tableX;
     for (const column of tableColumns) {
       commands.push(drawText(column.label, x + 3, tableTop - 14, {
@@ -2046,9 +2046,9 @@ function statementPdf(data, rows, signatureImage) {
     const rowsY = [top - rowHeight, top - rowHeight * 2, top - rowHeight * 3];
     const commands = [];
     for (const y of rowsY) {
-      commands.push(drawRect(0, y, leftWidth, rowHeight, null, [0.06, 0.09, 0.16]));
-      commands.push(drawRect(leftWidth, y, labelWidth, rowHeight, null, [0.06, 0.09, 0.16]));
-      commands.push(drawRect(leftWidth + labelWidth, y, valueWidth, rowHeight, null, [0.06, 0.09, 0.16]));
+      commands.push(drawRect(0, y, leftWidth, rowHeight, null, [0.35, 0.40, 0.47]));
+      commands.push(drawRect(leftWidth, y, labelWidth, rowHeight, null, [0.35, 0.40, 0.47]));
+      commands.push(drawRect(leftWidth + labelWidth, y, valueWidth, rowHeight, null, [0.35, 0.40, 0.47]));
     }
     commands.push(drawText(data.settings.companyName || "N&M LOGISTIC", 0, rowsY[0] + 4, { size: 11, bold: true, width: leftWidth, align: "center" }));
     commands.push(drawText("Invoice No:", leftWidth + 3, rowsY[0] + 4, { size: 7, bold: true, width: labelWidth - 6 }));
