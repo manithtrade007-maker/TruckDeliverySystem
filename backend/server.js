@@ -1037,12 +1037,7 @@ function filteredDeliveries(data, query) {
   if (query.month) rows = filterByMonth(rows, query.month);
   if (query.truckNo) rows = rows.filter((item) => item.truckNo === query.truckNo);
   if (query.truckType) rows = rows.filter((item) => item.truckType === query.truckType);
-  return rows.sort(
-    (a, b) =>
-      String(a.deliveryDate || "").localeCompare(String(b.deliveryDate || "")) ||
-      String(a.invoiceNo || "").localeCompare(String(b.invoiceNo || "")) ||
-      String(a.createdAt || "").localeCompare(String(b.createdAt || ""))
-  );
+  return rows.sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
 }
 
 function statementsWithCounts(data) {
