@@ -459,6 +459,7 @@ function App() {
   const [entryTruckType, setEntryTruckType] = useState("With Crane");
   const [entryActionTruckType, setEntryActionTruckType] = useState("");
   const [showStatementWorkspace, setShowStatementWorkspace] = useState(false);
+  const [expandStatementEdit, setExpandStatementEdit] = useState(false);
   const [statementForm, setStatementForm] = useState({
     id: "",
     month: currentMonth(),
@@ -1049,6 +1050,7 @@ function App() {
     setViewStatementId("");
     setEntryTruckType(statement.truckType);
     setShowStatementWorkspace(true);
+    setExpandStatementEdit(false);
     setSelectedStatementId(statement.id);
     setStatementForm({
       id: statement.id,
@@ -2365,67 +2367,89 @@ function App() {
             </Panel>
           )}
 
-          {selectedStatement && (
-            <div className="grid gap-3 lg:col-span-2 lg:grid-cols-4">
-              <KpiCard label="Selected" value={`Statement ${selectedStatement.statementNumber}`} tone="teal" />
-              <KpiCard label="Rows" value={`${statementRows.length}/30`} tone="blue" />
-              <KpiCard label="Total QTY" value={`${totals.qty.toFixed(4)}T`} tone="slate" />
-              <KpiCard label="Total Amount" value={`$${money(totals.amount)}`} tone="amber" />
-            </div>
-          )}
-
-          {(showStatementWorkspace || selectedStatement) && (
-          <Panel id="statement-form-panel" className="lg:col-span-2">
-            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <h2 className="text-lg font-black tracking-tight">
-                {selectedStatement ? `${truckTypeLabel(entryTruckType)} Statement Details` : `Create ${truckTypeLabel(entryTruckType)} Statement`}
-              </h2>
-              <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-black text-teal-800">
-                {selectedStatement ? `Statement ${selectedStatement.statementNumber} | ${truckTypeLabel(selectedStatement.truckType)} | ${selectedStatement.status} | ${statementRows.length}/30 rows` : `${truckTypeLabel(entryTruckType)} mode`}
-              </span>
-            </div>
-            <form className="grid gap-3 md:grid-cols-4" onSubmit={saveStatement}>
-              <Field label="Month">
-                <Input
-                  type="month"
-                  required
-                  value={statementForm.month}
-                  onChange={async (event) => {
-                    const month = event.target.value;
-                    setStatementForm((current) => ({ ...current, month }));
-                    if (!statementForm.id && month) {
-                      try {
-                        const statementNumber = await getNextStatementNumber(month);
-                        setStatementForm((current) => ({ ...current, month, statementNumber }));
-                      } catch (err) {
-                        flash(err.message, "error");
+          {showStatementWorkspace && !selectedStatement && (
+            <Panel id="statement-form-panel" className="lg:col-span-2">
+              <h2 className="mb-4 text-lg font-black tracking-tight">Create {truckTypeLabel(entryTruckType)} Statement</h2>
+              <form className="grid gap-3 md:grid-cols-4" onSubmit={saveStatement}>
+                <Field label="Month">
+                  <Input type="month" required value={statementForm.month}
+                    onChange={async (event) => {
+                      const month = event.target.value;
+                      setStatementForm((current) => ({ ...current, month }));
+                      if (!statementForm.id && month) {
+                        try { const statementNumber = await getNextStatementNumber(month); setStatementForm((current) => ({ ...current, month, statementNumber })); }
+                        catch (err) { flash(err.message, "error"); }
                       }
-                    }
-                  }}
-                />
-              </Field>
-              <Field label="Truck Type"><Input value={truckTypeLabel(entryTruckType)} disabled readOnly /></Field>
-              <Field label="Statement No">
-                <Input type="number" min="1" required placeholder="Enter your statement number" value={statementForm.statementNumber} onChange={(event) => setStatementForm({ ...statementForm, statementNumber: event.target.value })} />
-              </Field>
-              <Field label="Statement Date">
-                <Input type="date" required value={statementForm.statementDate} onChange={(event) => setStatementForm({ ...statementForm, statementDate: event.target.value })} />
-              </Field>
-              <div className="flex flex-wrap items-end gap-2 md:col-span-4">
-                <Button type="submit">{statementForm.id ? "Save Changes" : "Create Statement"}</Button>
-                <Button type="button" variant="secondary" onClick={backToStatementList}>
-                  Back to Statements
-                </Button>
-                {selectedStatement && !isDraft && (
-                  <Button type="button" variant="secondary" onClick={reopenStatement}>Reopen to Edit Rows</Button>
-                )}
-              </div>
-            </form>
-          </Panel>
+                    }} />
+                </Field>
+                <Field label="Truck Type"><Input value={truckTypeLabel(entryTruckType)} disabled readOnly /></Field>
+                <Field label="Statement No"><Input type="number" min="1" required placeholder="Statement number" value={statementForm.statementNumber} onChange={(e) => setStatementForm({ ...statementForm, statementNumber: e.target.value })} /></Field>
+                <Field label="Statement Date"><Input type="date" required value={statementForm.statementDate} onChange={(e) => setStatementForm({ ...statementForm, statementDate: e.target.value })} /></Field>
+                <div className="flex flex-wrap items-end gap-2 md:col-span-4">
+                  <Button type="submit">Create Statement</Button>
+                  <Button type="button" variant="secondary" onClick={backToStatementList}>Cancel</Button>
+                </div>
+              </form>
+            </Panel>
           )}
 
           {selectedStatement && (
             <>
+              {/* ── Compact statement info bar ─────────────────────────────── */}
+              <div className="lg:col-span-2 rounded-2xl bg-slate-900 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                <button type="button" onClick={backToStatementList}
+                  className="flex items-center gap-1.5 text-sm font-black text-slate-400 hover:text-white transition shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                  Back
+                </button>
+                <div className="flex flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="font-black text-white">Statement {selectedStatement.statementNumber}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-black ${selectedStatement.truckType === "With Crane" ? "bg-teal-500/20 text-teal-300" : "bg-sky-500/20 text-sky-300"}`}>{truckTypeLabel(selectedStatement.truckType)}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-black ${selectedStatement.status === "Draft" ? "bg-amber-500/20 text-amber-300" : selectedStatement.status === "Finished" ? "bg-emerald-500/20 text-emerald-300" : "bg-sky-500/20 text-sky-300"}`}>{selectedStatement.status}</span>
+                  <span className="text-slate-500 text-xs">·</span>
+                  <span className="text-slate-300 text-sm font-bold">{statementRows.length}/30 rows</span>
+                  <span className="text-slate-500 text-xs">·</span>
+                  <span className="text-slate-300 text-sm font-bold">{totals.qty.toFixed(3)}T</span>
+                  <span className="text-slate-500 text-xs">·</span>
+                  <span className="text-white font-black">${money(totals.amount)}</span>
+                </div>
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  <button type="button" onClick={() => setExpandStatementEdit((v) => !v)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-black transition ${expandStatementEdit ? "border-slate-500 bg-slate-700 text-white" : "border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white"}`}>
+                    {expandStatementEdit ? "Hide Details" : "Edit Details"}
+                  </button>
+                  {!isDraft && <button type="button" onClick={reopenStatement} className="rounded-lg border border-amber-800 px-3 py-1.5 text-xs font-black text-amber-300 hover:border-amber-600 transition">Reopen</button>}
+                  {canFinishStatement && <button type="button" onClick={finishStatement} className="rounded-lg border border-emerald-700 bg-emerald-600 px-3 py-1.5 text-xs font-black text-white hover:bg-emerald-500 transition">Finish Statement</button>}
+                </div>
+              </div>
+
+              {/* ── Collapsible statement edit form ───────────────────────── */}
+              {expandStatementEdit && (
+                <Panel className="lg:col-span-2">
+                  <h2 className="mb-3 text-base font-black tracking-tight text-slate-700">Statement Details</h2>
+                  <form className="grid gap-3 md:grid-cols-4" onSubmit={saveStatement}>
+                    <Field label="Month">
+                      <Input type="month" required value={statementForm.month}
+                        onChange={async (event) => {
+                          const month = event.target.value;
+                          setStatementForm((current) => ({ ...current, month }));
+                          if (!statementForm.id && month) {
+                            try { const statementNumber = await getNextStatementNumber(month); setStatementForm((current) => ({ ...current, month, statementNumber })); }
+                            catch (err) { flash(err.message, "error"); }
+                          }
+                        }} />
+                    </Field>
+                    <Field label="Truck Type"><Input value={truckTypeLabel(entryTruckType)} disabled readOnly /></Field>
+                    <Field label="Statement No"><Input type="number" min="1" required value={statementForm.statementNumber} onChange={(e) => setStatementForm({ ...statementForm, statementNumber: e.target.value })} /></Field>
+                    <Field label="Statement Date"><Input type="date" required value={statementForm.statementDate} onChange={(e) => setStatementForm({ ...statementForm, statementDate: e.target.value })} /></Field>
+                    <div className="flex flex-wrap gap-2 md:col-span-4">
+                      <Button type="submit">Save Changes</Button>
+                      <Button type="button" variant="secondary" onClick={() => setExpandStatementEdit(false)}>Close</Button>
+                    </div>
+                  </form>
+                </Panel>
+              )}
+
               <Panel className="lg:col-span-2">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-black tracking-tight">{isEditingDelivery ? "Edit Delivery Row" : "Delivery Entry"}</h2>
