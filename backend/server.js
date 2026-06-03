@@ -1614,6 +1614,176 @@ function salaryExport(data, rows, query = {}, loanDeduction = 0, garageFee = 0) 
   );
 }
 
+async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
+  const truck = data.trucks.find((item) => item.truckNo === query.truckNo) || {};
+  const truckNo = query.truckNo || rows[0]?.truckNo || "All Trucks";
+  const truckType = truckTypeLabel(rows[0]?.truckType || truck.truckType || query.truckType || "No Data");
+  const driverName = rows[0]?.driverName || truck.driverName || "-";
+  const reportMonth = monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
+  const totalDriverAmount = rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0);
+  const netPay = totalDriverAmount - loanDeduction - garageFee;
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = data.settings.companyName || "N&M LOGISTIC";
+  workbook.created = new Date();
+  workbook.modified = new Date();
+
+  const worksheet = workbook.addWorksheet("Driver Payment", {
+    pageSetup: {
+      paperSize: 9,
+      orientation: "portrait",
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      margins: { left: 0, right: 0, top: 0, bottom: 0, header: 0, footer: 0 }
+    },
+    views: [{ showGridLines: true }]
+  });
+
+  worksheet.columns = [
+    { key: "no", width: 5 },
+    { key: "deliveryDate", width: 14 },
+    { key: "invoiceNo", width: 14 },
+    { key: "fromLocation", width: 14 },
+    { key: "toLocation", width: 24 },
+    { key: "qtyTon", width: 14 },
+    { key: "unitPrice", width: 12 },
+    { key: "driverAmount", width: 14 }
+  ];
+
+  const thinBorder = {
+    top: { style: "thin", color: { argb: "FF333333" } },
+    left: { style: "thin", color: { argb: "FF333333" } },
+    bottom: { style: "thin", color: { argb: "FF333333" } },
+    right: { style: "thin", color: { argb: "FF333333" } }
+  };
+  const baseFont = { name: "Arial", size: 10 };
+  const titleFont = { name: "Arial", size: 14, bold: true };
+  const boldFont = { name: "Arial", size: 10, bold: true };
+
+  const merge = (range, value, options = {}) => {
+    worksheet.mergeCells(range);
+    const cell = worksheet.getCell(range.split(":")[0]);
+    cell.value = value;
+    cell.font = options.font || baseFont;
+    cell.alignment = options.alignment || { vertical: "middle" };
+    cell.border = thinBorder;
+    return cell;
+  };
+
+  const styleRange = (startRow, endRow, startCol = 1, endCol = 8, options = {}) => {
+    for (let r = startRow; r <= endRow; r++) {
+      for (let c = startCol; c <= endCol; c++) {
+        const cell = worksheet.getCell(r, c);
+        cell.font = options.font || cell.font || baseFont;
+        cell.alignment = options.alignment || cell.alignment || { vertical: "middle" };
+        cell.border = options.border || thinBorder;
+        if (options.fill) cell.fill = options.fill;
+      }
+    }
+  };
+
+  // Header rows
+  merge("A1:H1", data.settings.companyName || "N&M LOGISTIC", {
+    font: titleFont,
+    alignment: { horizontal: "center", vertical: "middle" }
+  });
+  merge("A2:D2", `Driver Verification: ${truckNo}`, { font: boldFont });
+  merge("E2:F2", "Month:", { font: boldFont });
+  merge("G2:H2", reportMonth, { font: boldFont });
+  merge("A3:D3", `Driver: ${driverName}`, { font: boldFont });
+  merge("E3:F3", "Truck Type:", { font: boldFont });
+  merge("G3:H3", truckType, { font: boldFont });
+  merge("A4:D4", `Driver Payment: $ ${money(totalDriverAmount)}`, { font: boldFont });
+  merge("E4:H4", "", { font: baseFont });
+
+  worksheet.getRow(1).height = 18;
+  worksheet.getRow(2).height = 16;
+  worksheet.getRow(3).height = 16;
+  worksheet.getRow(4).height = 16;
+  styleRange(1, 4);
+
+  // Column headers
+  const colHeaders = ["No", "Delivery Date", "Invoice No", "From", "To", "QTY(T)", "Driver Price", "Driver Amount"];
+  worksheet.getRow(5).values = colHeaders;
+  worksheet.getRow(5).height = 20;
+  styleRange(5, 5, 1, 8, {
+    font: boldFont,
+    alignment: { horizontal: "center", vertical: "middle", wrapText: true },
+    fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } }
+  });
+
+  // Data rows
+  rows.forEach((row, index) => {
+    const rowNumber = index + 6;
+    worksheet.getRow(rowNumber).height = 22;
+    worksheet.getRow(rowNumber).values = [
+      index + 1,
+      formatShortDate(row.deliveryDate),
+      String(row.invoiceNo || ""),
+      row.fromLocation || "",
+      row.toLocation || "",
+      `${Number(row.qtyTon || 0).toFixed(5)}T`,
+      `$${unitMoney(row.truckSalaryUnitPrice)}`,
+      `$${money(row.truckSalaryAmount)}`
+    ];
+    styleRange(rowNumber, rowNumber, 1, 8, {
+      font: baseFont,
+      alignment: { horizontal: "center", vertical: "middle", wrapText: false }
+    });
+    worksheet.getCell(rowNumber, 4).alignment = { horizontal: "left", vertical: "middle" };
+    worksheet.getCell(rowNumber, 5).alignment = { horizontal: "left", vertical: "middle" };
+  });
+
+  // Total row
+  const totalRowNumber = rows.length + 6;
+  worksheet.getRow(totalRowNumber).height = 20;
+  worksheet.mergeCells(totalRowNumber, 1, totalRowNumber, 5);
+  worksheet.getCell(totalRowNumber, 1).value = "Total";
+  worksheet.getCell(totalRowNumber, 6).value = `${rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0).toFixed(5)}T`;
+  worksheet.getCell(totalRowNumber, 8).value = `$${money(totalDriverAmount)}`;
+  styleRange(totalRowNumber, totalRowNumber, 1, 8, {
+    font: boldFont,
+    alignment: { horizontal: "center", vertical: "middle" }
+  });
+  worksheet.getCell(totalRowNumber, 1).alignment = { horizontal: "left", vertical: "middle" };
+  worksheet.getCell(totalRowNumber, 8).alignment = { horizontal: "right", vertical: "middle" };
+
+  // Extra total rows (loan deduction, garage fee, net pay)
+  let nextRow = totalRowNumber + 1;
+  if (loanDeduction > 0) {
+    worksheet.getRow(nextRow).height = 18;
+    worksheet.mergeCells(nextRow, 1, nextRow, 7);
+    worksheet.getCell(nextRow, 1).value = "Loan Deduction";
+    worksheet.getCell(nextRow, 8).value = `- $ ${money(loanDeduction)}`;
+    styleRange(nextRow, nextRow, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
+    worksheet.getCell(nextRow, 8).alignment = { horizontal: "right", vertical: "middle" };
+    nextRow++;
+  }
+  if (garageFee > 0) {
+    worksheet.getRow(nextRow).height = 18;
+    worksheet.mergeCells(nextRow, 1, nextRow, 7);
+    worksheet.getCell(nextRow, 1).value = "Garage Fee";
+    worksheet.getCell(nextRow, 8).value = `- $ ${money(garageFee)}`;
+    styleRange(nextRow, nextRow, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
+    worksheet.getCell(nextRow, 8).alignment = { horizontal: "right", vertical: "middle" };
+    nextRow++;
+  }
+  if (loanDeduction > 0 || garageFee > 0) {
+    worksheet.getRow(nextRow).height = 18;
+    worksheet.mergeCells(nextRow, 1, nextRow, 7);
+    worksheet.getCell(nextRow, 1).value = "Net Pay";
+    worksheet.getCell(nextRow, 8).value = `$ ${money(netPay)}`;
+    styleRange(nextRow, nextRow, 1, 8, { font: boldFont, alignment: { vertical: "middle" } });
+    worksheet.getCell(nextRow, 8).alignment = { horizontal: "right", vertical: "middle" };
+    nextRow++;
+  }
+
+  worksheet.pageSetup.printArea = `A1:H${nextRow - 1}`;
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
 function salaryPdf(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
   const truck = data.trucks.find((item) => item.truckNo === query.truckNo) || {};
   const truckNo = query.truckNo || rows[0]?.truckNo || "All Trucks";
@@ -3332,11 +3502,12 @@ async function api(req, res, url, role = "admin") {
       });
       return res.end(salaryPdf(data, rows, query, loanDeduction, garageFee));
     }
+    const workbookBuffer = await salaryWorkbook(data, rows, query, loanDeduction, garageFee);
     res.writeHead(200, {
-      "Content-Type": "application/vnd.ms-excel; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${fileName}.xls"`
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${fileName}.xlsx"`
     });
-    return res.end(salaryExport(data, rows, query, loanDeduction, garageFee));
+    return res.end(workbookBuffer);
   }
 
   if (req.method === "GET" && url.pathname === "/api/export/dashboard") {
