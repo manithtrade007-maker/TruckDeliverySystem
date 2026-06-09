@@ -1037,7 +1037,10 @@ function filteredDeliveries(data, query) {
   if (query.month) rows = filterByMonth(rows, query.month);
   if (query.truckNo) rows = rows.filter((item) => item.truckNo === query.truckNo);
   if (query.truckType) rows = rows.filter((item) => item.truckType === query.truckType);
-  return rows.sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+  return rows.sort((a, b) =>
+    String(a.deliveryDate || "").localeCompare(String(b.deliveryDate || "")) ||
+    String(a.createdAt || "").localeCompare(String(b.createdAt || ""))
+  );
 }
 
 function statementsWithCounts(data) {
@@ -1404,9 +1407,9 @@ async function accountingWorkbook(data, rows, signatureImage) {
     { key: "truckType", width: 13 },
     { key: "fromLocation", width: 14 },
     { key: "toLocation", width: 24 },
-    { key: "qtyTon", width: 12 },
-    { key: "companyUnitPrice", width: 11 },
-    { key: "companyTotalAmount", width: 14 }
+    { key: "qtyTon", width: 12, style: { numFmt: '0.00000"T"' } },
+    { key: "companyUnitPrice", width: 11, style: { numFmt: '"$"0.000' } },
+    { key: "companyTotalAmount", width: 14, style: { numFmt: '"$"0.00' } }
   ];
 
   const thinBorder = {
@@ -1487,9 +1490,9 @@ async function accountingWorkbook(data, rows, signatureImage) {
       truckTypeLabel(row.truckType),
       row.fromLocation || "",
       row.toLocation || "",
-      `${Number(row.qtyTon || 0).toFixed(5)}T`,
-      `$${unitMoney(row.companyUnitPrice)}`,
-      `$${money(row.companyTotalAmount)}`
+      Number(row.qtyTon || 0),
+      Number(row.companyUnitPrice || 0),
+      Number(row.companyTotalAmount || 0)
     ];
     const isHighlighted = Boolean(row.highlighted);
     styleRange(rowNumber, rowNumber, 1, 10, {
@@ -1504,8 +1507,10 @@ async function accountingWorkbook(data, rows, signatureImage) {
   worksheet.getRow(totalRowNumber).height = 20;
   worksheet.mergeCells(totalRowNumber, 1, totalRowNumber, 7);
   worksheet.getCell(totalRowNumber, 1).value = "Total";
-  worksheet.getCell(totalRowNumber, 8).value = `${rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0).toFixed(5)}T`;
-  worksheet.getCell(totalRowNumber, 10).value = `$${money(rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0))}`;
+  worksheet.getCell(totalRowNumber, 8).value = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
+  worksheet.getCell(totalRowNumber, 8).numFmt = '0.00000"T"';
+  worksheet.getCell(totalRowNumber, 10).value = rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0);
+  worksheet.getCell(totalRowNumber, 10).numFmt = '"$"0.00';
   styleRange(totalRowNumber, totalRowNumber, 1, 10, {
     font: boldFont,
     alignment: { horizontal: "center", vertical: "middle" }
@@ -1646,9 +1651,9 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
     { key: "invoiceNo", width: 14 },
     { key: "fromLocation", width: 14 },
     { key: "toLocation", width: 24 },
-    { key: "qtyTon", width: 14 },
-    { key: "unitPrice", width: 12 },
-    { key: "driverAmount", width: 14 }
+    { key: "qtyTon", width: 14, style: { numFmt: '0.00000"T"' } },
+    { key: "unitPrice", width: 12, style: { numFmt: '"$"0.000' } },
+    { key: "driverAmount", width: 14, style: { numFmt: '"$"0.00' } }
   ];
 
   const thinBorder = {
@@ -1723,9 +1728,9 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
       String(row.invoiceNo || ""),
       row.fromLocation || "",
       row.toLocation || "",
-      `${Number(row.qtyTon || 0).toFixed(5)}T`,
-      `$${unitMoney(row.truckSalaryUnitPrice)}`,
-      `$${money(row.truckSalaryAmount)}`
+      Number(row.qtyTon || 0),
+      Number(row.truckSalaryUnitPrice || 0),
+      Number(row.truckSalaryAmount || 0)
     ];
     styleRange(rowNumber, rowNumber, 1, 8, {
       font: baseFont,
@@ -1740,8 +1745,10 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
   worksheet.getRow(totalRowNumber).height = 20;
   worksheet.mergeCells(totalRowNumber, 1, totalRowNumber, 5);
   worksheet.getCell(totalRowNumber, 1).value = "Total";
-  worksheet.getCell(totalRowNumber, 6).value = `${rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0).toFixed(5)}T`;
-  worksheet.getCell(totalRowNumber, 8).value = `$${money(totalDriverAmount)}`;
+  worksheet.getCell(totalRowNumber, 6).value = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
+  worksheet.getCell(totalRowNumber, 6).numFmt = '0.00000"T"';
+  worksheet.getCell(totalRowNumber, 8).value = totalDriverAmount;
+  worksheet.getCell(totalRowNumber, 8).numFmt = '"$"0.00';
   styleRange(totalRowNumber, totalRowNumber, 1, 8, {
     font: boldFont,
     alignment: { horizontal: "center", vertical: "middle" }
@@ -3270,8 +3277,12 @@ async function api(req, res, url, role = "admin") {
     dlSheet.columns = [
       { key: "no", width: 5 }, { key: "date", width: 13 }, { key: "inv", width: 13 },
       { key: "truck", width: 10 }, { key: "type", width: 12 }, { key: "from", width: 14 },
-      { key: "to", width: 22 }, { key: "qty", width: 12 }, { key: "cUp", width: 11 },
-      { key: "cTot", width: 13 }, { key: "dUp", width: 11 }, { key: "dTot", width: 13 }
+      { key: "to", width: 22 },
+      { key: "qty", width: 12, style: { numFmt: '0.00000"T"' } },
+      { key: "cUp", width: 11, style: { numFmt: '"$"0.000' } },
+      { key: "cTot", width: 13, style: { numFmt: '"$"0.00' } },
+      { key: "dUp", width: 11, style: { numFmt: '"$"0.000' } },
+      { key: "dTot", width: 13, style: { numFmt: '"$"0.00' } }
     ];
     const dlHeaders = ["No", "Date", "Invoice No", "Truck", "Type", "From", "To", "QTY(T)", "Co. Price", "Co. Total", "Dr. Price", "Dr. Total"];
     dlSheet.getRow(1).values = dlHeaders;
@@ -3287,8 +3298,8 @@ async function api(req, res, url, role = "admin") {
       const r = i + 2;
       dlSheet.getRow(r).height = 18;
       const vals = [i + 1, formatShortDate(d.deliveryDate), d.invoiceNo, d.truckNo, truckTypeLabel(d.truckType), d.fromLocation, d.toLocation,
-        Number(d.qtyTon || 0).toFixed(5), `$ ${unitMoney(d.companyUnitPrice)}`, `$ ${money(d.companyTotalAmount)}`,
-        `$ ${unitMoney(d.truckSalaryUnitPrice)}`, `$ ${money(d.truckSalaryAmount)}`];
+        Number(d.qtyTon || 0), Number(d.companyUnitPrice || 0), Number(d.companyTotalAmount || 0),
+        Number(d.truckSalaryUnitPrice || 0), Number(d.truckSalaryAmount || 0)];
       vals.forEach((v, ci) => {
         const cell = dlSheet.getCell(r, ci + 1);
         cell.value = v; cell.font = baseFont; cell.border = thinBorder;
