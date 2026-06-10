@@ -1083,6 +1083,12 @@ function formatShortDate(value) {
   if (!match) return text;
   return `${match[3]}/${match[2]}/${match[1]}`;
 }
+function formatDotDate(value) {
+  const text = normalizeText(value);
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return text;
+  return `${match[3]}.${match[2]}.${match[1]}`;
+}
 
 function currentLocalDate() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -1161,7 +1167,7 @@ function rowsByPage(rows, pageSize = 30) {
 
 function formatExcelValue(value, column) {
   if (column.key === "rowNo") return value;
-  if (column.type === "date") return formatShortDate(value);
+  if (column.type === "date") return formatDotDate(value);
   if (column.type === "unitCurrency") return `$ ${unitMoney(value)}`;
   if (column.type === "unitMoney") return `$ ${unitMoney(value)}`;
   if (column.type === "currency") return `$ ${money(value)}`;
@@ -1344,7 +1350,7 @@ function accountingExport(data, rows) {
     <tr style="height:16pt; mso-height-source:userset;">
       <td class="meta" colspan="6" style="height:16pt; mso-height-source:userset;">From: ${htmlEscape(data.settings.fromName || "Nhep Manith")}</td>
       <td class="meta" colspan="2" style="height:16pt; mso-height-source:userset;">Statement Date:</td>
-      <td class="meta right" colspan="2" align="right" x:str style="height:16pt; mso-height-source:userset; text-align:right; mso-number-format:'\\@';"><div style="text-align:right;">${htmlEscape(formatShortDate(statement?.statementDate || ""))}</div></td>
+      <td class="meta right" colspan="2" align="right" x:str style="height:16pt; mso-height-source:userset; text-align:right; mso-number-format:'\\@';"><div style="text-align:right;">${htmlEscape(formatDotDate(statement?.statementDate || ""))}</div></td>
     </tr>
     <tr style="height:16pt; mso-height-source:userset;">
       <td class="meta" colspan="6" style="height:16pt; mso-height-source:userset;">To: ${htmlEscape(data.settings.toName || "SLP")}</td>
@@ -1455,7 +1461,7 @@ async function accountingWorkbook(data, rows, signatureImage) {
   });
   merge("A2:F2", `From: ${data.settings.fromName || "Nhep Manith"}`, { font: boldFont });
   merge("G2:H2", "Statement Date:", { font: boldFont });
-  merge("I2:J2", formatShortDate(statement?.statementDate || ""), {
+  merge("I2:J2", formatDotDate(statement?.statementDate || ""), {
     font: boldFont,
     alignment: { horizontal: "right", vertical: "middle" }
   });
@@ -1484,7 +1490,7 @@ async function accountingWorkbook(data, rows, signatureImage) {
     worksheet.getRow(rowNumber).height = 22;
     worksheet.getRow(rowNumber).values = [
       index + 1,
-      formatShortDate(row.deliveryDate),
+      formatDotDate(row.deliveryDate),
       String(row.invoiceNo || ""),
       row.truckNo || "",
       truckTypeLabel(row.truckType),
@@ -1543,7 +1549,7 @@ async function accountingWorkbook(data, rows, signatureImage) {
   worksheet.mergeCells(dateRow, 1, dateRow, 3);
   worksheet.mergeCells(dateRow, 4, dateRow, 7);
   worksheet.mergeCells(dateRow, 8, dateRow, 10);
-  worksheet.getCell(dateRow, 1).value = `Date: ${formatShortDate(statement?.statementDate || "")}`;
+  worksheet.getCell(dateRow, 1).value = `Date: ${formatDotDate(statement?.statementDate || "")}`;
   worksheet.getCell(dateRow, 4).value = "Date:";
   worksheet.getCell(dateRow, 8).value = "Date:";
   styleRange(signatureHeaderRow, dateRow, 1, 10, {
@@ -1580,8 +1586,8 @@ function salaryExport(data, rows, query = {}, loanDeduction = 0, garageFee = 0) 
   const totalDriverAmount = rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0);
   const netPay = totalDriverAmount - loanDeduction - garageFee;
   const extraTotalRows = [];
-  if (loanDeduction > 0) extraTotalRows.push({ label: "Loan Deduction", value: `- $ ${money(loanDeduction)}` });
-  if (garageFee > 0) extraTotalRows.push({ label: "Garage Fee", value: `- $ ${money(garageFee)}` });
+  if (loanDeduction > 0) extraTotalRows.push({ label: "Loan Deduction", value: `$ ${money(loanDeduction)}` });
+  if (garageFee > 0) extraTotalRows.push({ label: "Garage Fee", value: `$ ${money(garageFee)}` });
   if (extraTotalRows.length > 0) extraTotalRows.push({ label: "Net Pay", value: `$ ${money(netPay)}`, bold: true });
   const headerHtml = (pageIndex, pages) => `
     <tr>
@@ -1724,7 +1730,7 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
     worksheet.getRow(rowNumber).height = 22;
     worksheet.getRow(rowNumber).values = [
       index + 1,
-      formatShortDate(row.deliveryDate),
+      formatDotDate(row.deliveryDate),
       String(row.invoiceNo || ""),
       row.fromLocation || "",
       row.toLocation || "",
@@ -1762,7 +1768,7 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
     worksheet.getRow(nextRow).height = 18;
     worksheet.mergeCells(nextRow, 1, nextRow, 7);
     worksheet.getCell(nextRow, 1).value = "Loan Deduction";
-    worksheet.getCell(nextRow, 8).value = `- $ ${money(loanDeduction)}`;
+    worksheet.getCell(nextRow, 8).value = `$ ${money(loanDeduction)}`;
     styleRange(nextRow, nextRow, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
     worksheet.getCell(nextRow, 8).alignment = { horizontal: "right", vertical: "middle" };
     nextRow++;
@@ -1771,7 +1777,7 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
     worksheet.getRow(nextRow).height = 18;
     worksheet.mergeCells(nextRow, 1, nextRow, 7);
     worksheet.getCell(nextRow, 1).value = "Garage Fee";
-    worksheet.getCell(nextRow, 8).value = `- $ ${money(garageFee)}`;
+    worksheet.getCell(nextRow, 8).value = `$ ${money(garageFee)}`;
     styleRange(nextRow, nextRow, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
     worksheet.getCell(nextRow, 8).alignment = { horizontal: "right", vertical: "middle" };
     nextRow++;
@@ -1810,8 +1816,8 @@ function salaryPdf(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
     { key: "driverAmount", label: "Driver Amount", width: 96, align: "right", bold: true }
   ];
   const extraTotals = [];
-  if (loanDeduction > 0) extraTotals.push({ label: "Loan Deduction", value: `- $ ${money(loanDeduction)}` });
-  if (garageFee > 0) extraTotals.push({ label: "Garage Fee", value: `- $ ${money(garageFee)}` });
+  if (loanDeduction > 0) extraTotals.push({ label: "Loan Deduction", value: `$ ${money(loanDeduction)}` });
+  if (garageFee > 0) extraTotals.push({ label: "Garage Fee", value: `$ ${money(garageFee)}` });
   if (extraTotals.length > 0) extraTotals.push({ label: "Net Pay", value: `$ ${money(netPay)}`, bold: true, fill: [0.94, 0.99, 0.95] });
   return tablePdf({
     title: `Driver Verification - ${truckNo}`,
@@ -1819,7 +1825,7 @@ function salaryPdf(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
     columns,
     rows: rows.map((row, index) => ({
       no: index + 1,
-      date: formatShortDate(row.deliveryDate),
+      date: formatDotDate(row.deliveryDate),
       invoice: row.invoiceNo,
       from: row.fromLocation,
       to: row.toLocation,
@@ -1833,7 +1839,8 @@ function salaryPdf(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
     },
     totalsLabel: "TOTAL",
     extraTotals,
-    footer: false
+    footer: false,
+    headerFirstPageOnly: true
   });
 }
 
@@ -1955,7 +1962,7 @@ async function priceComparisonWorkbook(data, date) {
 
   // Subtitle row
   ws.mergeCells("A2:H2");
-  ws.getCell("A2").value = `Price Comparison — As of ${formatShortDate(date)}`;
+  ws.getCell("A2").value = `Price Comparison — As of ${formatDotDate(date)}`;
   styleCell(ws.getCell("A2"), { font: boldFont, alignment: { horizontal: "center", vertical: "middle" } });
   ws.getRow(2).height = 16;
 
@@ -2056,7 +2063,7 @@ function priceComparisonPdf(data, date) {
   const companyName = data.settings.companyName || "N&M LOGISTIC";
   return tablePdf({
     title: `${companyName} — Price Comparison`,
-    subtitle: `Active prices as of ${formatShortDate(date)} | ${rows.length} locations`,
+    subtitle: `Active prices as of ${formatDotDate(date)} | ${rows.length} locations`,
     columns: [
       { key: "no", label: "No", width: 22, align: "center" },
       { key: "location", label: "Location", width: 155 },
@@ -2285,7 +2292,7 @@ function buildPdf(pages, images = []) {
   return Buffer.from(pdf);
 }
 
-function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, extraTotals, footer, header, preparedBy, signatureImage }) {
+function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, extraTotals, footer, header, preparedBy, signatureImage, headerFirstPageOnly }) {
   const pageWidth = PDF_PAGE_WIDTH;
   const pageHeight = PDF_PAGE_HEIGHT;
   const margin = PDF_PAGE_MARGIN;
@@ -2315,7 +2322,7 @@ function tablePdf({ title, subtitle, columns, rows, totals, totalsLabel, extraTo
     const commands = [];
     if (hasCustomHeader) {
       commands.push(...header({ pageIndex, pages: chunks, pageWidth, pageHeight, tableWidth, margin }));
-    } else {
+    } else if (!headerFirstPageOnly || pageIndex === 0) {
       commands.push(drawText(title, margin, titleY, { size: 12, bold: true, width: tableWidth }));
       if (subtitle) commands.push(drawText(subtitle, margin, subtitleY, { size: 7.5, bold: true, color: [0.39, 0.46, 0.56], width: tableWidth }));
     }
@@ -2450,7 +2457,7 @@ function statementPdf(data, rows, signatureImage) {
     commands.push(drawText(statement?.statementNumber || "", leftWidth + labelWidth + 3, rowsY[0] + 4, { size: 7, bold: true, width: valueWidth - 6, align: "right" }));
     commands.push(drawText(`From: ${data.settings.fromName || "Nhep Manith"}`, 3, rowsY[1] + 4, { size: 7, bold: true, width: leftWidth - 6 }));
     commands.push(drawText("Statement Date:", leftWidth + 3, rowsY[1] + 4, { size: 7, bold: true, width: labelWidth - 6 }));
-    commands.push(drawText(formatShortDate(statement?.statementDate || ""), leftWidth + labelWidth + 3, rowsY[1] + 4, { size: 7, bold: true, width: valueWidth - 6, align: "right" }));
+    commands.push(drawText(formatDotDate(statement?.statementDate || ""), leftWidth + labelWidth + 3, rowsY[1] + 4, { size: 7, bold: true, width: valueWidth - 6, align: "right" }));
     commands.push(drawText(`To: ${data.settings.toName || "SLP"}`, 3, rowsY[2] + 4, { size: 7, bold: true, width: leftWidth - 6 }));
     commands.push(drawText(`Page ${pageIndex + 1} of ${pages.length}`, leftWidth + labelWidth + 3, rowsY[2] + 4, { size: 7, width: valueWidth - 6, align: "right" }));
     return commands;
@@ -2469,12 +2476,12 @@ function statementPdf(data, rows, signatureImage) {
   ];
   return tablePdf({
     title: `Statement ${statement?.statementNumber || ""} - ${monthLabel(statement?.month)}`,
-    subtitle: `${truckTypeLabel(statement?.truckType) || ""} | ${statement?.status || ""} | ${rows.length}/30 rows | From: ${data.settings.fromName || "Nhep Manith"} | To: ${data.settings.toName || "SLP"} | Date: ${formatShortDate(statement?.statementDate || "")}`,
+    subtitle: `${truckTypeLabel(statement?.truckType) || ""} | ${statement?.status || ""} | ${rows.length}/30 rows | From: ${data.settings.fromName || "Nhep Manith"} | To: ${data.settings.toName || "SLP"} | Date: ${formatDotDate(statement?.statementDate || "")}`,
     columns,
     header: statementHeader,
     rows: rows.map((row, index) => ({
       no: index + 1,
-      date: formatShortDate(row.deliveryDate),
+      date: formatDotDate(row.deliveryDate),
       invoice: row.invoiceNo,
       truckNo: row.truckNo,
       truckType: truckTypeLabel(row.truckType),
@@ -2491,7 +2498,7 @@ function statementPdf(data, rows, signatureImage) {
     },
     totalsLabel: "TOTAL",
     footer: true,
-    preparedBy: { name: "Nhep Manith", date: formatShortDate(statement?.statementDate || "") },
+    preparedBy: { name: "Nhep Manith", date: formatDotDate(statement?.statementDate || "") },
     signatureImage
   });
 }
@@ -2691,7 +2698,7 @@ async function api(req, res, url, role = "admin") {
         { key: "to", label: "To Location", width: 120 }, { key: "qty", label: "QTY(T)", width: 68, align: "right" },
         { key: "cTot", label: "Co. Total", width: 70, align: "right", bold: true }, { key: "dTot", label: "Dr. Total", width: 70, align: "right" },
       ],
-      rows: sortedDl2.map((d, i) => ({ no: i + 1, date: formatShortDate(d.deliveryDate), inv: d.invoiceNo, truck: d.truckNo, to: d.toLocation, qty: `${Number(d.qtyTon || 0).toFixed(3)}T`, cTot: `$ ${money(d.companyTotalAmount)}`, dTot: `$ ${money(d.truckSalaryAmount)}` })),
+      rows: sortedDl2.map((d, i) => ({ no: i + 1, date: formatDotDate(d.deliveryDate), inv: d.invoiceNo, truck: d.truckNo, to: d.toLocation, qty: `${Number(d.qtyTon || 0).toFixed(3)}T`, cTot: `$ ${money(d.companyTotalAmount)}`, dTot: `$ ${money(d.truckSalaryAmount)}` })),
       totals: { qty: `${totalQty2.toFixed(3)}T`, cTot: `$ ${money(totalRevenue2)}`, dTot: `$ ${money(totalDriver2)}` }, totalsLabel: "Total",
     });
 
@@ -3481,7 +3488,7 @@ async function api(req, res, url, role = "admin") {
       stSheet.getRow(r).height = 18;
       const totalAmt = monthDeliveries.filter((d) => d.statementId === s.id).reduce((sum, d) => sum + toNumber(d.companyTotalAmount), 0);
       const isPaid = data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received);
-      const vals = [i + 1, s.statementNumber, formatShortDate(s.statementDate), truckTypeLabel(s.truckType), s.status || "", s.paymentMonth || "", isPaid ? "Yes" : "No", `$ ${money(totalAmt)}`];
+      const vals = [i + 1, s.statementNumber, formatDotDate(s.statementDate), truckTypeLabel(s.truckType), s.status || "", s.paymentMonth || "", isPaid ? "Yes" : "No", `$ ${money(totalAmt)}`];
       vals.forEach((v, ci) => {
         const cell = stSheet.getCell(r, ci + 1);
         cell.value = v; cell.font = baseFont; cell.border = thinBorder;
@@ -3515,7 +3522,7 @@ async function api(req, res, url, role = "admin") {
     sortedDeliveries.forEach((d, i) => {
       const r = i + 2;
       dlSheet.getRow(r).height = 18;
-      const vals = [i + 1, formatShortDate(d.deliveryDate), d.invoiceNo, d.truckNo, truckTypeLabel(d.truckType), d.fromLocation, d.toLocation,
+      const vals = [i + 1, formatDotDate(d.deliveryDate), d.invoiceNo, d.truckNo, truckTypeLabel(d.truckType), d.fromLocation, d.toLocation,
         Number(d.qtyTon || 0), Number(d.companyUnitPrice || 0), Number(d.companyTotalAmount || 0),
         Number(d.truckSalaryUnitPrice || 0), Number(d.truckSalaryAmount || 0)];
       vals.forEach((v, ci) => {
@@ -3580,7 +3587,7 @@ async function api(req, res, url, role = "admin") {
       rows: monthStmts.map((s, i) => {
         const totalAmt = monthDeliveries.filter((d) => d.statementId === s.id).reduce((sum, d) => sum + toNumber(d.companyTotalAmount), 0);
         const isPaid = data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received);
-        return { no: i + 1, stNo: s.statementNumber, date: formatShortDate(s.statementDate), type: truckTypeLabel(s.truckType), status: s.status || "", payMonth: s.paymentMonth || "-", paid: isPaid ? "Yes" : "No", amount: `$ ${money(totalAmt)}` };
+        return { no: i + 1, stNo: s.statementNumber, date: formatDotDate(s.statementDate), type: truckTypeLabel(s.truckType), status: s.status || "", payMonth: s.paymentMonth || "-", paid: isPaid ? "Yes" : "No", amount: `$ ${money(totalAmt)}` };
       }),
       totals: { amount: `$ ${money(monthStmts.reduce((sum, s) => sum + monthDeliveries.filter((d) => d.statementId === s.id).reduce((rs, d) => rs + toNumber(d.companyTotalAmount), 0), 0))}` },
       totalsLabel: "Total",
@@ -3604,7 +3611,7 @@ async function api(req, res, url, role = "admin") {
         { key: "dTot", label: "Dr. Total", width: 66, align: "right" },
       ],
       rows: sortedDeliveries.map((d, i) => ({
-        no: i + 1, date: formatShortDate(d.deliveryDate), inv: d.invoiceNo,
+        no: i + 1, date: formatDotDate(d.deliveryDate), inv: d.invoiceNo,
         truck: d.truckNo, type: truckTypeLabel(d.truckType), to: d.toLocation,
         qty: `${Number(d.qtyTon || 0).toFixed(3)}T`,
         cUp: `$ ${unitMoney(d.companyUnitPrice)}`, cTot: `$ ${money(d.companyTotalAmount)}`,
