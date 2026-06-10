@@ -1873,6 +1873,224 @@ function monthlyTruckPerformance(data, month) {
     .sort((a, b) => b.companyAmount - a.companyAmount || a.truckNo.localeCompare(b.truckNo));
 }
 
+function buildPriceCompareRows(data, date) {
+  const craneMap = new Map();
+  const noCraneMap = new Map();
+  for (const price of data.prices) {
+    if (priceEffectiveDate(price) > date) continue;
+    const key = locationBaseKey(price.toLocation);
+    if (price.truckType === "With Crane") {
+      const ex = craneMap.get(key);
+      if (!ex || priceEffectiveDate(price) > priceEffectiveDate(ex)) craneMap.set(key, price);
+    } else if (price.truckType === "Without Crane") {
+      const ex = noCraneMap.get(key);
+      if (!ex || priceEffectiveDate(price) > priceEffectiveDate(ex)) noCraneMap.set(key, price);
+    }
+  }
+  const allKeys = new Set([...craneMap.keys(), ...noCraneMap.keys()]);
+  const PROVINCE_ORDER = ["PP", "Kandal", "Takeo", "K.Speu", "Prey Veng", "Svay Rieng", "Kampot", "Kep", "K.Chhnan", "K.Cham", "K.Thom"];
+  const provinceOf = (name) => { const m = String(name || "").match(/\(([^)]+)\)$/); return m ? m[1] : "ZZ"; };
+  const rows = [...allKeys].map((key) => {
+    const crane = craneMap.get(key) || null;
+    const noCrane = noCraneMap.get(key) || null;
+    return { key, canonicalName: (crane || noCrane).toLocation, crane, noCrane };
+  });
+  rows.sort((a, b) => {
+    const pa = PROVINCE_ORDER.indexOf(provinceOf(a.canonicalName));
+    const pb = PROVINCE_ORDER.indexOf(provinceOf(b.canonicalName));
+    const pa2 = pa === -1 ? 999 : pa;
+    const pb2 = pb === -1 ? 999 : pb;
+    return pa2 - pb2 || a.canonicalName.localeCompare(b.canonicalName);
+  });
+  return rows;
+}
+
+async function priceComparisonWorkbook(data, date) {
+  const rows = buildPriceCompareRows(data, date);
+  const companyName = data.settings.companyName || "N&M LOGISTIC";
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = companyName;
+  workbook.created = new Date();
+
+  const ws = workbook.addWorksheet("Price Comparison", {
+    pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.3, right: 0.3, top: 0.3, bottom: 0.3, header: 0, footer: 0 } },
+    views: [{ showGridLines: true }]
+  });
+
+  ws.columns = [
+    { key: "no", width: 5 },
+    { key: "location", width: 28 },
+    { key: "craneComp", width: 14, style: { numFmt: '"$"0.000' } },
+    { key: "craneDriv", width: 14, style: { numFmt: '"$"0.000' } },
+    { key: "craneMargin", width: 14, style: { numFmt: '"$"0.000' } },
+    { key: "ncComp", width: 14, style: { numFmt: '"$"0.000' } },
+    { key: "ncDriv", width: 14, style: { numFmt: '"$"0.000' } },
+    { key: "ncMargin", width: 14, style: { numFmt: '"$"0.000' } }
+  ];
+
+  const thinBorder = {
+    top: { style: "thin", color: { argb: "FF333333" } },
+    left: { style: "thin", color: { argb: "FF333333" } },
+    bottom: { style: "thin", color: { argb: "FF333333" } },
+    right: { style: "thin", color: { argb: "FF333333" } }
+  };
+  const baseFont = { name: "Arial", size: 10 };
+  const boldFont = { name: "Arial", size: 10, bold: true };
+  const titleFont = { name: "Arial", size: 14, bold: true };
+
+  const styleCell = (cell, options = {}) => {
+    cell.font = options.font || baseFont;
+    cell.alignment = options.alignment || { vertical: "middle" };
+    cell.border = thinBorder;
+    if (options.fill) cell.fill = options.fill;
+    if (options.numFmt) cell.numFmt = options.numFmt;
+  };
+
+  // Title row
+  ws.mergeCells("A1:H1");
+  ws.getCell("A1").value = companyName;
+  styleCell(ws.getCell("A1"), { font: titleFont, alignment: { horizontal: "center", vertical: "middle" } });
+  ws.getRow(1).height = 22;
+
+  // Subtitle row
+  ws.mergeCells("A2:H2");
+  ws.getCell("A2").value = `Price Comparison — As of ${formatShortDate(date)}`;
+  styleCell(ws.getCell("A2"), { font: boldFont, alignment: { horizontal: "center", vertical: "middle" } });
+  ws.getRow(2).height = 16;
+
+  // Merged group headers row 3
+  ws.mergeCells("A3:B3");
+  ws.getCell("A3").value = "";
+  ws.mergeCells("C3:E3");
+  ws.getCell("C3").value = "CRANE";
+  ws.mergeCells("F3:H3");
+  ws.getCell("F3").value = "NO CRANE";
+  [["A3", "B3"], ["C3", "D3", "E3"], ["F3", "G3", "H3"]].forEach(([start]) => {});
+  ["A3", "C3", "F3"].forEach((addr) => {
+    styleCell(ws.getCell(addr), {
+      font: boldFont,
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } }
+    });
+    ws.getCell(addr).font = { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } };
+  });
+  for (let c = 1; c <= 8; c++) {
+    const cell = ws.getCell(3, c);
+    cell.border = thinBorder;
+  }
+  ws.getRow(3).height = 18;
+
+  // Column headers row 4
+  const colHeaders = ["No", "Location", "Company", "Driver", "Margin", "Company", "Driver", "Margin"];
+  ws.getRow(4).values = colHeaders;
+  ws.getRow(4).height = 18;
+  for (let c = 1; c <= 8; c++) {
+    styleCell(ws.getCell(4, c), {
+      font: boldFont,
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } }
+    });
+  }
+
+  // Data rows
+  rows.forEach((row, i) => {
+    const r = i + 5;
+    ws.getRow(r).height = 18;
+    const cComp = row.crane ? Number(row.crane.companyUnitPrice || 0) : null;
+    const cDriv = row.crane ? Number(row.crane.truckSalaryUnitPrice || 0) : null;
+    const cMargin = cComp !== null ? cComp - cDriv : null;
+    const nComp = row.noCrane ? Number(row.noCrane.companyUnitPrice || 0) : null;
+    const nDriv = row.noCrane ? Number(row.noCrane.truckSalaryUnitPrice || 0) : null;
+    const nMargin = nComp !== null ? nComp - nDriv : null;
+    const hasNegative = (cMargin !== null && cMargin < 0) || (nMargin !== null && nMargin < 0);
+    const rowFill = hasNegative
+      ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEE2E2" } }
+      : i % 2 === 0
+        ? null
+        : { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+
+    const setDataCell = (col, value, extraOptions = {}) => {
+      const cell = ws.getCell(r, col);
+      cell.value = value;
+      styleCell(cell, { font: baseFont, alignment: { horizontal: col <= 2 ? (col === 1 ? "center" : "left") : "right", vertical: "middle" }, fill: rowFill, ...extraOptions });
+    };
+
+    setDataCell(1, i + 1);
+    setDataCell(2, row.canonicalName, { font: boldFont });
+
+    if (row.crane) {
+      setDataCell(3, cComp);
+      setDataCell(4, cDriv);
+      const mCell = ws.getCell(r, 5);
+      mCell.value = cMargin;
+      styleCell(mCell, { font: { name: "Arial", size: 10, bold: true, color: { argb: cMargin < 0 ? "FFDC2626" : "FF0F766E" } }, alignment: { horizontal: "right", vertical: "middle" }, fill: rowFill });
+    } else {
+      ws.mergeCells(r, 3, r, 5);
+      const cell = ws.getCell(r, 3);
+      cell.value = "—";
+      styleCell(cell, { font: { name: "Arial", size: 10, color: { argb: "FFCBD5E1" } }, alignment: { horizontal: "center", vertical: "middle" }, fill: rowFill });
+    }
+
+    if (row.noCrane) {
+      setDataCell(6, nComp);
+      setDataCell(7, nDriv);
+      const mCell = ws.getCell(r, 8);
+      mCell.value = nMargin;
+      styleCell(mCell, { font: { name: "Arial", size: 10, bold: true, color: { argb: nMargin < 0 ? "FFDC2626" : "FF0F766E" } }, alignment: { horizontal: "right", vertical: "middle" }, fill: rowFill });
+    } else {
+      ws.mergeCells(r, 6, r, 8);
+      const cell = ws.getCell(r, 6);
+      cell.value = "—";
+      styleCell(cell, { font: { name: "Arial", size: 10, color: { argb: "FFCBD5E1" } }, alignment: { horizontal: "center", vertical: "middle" }, fill: rowFill });
+    }
+  });
+
+  ws.pageSetup.printArea = `A1:H${rows.length + 4}`;
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
+function priceComparisonPdf(data, date) {
+  const rows = buildPriceCompareRows(data, date);
+  const companyName = data.settings.companyName || "N&M LOGISTIC";
+  return tablePdf({
+    title: `${companyName} — Price Comparison`,
+    subtitle: `Active prices as of ${formatShortDate(date)} | ${rows.length} locations`,
+    columns: [
+      { key: "no", label: "No", width: 22, align: "center" },
+      { key: "location", label: "Location", width: 155 },
+      { key: "craneComp", label: "Crane Co.", width: 58, align: "right" },
+      { key: "craneDriv", label: "Crane Dr.", width: 58, align: "right" },
+      { key: "craneMargin", label: "Crane Margin", width: 68, align: "right", bold: true },
+      { key: "ncComp", label: "NoCrane Co.", width: 58, align: "right" },
+      { key: "ncDriv", label: "NoCrane Dr.", width: 58, align: "right" },
+      { key: "ncMargin", label: "NoCrane Margin", width: 68, align: "right", bold: true }
+    ],
+    rows: rows.map((row, i) => {
+      const cComp = row.crane ? Number(row.crane.companyUnitPrice || 0) : null;
+      const cDriv = row.crane ? Number(row.crane.truckSalaryUnitPrice || 0) : null;
+      const cMargin = cComp !== null ? cComp - cDriv : null;
+      const nComp = row.noCrane ? Number(row.noCrane.companyUnitPrice || 0) : null;
+      const nDriv = row.noCrane ? Number(row.noCrane.truckSalaryUnitPrice || 0) : null;
+      const nMargin = nComp !== null ? nComp - nDriv : null;
+      const hasNegative = (cMargin !== null && cMargin < 0) || (nMargin !== null && nMargin < 0);
+      return {
+        no: i + 1,
+        location: row.canonicalName,
+        craneComp: cComp !== null ? `$ ${unitMoney(cComp)}` : "—",
+        craneDriv: cDriv !== null ? `$ ${unitMoney(cDriv)}` : "—",
+        craneMargin: cMargin !== null ? `$ ${unitMoney(cMargin)}` : "—",
+        ncComp: nComp !== null ? `$ ${unitMoney(nComp)}` : "—",
+        ncDriv: nDriv !== null ? `$ ${unitMoney(nDriv)}` : "—",
+        ncMargin: nMargin !== null ? `$ ${unitMoney(nMargin)}` : "—",
+        _highlighted: hasNegative
+      };
+    }),
+    footer: false
+  });
+}
+
 function dashboardExport(rows, month) {
   const label = monthLabel(month);
   const displayRows = rows.map((row) => ({ ...row, truckType: truckTypeLabel(row.truckType) }));
@@ -3538,6 +3756,26 @@ async function api(req, res, url, role = "admin") {
       "Content-Disposition": `attachment; filename="${fileName}.xls"`
     });
     return res.end(dashboardExport(rows, month));
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/export/price-comparison") {
+    requireAdmin();
+    const date = normalizeText(query.date) || currentLocalDate();
+    const format = normalizeText(query.format || "xlsx");
+    const fileName = `price-comparison-${date}`;
+    if (format === "pdf") {
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${fileName}.pdf"`
+      });
+      return res.end(priceComparisonPdf(data, date));
+    }
+    const workbookBuffer = await priceComparisonWorkbook(data, date);
+    res.writeHead(200, {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${fileName}.xlsx"`
+    });
+    return res.end(workbookBuffer);
   }
 
   return sendJson(res, 404, { error: "API route not found." });
