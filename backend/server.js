@@ -1877,14 +1877,14 @@ function buildPriceCompareRows(data, date) {
   const craneMap = new Map();
   const noCraneMap = new Map();
   for (const price of data.prices) {
-    if (priceEffectiveDate(price) > date) continue;
+    if (effectiveDateOf(price) > date) continue;
     const key = locationBaseKey(price.toLocation);
     if (price.truckType === "With Crane") {
       const ex = craneMap.get(key);
-      if (!ex || priceEffectiveDate(price) > priceEffectiveDate(ex)) craneMap.set(key, price);
+      if (!ex || effectiveDateOf(price) > effectiveDateOf(ex)) craneMap.set(key, price);
     } else if (price.truckType === "Without Crane") {
       const ex = noCraneMap.get(key);
-      if (!ex || priceEffectiveDate(price) > priceEffectiveDate(ex)) noCraneMap.set(key, price);
+      if (!ex || effectiveDateOf(price) > effectiveDateOf(ex)) noCraneMap.set(key, price);
     }
   }
   const allKeys = new Set([...craneMap.keys(), ...noCraneMap.keys()]);
