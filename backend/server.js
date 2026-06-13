@@ -1877,6 +1877,7 @@ function buildPriceCompareRows(data, date) {
   const craneMap = new Map();
   const noCraneMap = new Map();
   for (const price of data.prices) {
+    if (price.active === false) continue;
     if (effectiveDateOf(price) > date) continue;
     const key = locationBaseKey(price.toLocation);
     if (price.truckType === "With Crane") {

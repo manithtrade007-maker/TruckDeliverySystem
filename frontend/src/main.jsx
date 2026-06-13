@@ -777,6 +777,7 @@ function App() {
     const craneMap = new Map();
     const noCraneMap = new Map();
     for (const price of data.prices) {
+      if (price.active === false) continue;
       if (priceEffectiveDate(price) > priceCompareDate) continue;
       const key = locationBaseKey(price.toLocation);
       if (price.truckType === "With Crane") {
@@ -812,6 +813,7 @@ function App() {
     const seen = new Set();
     const todayStr = today();
     for (const p of data.prices) {
+      if (p.active === false) continue;
       const d = priceEffectiveDate(p);
       if (d <= todayStr) seen.add(d);
     }
@@ -1395,7 +1397,7 @@ function App() {
         distanceKm: "",
         companyUnitPrice: "",
         truckSalaryUnitPrice: "",
-        effectiveDate: today()
+        effectiveDate: priceCompareDates[priceCompareDates.length - 1] || today()
       });
       await loadData();
       flash("Price saved.");
@@ -1428,7 +1430,7 @@ function App() {
         truckType: "With Crane",
         distanceKm: "",
         truckSalaryUnitPrice: "",
-        effectiveDate: today()
+        effectiveDate: priceCompareDates[priceCompareDates.length - 1] || today()
       });
       await loadData();
       flash("Driver price saved.");
@@ -1501,10 +1503,10 @@ function App() {
     try {
       const result = await api(`/api/prices/${encodeURIComponent(price.id)}`, { method: "DELETE" });
       if (priceForm.id === price.id) {
-        setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: "With Crane", distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: today() });
+        setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: "With Crane", distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: priceCompareDates[priceCompareDates.length - 1] || today() });
       }
       if (driverPriceForm.id === price.id) {
-        setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: "With Crane", distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: today() });
+        setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: "With Crane", distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: priceCompareDates[priceCompareDates.length - 1] || today() });
       }
       await loadData();
       flash(result.action === "deactivated" ? "Price deactivated and kept for history." : "Price deleted.");
@@ -3697,7 +3699,7 @@ function App() {
                     <div className="flex gap-2">
                       <Button type="submit">{priceForm.id ? "Save" : "Add Price"}</Button>
                       {priceForm.id && (
-                        <Button type="button" variant="secondary" onClick={() => setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: priceForm.truckType, distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: today() })}>Cancel</Button>
+                        <Button type="button" variant="secondary" onClick={() => setPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: priceForm.truckType, distanceKm: "", companyUnitPrice: "", truckSalaryUnitPrice: "", effectiveDate: priceCompareDates[priceCompareDates.length - 1] || today() })}>Cancel</Button>
                       )}
                     </div>
                   </Field>
@@ -3778,7 +3780,7 @@ function App() {
                     <div className="flex gap-2">
                       <Button type="submit">{driverPriceForm.id ? "Save" : "Add Price"}</Button>
                       {driverPriceForm.id && (
-                        <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: driverPriceForm.truckType, distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: today() })}>Cancel</Button>
+                        <Button type="button" variant="secondary" onClick={() => setDriverPriceForm({ id: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", truckType: driverPriceForm.truckType, distanceKm: "", truckSalaryUnitPrice: "", effectiveDate: priceCompareDates[priceCompareDates.length - 1] || today() })}>Cancel</Button>
                       )}
                     </div>
                   </Field>
