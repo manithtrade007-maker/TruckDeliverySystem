@@ -899,10 +899,8 @@ function recalculateAllDeliveries(data) {
   return recalculatedDeliveries;
 }
 
-function nextStatementNumber(data, month) {
-  const numbers = data.statements
-    .filter((statement) => statement.month === month)
-    .map((statement) => Number(statement.statementNumber || 0));
+function nextStatementNumber(data) {
+  const numbers = data.statements.map((statement) => Number(statement.statementNumber || 0));
   return numbers.length ? Math.max(...numbers) + 1 : 1;
 }
 
@@ -2741,9 +2739,7 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "GET" && url.pathname === "/api/next-statement-number") {
-    const month = normalizeText(query.month);
-    if (!month) throw new Error("Month is required.");
-    return sendJson(res, 200, { nextStatementNumber: nextStatementNumber(data, month) });
+    return sendJson(res, 200, { nextStatementNumber: nextStatementNumber(data) });
   }
 
   if (req.method === "POST" && url.pathname === "/api/statements") {
