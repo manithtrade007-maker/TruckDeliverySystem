@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(npx vite *)",
-      "Bash(node --check /Users/manith-nhep/Desktop/TrcuKDelliveySystem/backend/server.js)"
+      "Bash(node --check /Users/manith-nhep/Desktop/TrcuKDelliveySystem/backend/server.js)",
+      "Bash(node -e ' *)",
+      "Bash(sqlite3 backend/data.db \"SELECT DISTINCT effectiveDate, COUNT\\(*\\) as count FROM prices WHERE active=1 GROUP BY effectiveDate ORDER BY effectiveDate;\")",
+      "Bash(curl -s http://localhost:3000/api/data)",
+      "Bash(node --input-type=module -e ' *)"
     ]
   }
 }
