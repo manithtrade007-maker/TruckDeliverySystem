@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(node --check /Users/manith-nhep/Desktop/TrcuKDelliveySystem/backend/server.js)"
     ]
   }
 }

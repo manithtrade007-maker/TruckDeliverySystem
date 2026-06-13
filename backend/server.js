@@ -1602,8 +1602,7 @@ function salaryExport(data, rows, query = {}, loanDeduction = 0, garageFee = 0) 
       <td class="meta" colspan="2">${htmlEscape(truckType)}</td>
     </tr>
     <tr>
-      <td class="meta" colspan="4">Driver Payment: $ ${htmlEscape(money(totalDriverAmount))}</td>
-      <td class="subtitle" colspan="4">Page ${pageIndex + 1} of ${pages.length}</td>
+      <td class="subtitle" colspan="8">Page ${pageIndex + 1} of ${pages.length}</td>
     </tr>`;
   return excelTable(
     `${truckNo} Driver Verification`,
@@ -1703,20 +1702,16 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
   merge("A3:D3", `Driver: ${driverName}`, { font: boldFont });
   merge("E3:F3", "Truck Type:", { font: boldFont });
   merge("G3:H3", truckType, { font: boldFont });
-  merge("A4:D4", `Driver Payment: $ ${money(totalDriverAmount)}`, { font: boldFont });
-  merge("E4:H4", "", { font: baseFont });
-
   worksheet.getRow(1).height = 18;
   worksheet.getRow(2).height = 16;
   worksheet.getRow(3).height = 16;
-  worksheet.getRow(4).height = 16;
-  styleRange(1, 4);
+  styleRange(1, 3);
 
   // Column headers
   const colHeaders = ["No", "Delivery Date", "Invoice No", "From", "To", "QTY(T)", "Driver Price", "Driver Amount"];
-  worksheet.getRow(5).values = colHeaders;
-  worksheet.getRow(5).height = 20;
-  styleRange(5, 5, 1, 8, {
+  worksheet.getRow(4).values = colHeaders;
+  worksheet.getRow(4).height = 20;
+  styleRange(4, 4, 1, 8, {
     font: boldFont,
     alignment: { horizontal: "center", vertical: "middle", wrapText: true },
     fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } }
@@ -1724,7 +1719,7 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
 
   // Data rows
   rows.forEach((row, index) => {
-    const rowNumber = index + 6;
+    const rowNumber = index + 5;
     worksheet.getRow(rowNumber).height = 22;
     worksheet.getRow(rowNumber).values = [
       index + 1,
@@ -1745,7 +1740,7 @@ async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageF
   });
 
   // Total row
-  const totalRowNumber = rows.length + 6;
+  const totalRowNumber = rows.length + 5;
   worksheet.getRow(totalRowNumber).height = 20;
   worksheet.mergeCells(totalRowNumber, 1, totalRowNumber, 5);
   worksheet.getCell(totalRowNumber, 1).value = "Total";
@@ -1819,7 +1814,7 @@ function salaryPdf(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
   if (extraTotals.length > 0) extraTotals.push({ label: "Net Pay", value: `$ ${money(netPay)}`, bold: true, fill: [0.94, 0.99, 0.95] });
   return tablePdf({
     title: `Driver Verification - ${truckNo}`,
-    subtitle: `${truckTypeLabel(truckType)} | Driver: ${driverName} | Month: ${reportMonth} | Gross Pay: $ ${money(totalDriverAmount)}`,
+    subtitle: `${truckTypeLabel(truckType)} | Driver: ${driverName} | Month: ${reportMonth}`,
     columns,
     rows: rows.map((row, index) => ({
       no: index + 1,
