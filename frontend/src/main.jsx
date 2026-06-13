@@ -2177,7 +2177,7 @@ function App() {
                     onClick={() => {
                       downloadFile(`/api/export/accounting?statementId=${encodeURIComponent(selectedViewStatement.id)}&truckType=${encodeURIComponent(selectedViewStatement.truckType)}`).catch((err) => flash(err.message, "error"));
                     }}
-                    disabled={viewStatementRows.length < 1}
+                    disabled={viewStatementRows.length < 1 && !selectedViewStatement?.isManual}
                   >
                     Export Statement
                   </Button>
@@ -2390,7 +2390,7 @@ function App() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>
-                        {isAdmin && statement.rowCount > 0 && (
+                        {isAdmin && (statement.rowCount > 0 || statement.isManual) && (
                           <div className="relative">
                             <Button type="button" variant="secondary"
                               onClick={(e) => { e.stopPropagation(); setExportDropdownId(exportDropdownId === statement.id ? null : statement.id); }}>
