@@ -455,7 +455,6 @@ function App() {
   const [paymentsViewMonth, setPaymentsViewMonth] = useState(currentMonth());
   const [quickForm, setQuickForm] = useState({ statementNumber: "", month: currentMonth(), manualAmount: "" });
   const [showQuickEntry, setShowQuickEntry] = useState(false);
-  const [exportDropdownId, setExportDropdownId] = useState(null);
   const [entryTruckType, setEntryTruckType] = useState("With Crane");
   const [entryActionTruckType, setEntryActionTruckType] = useState("");
   const [showStatementWorkspace, setShowStatementWorkspace] = useState(false);
@@ -2391,21 +2390,10 @@ function App() {
                       <div className="flex flex-wrap gap-2">
                         <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>
                         {isAdmin && (statement.rowCount > 0 || statement.isManual) && (
-                          <div className="relative">
-                            <Button type="button" variant="secondary"
-                              onClick={(e) => { e.stopPropagation(); setExportDropdownId(exportDropdownId === statement.id ? null : statement.id); }}>
-                              Export ▾
-                            </Button>
-                            {exportDropdownId === statement.id && (
-                              <>
-                                <div className="fixed inset-0 z-10" onClick={() => setExportDropdownId(null)} />
-                                <div className="absolute right-0 top-full z-20 mt-1 flex flex-col rounded-xl border border-slate-200 bg-white shadow-xl min-w-[130px] overflow-hidden">
-                                  <button type="button" onClick={() => { exportStatementFile(statement, "xls"); setExportDropdownId(null); }} className="px-4 py-3 text-sm font-bold text-left text-slate-700 hover:bg-slate-50 active:bg-slate-100">Excel (.xlsx)</button>
-                                  <button type="button" onClick={() => { exportStatementFile(statement, "pdf"); setExportDropdownId(null); }} className="px-4 py-3 text-sm font-bold text-left text-slate-700 hover:bg-slate-50 active:bg-slate-100 border-t border-slate-100">PDF</button>
-                                </div>
-                              </>
-                            )}
-                          </div>
+                          <>
+                            <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "xls")}>Excel</Button>
+                            <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "pdf")}>PDF</Button>
+                          </>
                         )}
                         {isAdmin && (
                           <Button type="button" variant="secondary" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
