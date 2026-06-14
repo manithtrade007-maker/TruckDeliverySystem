@@ -1453,7 +1453,7 @@ async function accountingWorkbook(data, rows, signatureImage) {
     alignment: { horizontal: "center", vertical: "middle" }
   });
   merge("G1:H1", "Invoice No:", { font: boldFont });
-  merge("I1:J1", statement?.statementNumber || "", {
+  merge("I1:J1", String(statement?.statementNumber ?? ""), {
     font: boldFont,
     alignment: { horizontal: "right", vertical: "middle" }
   });
