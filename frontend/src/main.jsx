@@ -990,9 +990,13 @@ function App() {
   const isDraft = selectedStatement?.status === "Draft";
   const isEditingDelivery = Boolean(deliveryForm.id);
   const canEditRows = Boolean(selectedStatement) && isDraft;
-  const duplicateInvoice = Boolean(deliveryForm.invoiceNo) && data.deliveries.some(
-    (row) => row.invoiceNo === deliveryForm.invoiceNo && row.id !== deliveryForm.id
-  );
+  const duplicateInvoiceRow = Boolean(deliveryForm.invoiceNo)
+    ? data.deliveries.find((row) => row.invoiceNo === deliveryForm.invoiceNo && row.id !== deliveryForm.id)
+    : null;
+  const duplicateInvoice = Boolean(duplicateInvoiceRow);
+  const duplicateInvoiceStatement = duplicateInvoiceRow
+    ? data.statements.find((s) => s.id === duplicateInvoiceRow.statementId)
+    : null;
   const typedTruck = Boolean(deliveryForm.truckNo);
   const truckMissing = typedTruck && !selectedTruck;
   const truckTypeMismatch = Boolean(selectedTruck && selectedStatement && selectedTruck.truckType !== selectedStatement.truckType);
@@ -1263,7 +1267,7 @@ function App() {
   async function saveDelivery(event) {
     event.preventDefault();
     try {
-      if (duplicateInvoice) throw new Error("Invoice number already exists. Check the invoice before saving.");
+      if (duplicateInvoice) throw new Error(`Invoice number already exists in Statement ${duplicateInvoiceStatement?.statementNumber ?? "unknown"}. Check before saving.`);
       if (truckMissing) throw new Error("Truck number does not exist or is inactive.");
       if (truckTypeMismatch) throw new Error(`Truck ${deliveryForm.truckNo} is not allowed in this ${truckTypeLabel(selectedStatement.truckType)} statement.`);
       if (missingPrice) throw new Error(`No active price found for ${deliveryForm.toLocation} on ${formatDate(deliveryForm.deliveryDate)}.`);
@@ -2600,7 +2604,7 @@ function App() {
                   <Field label="Unit Price"><Input disabled value={selectedPrice ? `$${unitMoney(selectedPrice.companyUnitPrice)}` : ""} readOnly /></Field>
                   {(duplicateInvoice || truckMissing || truckTypeMismatch || missingPrice) && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 md:col-span-4">
-                      {duplicateInvoice && <div>Invoice number already exists. Use a different invoice number or edit the existing row.</div>}
+                      {duplicateInvoice && <div>Invoice already exists in Statement {duplicateInvoiceStatement?.statementNumber ?? "unknown"}. Check before saving.</div>}
                       {truckMissing && <div>Truck number does not exist or is inactive.</div>}
                       {truckTypeMismatch && <div>This truck belongs to {truckTypeLabel(selectedTruck.truckType)}, so it cannot be saved inside a {truckTypeLabel(selectedStatement.truckType)} statement.</div>}
                       {missingPrice && <div>No active price found for this location and delivery date. Add the price in Setup before saving.</div>}
