@@ -2400,7 +2400,7 @@ function App() {
                           </>
                         )}
                         {isAdmin && (
-                          <Button type="button" variant="secondary" className="w-[152px]" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
+                          <Button type="button" variant="secondary" className="w-[170px] whitespace-nowrap" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
                             {statement.paymentMonth ? `Pay: ${monthName(statement.paymentMonth)}` : "Pay Month"}
                           </Button>
                         )}
