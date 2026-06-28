@@ -2123,7 +2123,7 @@ function App() {
                     key={truckType}
                     type="button"
                     onClick={() => startEntryAction(truckType).catch((err) => flash(err.message, "error"))}
-                    className={`min-w-[220px] rounded-xl px-4 py-3 text-left transition ${
+                    className={`w-full sm:min-w-[220px] rounded-xl px-4 py-3 text-left transition ${
                       entryTruckType === truckType
                         ? "bg-teal-700 text-white shadow-sm"
                         : "bg-white text-slate-700 hover:text-slate-950"
@@ -2165,9 +2165,9 @@ function App() {
 
           {selectedViewStatement && (
             <Panel className="lg:col-span-2">
-              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="mb-4 flex flex-col gap-3">
                 <div>
-                  <h2 className="text-xl font-black tracking-tight">Statement {selectedViewStatement.statementNumber} - {monthName(selectedViewStatement.month)}</h2>
+                  <h2 className="text-lg font-black tracking-tight">Statement {selectedViewStatement.statementNumber} — {monthName(selectedViewStatement.month)}</h2>
                   <p className="mt-1 text-sm font-bold text-slate-500">
                     {truckTypeLabel(selectedViewStatement.truckType)} | {selectedViewStatement.status} | {viewStatementRows.length}/30 rows
                   </p>
@@ -2382,7 +2382,7 @@ function App() {
                     </span>
                   );
                   return (
-                    <div key={statement.id} className={`grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border p-3 transition ${statement.id === selectedStatementId ? "border-teal-700 bg-teal-50 shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
+                    <div key={statement.id} className={`flex flex-col gap-2 rounded-xl border p-3 transition sm:grid sm:grid-cols-[1fr_auto] sm:items-center sm:gap-3 ${statement.id === selectedStatementId ? "border-teal-700 bg-teal-50 shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <strong className="text-sm font-black">Statement {statement.statementNumber} - {monthName(statement.month)}</strong>
@@ -2449,30 +2449,33 @@ function App() {
           {selectedStatement && (
             <>
               {/* ── Compact statement info bar ─────────────────────────────── */}
-              <div className="lg:col-span-2 rounded-2xl bg-slate-900 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
-                <button type="button" onClick={backToStatementList}
-                  className="flex items-center gap-1.5 text-sm font-black text-slate-400 hover:text-white transition shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-                  Back
-                </button>
-                <div className="flex flex-1 flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="font-black text-white">Statement {selectedStatement.statementNumber}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-black ${selectedStatement.truckType === "With Crane" ? "bg-teal-500/20 text-teal-300" : "bg-sky-500/20 text-sky-300"}`}>{truckTypeLabel(selectedStatement.truckType)}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-black ${selectedStatement.status === "Draft" ? "bg-amber-500/20 text-amber-300" : selectedStatement.status === "Finished" ? "bg-emerald-500/20 text-emerald-300" : "bg-sky-500/20 text-sky-300"}`}>{selectedStatement.status}</span>
-                  <span className="text-slate-500 text-xs">·</span>
-                  <span className="text-slate-300 text-sm font-bold">{statementRows.length}/30 rows</span>
-                  <span className="text-slate-500 text-xs">·</span>
-                  <span className="text-slate-300 text-sm font-bold">{totals.qty.toFixed(3)}T</span>
-                  <span className="text-slate-500 text-xs">·</span>
-                  <span className="text-white font-black">${money(totals.amount)}</span>
-                </div>
-                <div className="flex flex-wrap gap-2 shrink-0">
-                  <button type="button" onClick={() => setExpandStatementEdit((v) => !v)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-black transition ${expandStatementEdit ? "border-slate-500 bg-slate-700 text-white" : "border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white"}`}>
-                    {expandStatementEdit ? "Hide Details" : "Edit Details"}
+              <div className="lg:col-span-2 rounded-2xl bg-slate-900 px-4 py-3 flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <button type="button" onClick={backToStatementList}
+                    className="flex items-center gap-1.5 text-sm font-black text-slate-400 hover:text-white transition shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back
                   </button>
-                  {!isDraft && <button type="button" onClick={reopenStatement} className="rounded-lg border border-amber-800 px-3 py-1.5 text-xs font-black text-amber-300 hover:border-amber-600 transition">Reopen</button>}
-                  {canFinishStatement && <button type="button" onClick={finishStatement} className="rounded-lg border border-emerald-700 bg-emerald-600 px-3 py-1.5 text-xs font-black text-white hover:bg-emerald-500 transition">Finish Statement</button>}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="font-black text-white">Stmt {selectedStatement.statementNumber}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-black ${selectedStatement.truckType === "With Crane" ? "bg-teal-500/20 text-teal-300" : "bg-sky-500/20 text-sky-300"}`}>{truckTypeLabel(selectedStatement.truckType)}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-black ${selectedStatement.status === "Draft" ? "bg-amber-500/20 text-amber-300" : selectedStatement.status === "Finished" ? "bg-emerald-500/20 text-emerald-300" : "bg-sky-500/20 text-sky-300"}`}>{selectedStatement.status}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                    <span className="text-slate-300 font-bold">{statementRows.length}/30</span>
+                    <span className="text-slate-300 font-bold">{totals.qty.toFixed(3)}T</span>
+                    <span className="text-white font-black">${money(totals.amount)}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <button type="button" onClick={() => setExpandStatementEdit((v) => !v)}
+                      className={`rounded-lg border px-3 py-1.5 text-xs font-black transition ${expandStatementEdit ? "border-slate-500 bg-slate-700 text-white" : "border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white"}`}>
+                      {expandStatementEdit ? "Hide" : "Edit"}
+                    </button>
+                    {!isDraft && <button type="button" onClick={reopenStatement} className="rounded-lg border border-amber-800 px-3 py-1.5 text-xs font-black text-amber-300 hover:border-amber-600 transition">Reopen</button>}
+                    {canFinishStatement && <button type="button" onClick={finishStatement} className="rounded-lg border border-emerald-700 bg-emerald-600 px-3 py-1.5 text-xs font-black text-white hover:bg-emerald-500 transition">Finish</button>}
+                  </div>
                 </div>
               </div>
 
@@ -2504,10 +2507,10 @@ function App() {
               )}
 
               <Panel className="lg:col-span-2">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-lg font-black tracking-tight">{isEditingDelivery ? "Edit Delivery Row" : "Delivery Entry"}</h2>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600">
-                    Statement {selectedStatement.statementNumber} - {truckTypeLabel(selectedStatement.truckType)} - {statementRows.length}/30 rows
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                    Stmt {selectedStatement.statementNumber} · {statementRows.length}/30
                   </span>
                 </div>
                 <form ref={deliveryFormRef} className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
@@ -2610,7 +2613,7 @@ function App() {
                       {missingPrice && <div>No active price found for this location and delivery date. Add the price in Setup before saving.</div>}
                     </div>
                   )}
-                  <div className="flex items-end gap-2 md:col-span-2">
+                  <div className="flex flex-wrap items-end gap-2 md:col-span-2">
                     <Button type="submit" disabled={!canSaveDelivery}>{isEditingDelivery ? "Update Row" : "Save Delivery"}</Button>
                     <Button type="button" variant="secondary" onClick={() => resetDeliveryForm()}>Cancel</Button>
                     {isDraft && (
@@ -2621,7 +2624,7 @@ function App() {
                         disabled={!canFinishStatement}
                         title={canFinishStatement ? "Finish this statement" : "Add at least one delivery row before finishing"}
                       >
-                        Finish Statement
+                        Finish
                       </Button>
                     )}
                   </div>
