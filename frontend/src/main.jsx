@@ -2538,57 +2538,90 @@ function App() {
                   />
                 </Field>
               </div>
-              <div className="mt-4 grid max-h-[520px] gap-2 overflow-auto pr-1">
-                {filteredStatements.map((statement) => {
-                  const statusBadge = statement.isManual
-                    ? { label: "Manual", cls: "bg-orange-100 text-orange-700" }
-                    : statement.status === "Draft"
-                    ? { label: "Draft", cls: "bg-amber-100 text-amber-800" }
-                    : statement.status === "Exported"
-                    ? { label: "Exported", cls: "bg-sky-100 text-sky-800" }
-                    : statement.status === "Finished"
-                    ? { label: "Finished", cls: "bg-emerald-100 text-emerald-800" }
-                    : { label: statement.status, cls: "bg-slate-100 text-slate-600" };
-                  const typeBadge = !statement.isManual && (
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
-                      {truckTypeLabel(statement.truckType)}
-                    </span>
-                  );
-                  return (
-                    <div key={statement.id} className={`flex flex-col gap-2 rounded-xl border p-3 transition sm:grid sm:grid-cols-[1fr_auto] sm:items-center sm:gap-3 ${statement.id === selectedStatementId ? "border-teal-700 bg-teal-50 shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <strong className="text-sm font-black">Statement {statement.statementNumber} - {monthName(statement.month)}</strong>
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statusBadge.cls}`}>{statusBadge.label}</span>
-                          {typeBadge}
-                        </div>
-                        <span className="text-xs text-slate-500">{statement.month} | {statement.isManual ? "Manual entry" : `${statement.rowCount}/30 rows`} | ${money(statement.companyTotalAmount)}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button type="button" variant="secondary" onClick={() => viewStatement(statement)}>View</Button>
-                        {isAdmin && (statement.rowCount > 0 || statement.isManual) && (
-                          <>
-                            <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "xls")}>Excel</Button>
-                            <Button type="button" variant="secondary" onClick={() => exportStatementFile(statement, "pdf")}>PDF</Button>
-                          </>
-                        )}
-                        {isAdmin && (
-                          <Button type="button" variant="secondary" className="w-[170px] whitespace-nowrap" onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}>
-                            {statement.paymentMonth ? `Pay: ${monthName(statement.paymentMonth)}` : "Pay Month"}
-                          </Button>
-                        )}
-                        <Button type="button" onClick={() => openStatement(statement)}>Edit</Button>
-                        {isAdmin && (
-                          <button type="button" onClick={() => deleteStatement(statement)}
-                            className="flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-red-600 hover:bg-red-100 transition"
-                            title="Delete statement">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="mt-4 overflow-auto rounded-xl border border-slate-200">
+                <table className="w-full min-w-[720px] border-collapse text-sm">
+                  <thead className="bg-slate-900 text-white">
+                    <tr>
+                      <th className="px-3 py-2.5 text-left font-black">Statement</th>
+                      <th className="px-3 py-2.5 text-center font-black">Type</th>
+                      <th className="px-3 py-2.5 text-center font-black">Status</th>
+                      <th className="px-3 py-2.5 text-center font-black">Rows</th>
+                      <th className="px-3 py-2.5 text-right font-black">Amount</th>
+                      {isAdmin && <th className="px-3 py-2.5 text-center font-black">Pay Month</th>}
+                      <th className="px-3 py-2.5 text-right font-black">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredStatements.length === 0 && (
+                      <tr><td colSpan="7" className="px-4 py-8 text-center text-sm font-bold text-slate-400">No statements for this month.</td></tr>
+                    )}
+                    {filteredStatements.map((statement) => {
+                      const statusCls = statement.isManual
+                        ? "bg-orange-100 text-orange-700"
+                        : statement.status === "Draft" ? "bg-amber-100 text-amber-800"
+                        : statement.status === "Exported" ? "bg-sky-100 text-sky-800"
+                        : statement.status === "Finished" ? "bg-emerald-100 text-emerald-800"
+                        : "bg-slate-100 text-slate-600";
+                      const statusLabel = statement.isManual ? "Manual" : statement.status;
+                      const isActive = statement.id === selectedStatementId;
+                      return (
+                        <tr key={statement.id} className={`border-b border-slate-100 transition ${isActive ? "bg-teal-50" : "odd:bg-white even:bg-slate-50/60 hover:bg-slate-100"}`}>
+                          <td className="px-3 py-2.5 font-black text-slate-800">
+                            {statement.statementNumber}
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {!statement.isManual && (
+                              <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
+                                {truckTypeLabel(statement.truckType)}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statusCls}`}>{statusLabel}</span>
+                          </td>
+                          <td className="px-3 py-2.5 text-center tabular-nums text-slate-600">
+                            {statement.isManual ? "—" : `${statement.rowCount}/30`}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums font-black text-slate-800">
+                            ${money(statement.companyTotalAmount)}
+                          </td>
+                          {isAdmin && (
+                            <td className="px-3 py-2.5 text-center">
+                              <button type="button"
+                                onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}
+                                className="whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">
+                                {statement.paymentMonth ? `Pay: ${monthName(statement.paymentMonth)}` : "Set Pay"}
+                              </button>
+                            </td>
+                          )}
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center justify-end gap-1">
+                              <button type="button" onClick={() => viewStatement(statement)}
+                                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">View</button>
+                              {isAdmin && (statement.rowCount > 0 || statement.isManual) && (
+                                <>
+                                  <button type="button" onClick={() => exportStatementFile(statement, "xls")}
+                                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">Excel</button>
+                                  <button type="button" onClick={() => exportStatementFile(statement, "pdf")}
+                                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">PDF</button>
+                                </>
+                              )}
+                              <button type="button" onClick={() => openStatement(statement)}
+                                className="rounded-lg border border-teal-700 bg-teal-700 px-2.5 py-1 text-xs font-bold text-white hover:bg-teal-800 transition">Edit</button>
+                              {isAdmin && (
+                                <button type="button" onClick={() => deleteStatement(statement)}
+                                  className="flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-red-600 hover:bg-red-100 transition"
+                                  title="Delete statement">
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </Panel>
           )}
