@@ -2140,7 +2140,7 @@ function App() {
                 </select>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3 mb-4">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 mb-4">
               <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-4 shadow-sm">
                 <div className="text-[10px] font-black uppercase tracking-wider text-teal-600 mb-1">Total Net Profit {reportYear}</div>
                 <div className="text-2xl font-black text-teal-900">${money(yearSummary.totalNet)}</div>
@@ -2216,12 +2216,12 @@ function App() {
                   <div className="p-8 text-center text-sm font-bold text-slate-400">No data for {reportYear}</div>
                 ) : (
                   <div className="overflow-auto">
-                    <table className="w-full text-sm">
+                    <table className="w-full min-w-[380px] text-sm">
                       <thead>
                         <tr className="border-b border-slate-100 bg-slate-50">
                           <th className="px-3 py-2 text-center text-xs font-black uppercase tracking-wide text-slate-500 w-10">#</th>
                           <th className="px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-slate-500">Truck</th>
-                          <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Revenue</th>
+                          <th className="hidden sm:table-cell px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Revenue</th>
                           <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Net Profit</th>
                           <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Trips</th>
                         </tr>
@@ -2234,7 +2234,7 @@ function App() {
                               <div className="font-black text-slate-800">{truck.truckNo}</div>
                               <div className="text-xs text-slate-400">{truckTypeLabel(truck.truckType)}</div>
                             </td>
-                            <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">${money(truck.revenue)}</td>
+                            <td className="hidden sm:table-cell px-3 py-2.5 text-right tabular-nums text-slate-600">${money(truck.revenue)}</td>
                             <td className={`px-3 py-2.5 text-right tabular-nums font-black ${truck.net > 0 ? "text-teal-700" : "text-red-600"}`}>${money(truck.net)}</td>
                             <td className="px-3 py-2.5 text-right tabular-nums text-slate-500">{truck.trips}</td>
                           </tr>
@@ -2548,21 +2548,21 @@ function App() {
                 </Field>
               </div>
               <div className="mt-4 overflow-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[720px] border-collapse text-sm">
+                <table className="w-full min-w-[420px] border-collapse text-sm">
                   <thead className="bg-slate-900 text-white">
                     <tr>
                       <th className="px-3 py-2.5 text-left font-black">Statement</th>
-                      <th className="px-3 py-2.5 text-center font-black">Type</th>
+                      <th className="hidden sm:table-cell px-3 py-2.5 text-center font-black">Type</th>
                       <th className="px-3 py-2.5 text-center font-black">Status</th>
-                      <th className="px-3 py-2.5 text-center font-black">Rows</th>
+                      <th className="hidden sm:table-cell px-3 py-2.5 text-center font-black">Rows</th>
                       <th className="px-3 py-2.5 text-right font-black">Amount</th>
-                      {isAdmin && <th className="px-3 py-2.5 text-center font-black">Pay Month</th>}
+                      {isAdmin && <th className="hidden md:table-cell px-3 py-2.5 text-center font-black">Pay Month</th>}
                       <th className="px-3 py-2.5 text-right font-black">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredStatements.length === 0 && (
-                      <tr><td colSpan="7" className="px-4 py-8 text-center text-sm font-bold text-slate-400">No statements for this month.</td></tr>
+                      <tr><td colSpan="99" className="px-4 py-8 text-center text-sm font-bold text-slate-400">No statements for this month.</td></tr>
                     )}
                     {filteredStatements.map((statement) => {
                       const statusCls = statement.isManual
@@ -2578,7 +2578,7 @@ function App() {
                           <td className="px-3 py-2.5 font-black text-slate-800">
                             {statement.statementNumber}
                           </td>
-                          <td className="px-3 py-2.5 text-center">
+                          <td className="hidden sm:table-cell px-3 py-2.5 text-center">
                             {!statement.isManual && (
                               <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statement.truckType === "With Crane" ? "bg-teal-100 text-teal-800" : "bg-sky-100 text-sky-800"}`}>
                                 {truckTypeLabel(statement.truckType)}
@@ -2588,14 +2588,14 @@ function App() {
                           <td className="px-3 py-2.5 text-center">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-black ${statusCls}`}>{statusLabel}</span>
                           </td>
-                          <td className="px-3 py-2.5 text-center tabular-nums text-slate-600">
+                          <td className="hidden sm:table-cell px-3 py-2.5 text-center tabular-nums text-slate-600">
                             {statement.isManual ? "—" : `${statement.rowCount}/30`}
                           </td>
                           <td className="px-3 py-2.5 text-right tabular-nums font-black text-slate-800">
                             ${money(statement.companyTotalAmount)}
                           </td>
                           {isAdmin && (
-                            <td className="px-3 py-2.5 text-center">
+                            <td className="hidden md:table-cell px-3 py-2.5 text-center">
                               <button type="button"
                                 onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}
                                 className="w-[150px] whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition text-center">
@@ -2606,13 +2606,13 @@ function App() {
                           <td className="px-3 py-2.5">
                             <div className="flex items-center justify-end gap-1">
                               <button type="button" onClick={() => viewStatement(statement)}
-                                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">View</button>
+                                className="hidden sm:block rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">View</button>
                               {isAdmin && (statement.rowCount > 0 || statement.isManual) && (
                                 <>
                                   <button type="button" onClick={() => exportStatementFile(statement, "xls")}
-                                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">Excel</button>
+                                    className="hidden sm:block rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">Excel</button>
                                   <button type="button" onClick={() => exportStatementFile(statement, "pdf")}
-                                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">PDF</button>
+                                    className="hidden sm:block rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">PDF</button>
                                 </>
                               )}
                               <button type="button" onClick={() => openStatement(statement)}
