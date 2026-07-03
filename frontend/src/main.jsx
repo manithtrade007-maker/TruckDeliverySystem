@@ -447,6 +447,7 @@ function App() {
   const [viewStatementId, setViewStatementId] = useState("");
   const [notice, setNotice] = useState({ type: "", text: "" });
   const [reportMonth, setReportMonth] = useState(currentMonth());
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
   const [reportTruckNo, setReportTruckNo] = useState("");
   const [deductionEdits, setDeductionEdits] = useState({});
   const [assignModal, setAssignModal] = useState(null);
@@ -727,6 +728,55 @@ function App() {
       driverPayment: driverByStatement[s.id] || 0,
     }));
   }, [data.statements, data.deliveries, reportMonth]);
+
+  const availableYears = useMemo(() => {
+    const years = new Set();
+    for (const row of data.deliveries) {
+      const y = row.deliveryDate?.slice(0, 4);
+      if (y) years.add(Number(y));
+    }
+    if (years.size === 0) years.add(new Date().getFullYear());
+    return [...years].sort((a, b) => b - a);
+  }, [data.deliveries]);
+
+  const yearSummary = useMemo(() => {
+    const year = String(reportYear);
+    const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const m = String(i + 1).padStart(2, "0");
+      return { month: `${year}-${m}`, label: MONTH_LABELS[i], revenue: 0, driverCost: 0, net: 0 };
+    });
+    const monthMap = new Map(months.map(m => [m.month, m]));
+    const byTruck = new Map();
+    for (const row of data.deliveries) {
+      const rowMonth = row.deliveryDate?.slice(0, 7);
+      if (!rowMonth?.startsWith(year)) continue;
+      const company = Number(row.companyTotalAmount || 0);
+      const driver = Number(row.truckSalaryAmount || 0);
+      if (monthMap.has(rowMonth)) {
+        const mo = monthMap.get(rowMonth);
+        mo.revenue += company;
+        mo.driverCost += driver;
+        mo.net += company - driver;
+      }
+      if (!byTruck.has(row.truckNo)) {
+        const truck = data.trucks.find(t => t.truckNo === row.truckNo);
+        byTruck.set(row.truckNo, { truckNo: row.truckNo, truckType: truck?.truckType || "", revenue: 0, driverCost: 0, net: 0, trips: 0 });
+      }
+      const t = byTruck.get(row.truckNo);
+      t.revenue += company;
+      t.driverCost += driver;
+      t.net += company - driver;
+      t.trips += 1;
+    }
+    const totalRevenue = months.reduce((s, m) => s + m.revenue, 0);
+    const totalDriverCost = months.reduce((s, m) => s + m.driverCost, 0);
+    const totalNet = totalRevenue - totalDriverCost;
+    const activeMonths = months.filter(m => m.revenue > 0);
+    const bestMonth = activeMonths.length ? activeMonths.reduce((best, m) => m.net > best.net ? m : best, activeMonths[0]) : null;
+    const trucks = [...byTruck.values()].sort((a, b) => b.net - a.net);
+    return { months, trucks, totalRevenue, totalDriverCost, totalNet, bestMonth };
+  }, [data.deliveries, data.trucks, reportYear]);
 
   const dashOutstanding = useMemo(() => {
     const allStatements = data.statements || [];
@@ -2071,6 +2121,128 @@ function App() {
                 </div>
               );
             })()}
+          </div>
+
+          {/* Year Summary */}
+          <div>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-black tracking-tight">Year Summary</h3>
+                <p className="text-xs font-bold text-slate-500">Net profit (revenue minus driver pay) — full year view</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-500">Year</span>
+                <select value={reportYear} onChange={(e) => setReportYear(Number(e.target.value))}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow-sm focus:border-teal-500 focus:outline-none">
+                  {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3 mb-4">
+              <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-4 shadow-sm">
+                <div className="text-[10px] font-black uppercase tracking-wider text-teal-600 mb-1">Total Net Profit {reportYear}</div>
+                <div className="text-2xl font-black text-teal-900">${money(yearSummary.totalNet)}</div>
+                <div className="text-xs font-bold text-teal-600 mt-1">Revenue ${money(yearSummary.totalRevenue)} · Driver ${money(yearSummary.totalDriverCost)}</div>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm">
+                <div className="text-[10px] font-black uppercase tracking-wider text-amber-600 mb-1">Best Month</div>
+                {yearSummary.bestMonth ? (
+                  <>
+                    <div className="text-2xl font-black text-amber-900">{yearSummary.bestMonth.label} {reportYear}</div>
+                    <div className="text-xs font-bold text-amber-600 mt-1">Net ${money(yearSummary.bestMonth.net)}</div>
+                  </>
+                ) : <div className="text-sm font-bold text-slate-400 mt-1">No data</div>}
+              </div>
+              <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm">
+                <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 mb-1">Best Truck</div>
+                {yearSummary.trucks[0] ? (
+                  <>
+                    <div className="text-2xl font-black text-blue-900">{yearSummary.trucks[0].truckNo}</div>
+                    <div className="text-xs font-bold text-blue-600 mt-1">Net ${money(yearSummary.trucks[0].net)} · {yearSummary.trucks[0].trips} trips</div>
+                  </>
+                ) : <div className="text-sm font-bold text-slate-400 mt-1">No data</div>}
+              </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="bg-slate-900 text-white px-4 py-2.5">
+                  <span className="text-sm font-black">Monthly Breakdown</span>
+                </div>
+                <div className="overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50">
+                        <th className="px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-slate-500">Month</th>
+                        <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Revenue</th>
+                        <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Driver Pay</th>
+                        <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Net Profit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {yearSummary.months.map((m) => {
+                        const isBest = yearSummary.bestMonth?.month === m.month;
+                        const hasData = m.revenue > 0;
+                        return (
+                          <tr key={m.month} className={`border-b border-slate-50 ${isBest ? "bg-amber-50" : "odd:bg-white even:bg-slate-50/60"}`}>
+                            <td className="px-3 py-2 font-bold text-slate-700">
+                              <span>{m.label}</span>
+                              {isBest && <span className="ml-2 text-[10px] font-black text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full">BEST</span>}
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums text-slate-600">{hasData ? `$${money(m.revenue)}` : "—"}</td>
+                            <td className="px-3 py-2 text-right tabular-nums text-amber-600">{hasData ? `$${money(m.driverCost)}` : "—"}</td>
+                            <td className={`px-3 py-2 text-right tabular-nums font-black ${m.net > 0 ? "text-teal-700" : m.net < 0 ? "text-red-600" : "text-slate-300"}`}>
+                              {hasData ? `$${money(m.net)}` : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      <tr className="bg-slate-900 text-white font-black">
+                        <td className="px-3 py-2.5">Total</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">${money(yearSummary.totalRevenue)}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">${money(yearSummary.totalDriverCost)}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">${money(yearSummary.totalNet)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="bg-slate-900 text-white px-4 py-2.5">
+                  <span className="text-sm font-black">Top Trucks by Net Profit</span>
+                </div>
+                {yearSummary.trucks.length === 0 ? (
+                  <div className="p-8 text-center text-sm font-bold text-slate-400">No data for {reportYear}</div>
+                ) : (
+                  <div className="overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-100 bg-slate-50">
+                          <th className="px-3 py-2 text-center text-xs font-black uppercase tracking-wide text-slate-500 w-10">#</th>
+                          <th className="px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-slate-500">Truck</th>
+                          <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Revenue</th>
+                          <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Net Profit</th>
+                          <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Trips</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {yearSummary.trucks.map((truck, i) => (
+                          <tr key={truck.truckNo} className="border-b border-slate-50 odd:bg-white even:bg-slate-50/60">
+                            <td className="px-3 py-2.5 text-center font-black text-slate-400">{i + 1}</td>
+                            <td className="px-3 py-2.5">
+                              <div className="font-black text-slate-800">{truck.truckNo}</div>
+                              <div className="text-xs text-slate-400">{truckTypeLabel(truck.truckType)}</div>
+                            </td>
+                            <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">${money(truck.revenue)}</td>
+                            <td className={`px-3 py-2.5 text-right tabular-nums font-black ${truck.net > 0 ? "text-teal-700" : "text-red-600"}`}>${money(truck.net)}</td>
+                            <td className="px-3 py-2.5 text-right tabular-nums text-slate-500">{truck.trips}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Activity timeline */}
