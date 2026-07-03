@@ -480,7 +480,7 @@ function App() {
   const truckInputRef = useRef(null);
   const deliveryFormRef = useRef(null);
   const [activeField, setActiveField] = useState("");
-  const [filters, setFilters] = useState({ month: currentMonth(), statementNumber: "" });
+  const [filters, setFilters] = useState({ statementNumber: "" });
   const [setupSection, setSetupSection] = useState("trucks");
   const [setupLocationSearch, setSetupLocationSearch] = useState("");
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
@@ -561,13 +561,13 @@ function App() {
   const filteredStatements = useMemo(() => {
     const statementNumber = String(filters.statementNumber || "").trim();
     return visibleStatements
-      .filter((statement) => statementNumber || !filters.month || statement.month === filters.month)
+      .filter((statement) => statementNumber || !reportMonth || statement.month === reportMonth)
       .filter((statement) => !statementNumber || String(statement.statementNumber).includes(statementNumber))
       .sort((a, b) => b.month.localeCompare(a.month) || Number(b.statementNumber) - Number(a.statementNumber));
   }, [visibleStatements, filters]);
 
   const statementCounts = useMemo(() => {
-    const month = filters.month || statementForm.month || currentMonth();
+    const month = reportMonth || statementForm.month || currentMonth();
     const rows = visibleStatements.filter((statement) => statement.month === month);
     const craneRows = rows.filter((statement) => statement.truckType === "With Crane");
     const noCraneRows = rows.filter((statement) => statement.truckType === "Without Crane");
@@ -580,7 +580,7 @@ function App() {
       noCraneAmount: noCraneRows.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0),
       totalAmount: rows.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0),
     };
-  }, [visibleStatements, filters.month, statementForm.month]);
+  }, [visibleStatements, reportMonth, statementForm.month]);
 
   const truckOptions = useMemo(
     () => data.trucks.filter((truck) => selectedStatement && truck.active !== false && truck.truckType === selectedStatement.truckType),
@@ -1145,7 +1145,7 @@ function App() {
     setEntryTruckType(statement.truckType);
     setEntryActionTruckType("");
     setShowStatementWorkspace(false);
-    setFilters((current) => ({ ...current, month: statement.month }));
+    setReportMonth(statement.month);
     resetDeliveryForm();
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   }
@@ -1193,7 +1193,7 @@ function App() {
 
   async function backToStatementList() {
     const deleted = await cleanupEmptyDraftStatements();
-    const month = statementForm.month || filters.month || currentMonth();
+    const month = statementForm.month || reportMonth || currentMonth();
     const truckType = entryTruckType;
     setSelectedStatementId("");
     setViewStatementId("");
@@ -1215,7 +1215,7 @@ function App() {
 
   async function createEntryStatement(truckType) {
     await cleanupEmptyDraftStatements();
-    const month = statementForm.month || filters.month || currentMonth();
+    const month = statementForm.month || reportMonth || currentMonth();
     const statementNumber = await getNextStatementNumber(month);
     setEntryTruckType(truckType);
     setSelectedStatementId("");
@@ -1234,7 +1234,7 @@ function App() {
     setViewStatementId("");
     setShowStatementWorkspace(false);
     resetDeliveryForm();
-    const month = statementForm.month || filters.month || currentMonth();
+    const month = statementForm.month || reportMonth || currentMonth();
     setStatementForm({ id: "", month, truckType, statementNumber: "", statementDate: today() });
   }
 
@@ -1254,7 +1254,7 @@ function App() {
       setSelectedStatementId("");
       setViewStatementId("");
       setShowStatementWorkspace(false);
-      setFilters((current) => ({ ...current, month: finishedMonth }));
+      setReportMonth(finishedMonth);
       resetDeliveryForm();
       setStatementForm({
         id: "",
@@ -2530,7 +2530,7 @@ function App() {
                 </span>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Month"><Input type="month" value={filters.month} onChange={(e) => setFilters({ ...filters, month: e.target.value })} /></Field>
+                <Field label="Month"><Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} /></Field>
                 <Field label="Statement No">
                   <Input
                     placeholder="Search statement number"
