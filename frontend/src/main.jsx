@@ -452,6 +452,7 @@ function App() {
   const [deductionEdits, setDeductionEdits] = useState({});
   const [assignModal, setAssignModal] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ statement: null, password: "", error: "" });
+  const [showAllActivity, setShowAllActivity] = useState(false);
   const [assignMonth, setAssignMonth] = useState(currentMonth());
   const [paymentsViewMonth, setPaymentsViewMonth] = useState(currentMonth());
   const [quickForm, setQuickForm] = useState({ statementNumber: "", month: currentMonth(), manualAmount: "" });
@@ -2255,29 +2256,37 @@ function App() {
             {(data.activity || []).length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-400">No activity recorded yet.</div>
             ) : (
-              <div className="relative pl-6">
-                <div className="absolute left-2 top-0 bottom-0 w-px bg-slate-100" />
-                <div className="grid gap-4">
-                  {(data.activity || []).slice(0, 3).map((item, i) => {
-                    const msg = item.message || "";
-                    const isPrice = msg.toLowerCase().includes("price");
-                    const isTruck = msg.toLowerCase().includes("truck");
-                    const isBackup = msg.toLowerCase().includes("backup");
-                    const dotColor = isPrice ? "bg-amber-400" : isTruck ? "bg-sky-400" : isBackup ? "bg-purple-400" : "bg-teal-400";
-                    const borderColor = isPrice ? "border-amber-100" : isTruck ? "border-sky-100" : isBackup ? "border-purple-100" : "border-teal-100";
-                    const bgColor = isPrice ? "bg-amber-50" : isTruck ? "bg-sky-50" : isBackup ? "bg-purple-50" : "bg-teal-50";
-                    return (
-                      <div key={item.id} className="relative">
-                        <span className={`absolute -left-[18px] top-2 h-3 w-3 rounded-full border-2 border-white ${dotColor}`} />
-                        <div className={`rounded-xl border px-4 py-3 ${borderColor} ${bgColor}`}>
-                          <div className="text-sm font-black text-slate-900">{item.message}</div>
-                          <div className="mt-0.5 text-xs font-bold text-slate-500">{formatDateTime(item.createdAt)}</div>
+              <>
+                <div className="relative pl-6">
+                  <div className="absolute left-2 top-0 bottom-0 w-px bg-slate-100" />
+                  <div className="grid gap-4">
+                    {(data.activity || []).slice(0, showAllActivity ? undefined : 3).map((item, i) => {
+                      const msg = item.message || "";
+                      const isPrice = msg.toLowerCase().includes("price");
+                      const isTruck = msg.toLowerCase().includes("truck");
+                      const isBackup = msg.toLowerCase().includes("backup");
+                      const dotColor = isPrice ? "bg-amber-400" : isTruck ? "bg-sky-400" : isBackup ? "bg-purple-400" : "bg-teal-400";
+                      const borderColor = isPrice ? "border-amber-100" : isTruck ? "border-sky-100" : isBackup ? "border-purple-100" : "border-teal-100";
+                      const bgColor = isPrice ? "bg-amber-50" : isTruck ? "bg-sky-50" : isBackup ? "bg-purple-50" : "bg-teal-50";
+                      return (
+                        <div key={item.id} className="relative">
+                          <span className={`absolute -left-[18px] top-2 h-3 w-3 rounded-full border-2 border-white ${dotColor}`} />
+                          <div className={`rounded-xl border px-4 py-3 ${borderColor} ${bgColor}`}>
+                            <div className="text-sm font-black text-slate-900">{item.message}</div>
+                            <div className="mt-0.5 text-xs font-bold text-slate-500">{formatDateTime(item.createdAt)}</div>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+                {(data.activity || []).length > 3 && (
+                  <button type="button" onClick={() => setShowAllActivity(v => !v)}
+                    className="mt-4 w-full rounded-xl border border-slate-200 py-2 text-xs font-black text-slate-500 hover:border-teal-600 hover:text-teal-700 transition">
+                    {showAllActivity ? "Show less" : `Show all ${data.activity.length} activities`}
+                  </button>
+                )}
+              </>
             )}
           </Panel>
         </main>
@@ -2589,7 +2598,7 @@ function App() {
                             <td className="px-3 py-2.5 text-center">
                               <button type="button"
                                 onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}
-                                className="whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">
+                                className="w-[150px] whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition text-center">
                                 {statement.paymentMonth ? `Pay: ${monthName(statement.paymentMonth)}` : "Set Pay"}
                               </button>
                             </td>
