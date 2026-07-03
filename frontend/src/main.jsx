@@ -446,7 +446,7 @@ function App() {
   const [selectedStatementId, setSelectedStatementId] = useState("");
   const [viewStatementId, setViewStatementId] = useState("");
   const [notice, setNotice] = useState({ type: "", text: "" });
-  const [reportMonth, setReportMonth] = useState(currentMonth());
+  const [reportMonth, setReportMonth] = useState(() => localStorage.getItem("nm_report_month") || currentMonth());
   const [reportYear, setReportYear] = useState(new Date().getFullYear());
   const [reportTruckNo, setReportTruckNo] = useState("");
   const [deductionEdits, setDeductionEdits] = useState({});
@@ -1098,6 +1098,8 @@ function App() {
     window.addEventListener("auth-logout", handleAuthLogout);
     return () => window.removeEventListener("auth-logout", handleAuthLogout);
   }, []);
+
+  useEffect(() => { localStorage.setItem("nm_report_month", reportMonth); }, [reportMonth]);
 
   useEffect(() => {
     if (loggedIn) loadData().catch((err) => flash(err.message, "error"));
