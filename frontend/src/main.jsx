@@ -564,7 +564,7 @@ function App() {
       .filter((statement) => statementNumber || !reportMonth || statement.month === reportMonth)
       .filter((statement) => !statementNumber || String(statement.statementNumber).includes(statementNumber))
       .sort((a, b) => b.month.localeCompare(a.month) || Number(b.statementNumber) - Number(a.statementNumber));
-  }, [visibleStatements, filters]);
+  }, [visibleStatements, filters, reportMonth]);
 
   const statementCounts = useMemo(() => {
     const month = reportMonth || statementForm.month || currentMonth();
@@ -2258,7 +2258,7 @@ function App() {
               <div className="relative pl-6">
                 <div className="absolute left-2 top-0 bottom-0 w-px bg-slate-100" />
                 <div className="grid gap-4">
-                  {(data.activity || []).slice(0, 8).map((item, i) => {
+                  {(data.activity || []).slice(0, 3).map((item, i) => {
                     const msg = item.message || "";
                     const isPrice = msg.toLowerCase().includes("price");
                     const isTruck = msg.toLowerCase().includes("truck");
