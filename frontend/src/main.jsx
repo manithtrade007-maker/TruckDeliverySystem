@@ -2762,7 +2762,10 @@ function App() {
                         <tr key={row.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
                           <td className="px-3 py-3 text-center">{index + 1}</td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">{formatDate(row.deliveryDate)}</td>
-                          <td className="px-3 py-3 tabular-nums">{row.invoiceNo}</td>
+                          <td className="px-3 py-3 tabular-nums">
+                            <div>{row.invoiceNo}</div>
+                            {(() => { const s = data.statements.find(st => st.id === row.statementId); return s ? <div className="text-xs text-slate-400 font-normal">Stmt {s.statementNumber}</div> : null; })()}
+                          </td>
                           <td className="px-3 py-3">{row.fromLocation}</td>
                           <td className="px-3 py-3">{row.toLocation}</td>
                           <td className="px-3 py-3 text-right font-bold tabular-nums">{Number(row.qtyTon || 0).toFixed(4)}T</td>
