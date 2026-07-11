@@ -21,6 +21,9 @@ const port = Number(process.env.PORT || 5058);
 const host = process.env.HOST || "0.0.0.0";
 const appUsername = process.env.APP_USERNAME || "";
 const appPassword = process.env.APP_PASSWORD || "";
+// "Production" = the real deployed site (Render sets NODE_ENV=production and RENDER).
+// On localhost neither is set, so login stays optional there for convenience.
+const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
 let saveQueue = Promise.resolve();
 let mutationQueue = Promise.resolve();
 
@@ -3899,8 +3902,16 @@ const server = createServer(async (req, res) => {
   }
 });
 
+// Safety guard: never let the live site run with the front door open.
+// On production, missing credentials would grant every visitor admin access,
+// so refuse to start (crash loudly) instead of silently opening up.
+if (isProduction && !isAuthEnabled()) {
+  console.error("FATAL: APP_USERNAME and APP_PASSWORD must be set in production. Refusing to start with login disabled.");
+  process.exit(1);
+}
+
 server.listen(port, host, () => {
   console.log(`Truck Delivery System running at http://${host}:${port}`);
   console.log(`Data directory: ${dataDir}`);
-  if (!isAuthEnabled()) console.log("Warning: APP_USERNAME and APP_PASSWORD are not set. Login is disabled.");
+  if (!isAuthEnabled()) console.log("Warning: APP_USERNAME and APP_PASSWORD are not set. Login is disabled (local only).");
 });
