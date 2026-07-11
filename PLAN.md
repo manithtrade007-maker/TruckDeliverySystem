@@ -42,13 +42,12 @@ None of this is a rewrite — it's hardening a system that already works and del
 - **Found:** a minor quirk — `locationMatchKey("Khan …")` double-expands `kh`→`khan` giving `khanan…`; search-only, documented in the test as a future fix.
 - **Remaining:** extend coverage to driver-amount / statement-total calc and the reconciliation + earnings aggregation once those move into testable modules.
 
-### 4. Workflow footguns / silent data loss
-- **Problem:** Editing a delivery row then clicking **Finish** discards the unsaved edit with no warning (`finishStatement()` calls `resetDeliveryForm()` before saving). Changing Truck No also silently clears To Location, which can strand the user with a disabled "Update Row".
-- **Fix:**
-  1. Guard `finishStatement()` — warn or auto-save when a row edit is unsaved.
-  2. Audit delete/overwrite paths for "are you sure / unsaved changes" prompts.
-  3. Only clear `toLocation` on Truck No change when the truck type actually changes.
-- **Effort:** ~half day.
+### 4. Workflow footguns / silent data loss — ✅ DONE (2026-07-12)
+- **Problem:** Editing a delivery row then clicking **Finish** discarded the unsaved edit with no warning (`finishStatement()` reset the form before saving). Changing Truck No also silently cleared To Location, stranding the user with a disabled "Update Row".
+- **Fixed:**
+  1. Added `deliveryFormDirty` detection + a guard in `finishStatement()` — it now blocks and warns ("unsaved changes to a row… Update Row or Cancel") instead of silently discarding. Only fires on genuine changes, so no false alarms.
+  2. Truck No change no longer clears To Location (the list isn't truck-dependent — it was a pure trap). Price re-looks-up automatically; a truck-type mismatch is still caught on save.
+- **Remaining (optional):** broader audit of other delete/overwrite paths for confirm prompts.
 
 ---
 

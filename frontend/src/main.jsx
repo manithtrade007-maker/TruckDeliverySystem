@@ -1097,6 +1097,14 @@ function App() {
   const isDraft = selectedStatement?.status === "Draft";
   const isEditingDelivery = Boolean(deliveryForm.id);
   const canEditRows = Boolean(selectedStatement) && isDraft;
+  // Are there unsaved changes to the row currently open in the edit form?
+  // Used to stop Finish from silently discarding an in-progress edit.
+  const editingSavedRow = isEditingDelivery ? data.deliveries.find((row) => row.id === deliveryForm.id) : null;
+  const deliveryFormDirty = Boolean(editingSavedRow) && (
+    ["deliveryDate", "invoiceNo", "truckNo", "toLocation"].some(
+      (key) => String(deliveryForm[key] ?? "") !== String(editingSavedRow[key] ?? "")
+    ) || Number(deliveryForm.qtyTon || 0) !== Number(editingSavedRow.qtyTon || 0)
+  );
   const duplicateInvoiceRow = Boolean(deliveryForm.invoiceNo)
     ? data.deliveries.find((row) => row.invoiceNo === deliveryForm.invoiceNo && row.id !== deliveryForm.id)
     : null;
@@ -1306,6 +1314,12 @@ function App() {
     if (!selectedStatement) return;
     if (statementRows.length < 1) {
       flash("Add at least one delivery row before finishing this statement.", "error");
+      return;
+    }
+    // Don't silently throw away an in-progress row edit (the old edit -> Finish bug).
+    if (deliveryFormDirty) {
+      flash('You have unsaved changes to a row. Click "Update Row" to save them, or "Cancel" to discard, before finishing.', "error");
+      deliveryFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     const finishedStatementId = selectedStatement.id;
@@ -2865,7 +2879,7 @@ function App() {
                         }
                       }}
                       value={deliveryForm.truckNo}
-                      onChange={(e) => setDeliveryForm({ ...deliveryForm, truckNo: e.target.value.toUpperCase(), toLocation: "" })}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, truckNo: e.target.value.toUpperCase() })}
                     />
                     <datalist id="delivery-truck-options">
                       {truckOptions.map((truck) => <option key={truck.truckNo} value={truck.truckNo} />)}
