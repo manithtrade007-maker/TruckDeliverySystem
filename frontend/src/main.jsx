@@ -9,6 +9,9 @@ const localDate = (date = new Date()) => {
 const today = () => localDate();
 const currentMonth = () => localDate().slice(0, 7);
 const money = (value) => Number(value || 0).toFixed(2);
+// Snap a summed money value to clean cents, removing floating-point crumbs
+// (e.g. 850.5399999999998 -> 850.54). Matches roundMoney() in the backend.
+const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 const unitMoney = (value) => {
   const number = Number(value || 0);
   if (!Number.isFinite(number)) return "0.000";
@@ -797,7 +800,9 @@ function App() {
       t.systemAmount += Number(row.truckSalaryAmount || 0);
       t.trips += 1;
     }
-    return [...byTruck.values()].sort((a, b) => String(a.truckNo).localeCompare(String(b.truckNo)));
+    return [...byTruck.values()]
+      .map((t) => ({ ...t, systemAmount: roundMoney(t.systemAmount) }))
+      .sort((a, b) => String(a.truckNo).localeCompare(String(b.truckNo)));
   }, [data.deliveries, data.trucks, reconMonth]);
 
   // Month-by-month earnings from the driver-payment discrepancies.
@@ -815,8 +820,8 @@ function App() {
     }
     const byMonth = new Map();
     for (const r of reported) {
-      const system = sysByKey.get(`${r.month}|${r.truckNo}`) || 0;
-      const diff = system - Number(r.amount || 0);
+      const system = roundMoney(sysByKey.get(`${r.month}|${r.truckNo}`) || 0);
+      const diff = roundMoney(system - Number(r.amount || 0));
       if (!byMonth.has(r.month)) byMonth.set(r.month, { month: r.month, checked: 0, mismatches: 0, kept: 0, overpaid: 0, net: 0 });
       const mo = byMonth.get(r.month);
       mo.checked += 1;
@@ -825,7 +830,9 @@ function App() {
       else if (diff < 0) mo.overpaid += -diff;
       mo.net += diff;
     }
-    return [...byMonth.values()].sort((a, b) => b.month.localeCompare(a.month));
+    return [...byMonth.values()]
+      .map((mo) => ({ ...mo, kept: roundMoney(mo.kept), overpaid: roundMoney(mo.overpaid), net: roundMoney(mo.net) }))
+      .sort((a, b) => b.month.localeCompare(a.month));
   }, [data.deliveries, data.driverReportedPayments]);
 
   const dashOutstanding = useMemo(() => {
@@ -3415,15 +3422,15 @@ function App() {
                 const raw = reconEdits[r.truckNo];
                 const hasEntry = raw !== undefined && raw !== "" && raw != null;
                 const driver = hasEntry ? Number(raw) || 0 : null;
-                const diff = driver == null ? null : r.systemAmount - driver;
+                const diff = driver == null ? null : roundMoney(r.systemAmount - driver);
                 return { ...r, raw: raw ?? "", driver, diff };
               });
-              const totalSystem = computed.reduce((s, r) => s + r.systemAmount, 0);
-              const totalDriver = computed.reduce((s, r) => s + (r.driver ?? 0), 0);
-              const totalDiff = computed.reduce((s, r) => s + (r.diff ?? 0), 0);
+              const totalSystem = roundMoney(computed.reduce((s, r) => s + r.systemAmount, 0));
+              const totalDriver = roundMoney(computed.reduce((s, r) => s + (r.driver ?? 0), 0));
+              const totalDiff = roundMoney(computed.reduce((s, r) => s + (r.diff ?? 0), 0));
               const checkedCount = computed.filter((r) => r.diff != null).length;
               const mismatchCount = computed.filter((r) => r.diff != null && Math.abs(r.diff) >= TOL).length;
-              const totalOff = computed.reduce((s, r) => s + (r.diff != null ? Math.abs(r.diff) : 0), 0);
+              const totalOff = roundMoney(computed.reduce((s, r) => s + (r.diff != null ? Math.abs(r.diff) : 0), 0));
               const fmtDiff = (v) => `${v > 0 ? "+" : v < 0 ? "−" : ""}$ ${money(Math.abs(v))}`;
               return (
                 <>
@@ -3515,9 +3522,9 @@ function App() {
             {earningsHistory.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-semibold text-slate-400">No driver figures entered yet. Fill in the sheet above for any month to start tracking earnings.</div>
             ) : (() => {
-              const totalKept = earningsHistory.reduce((s, m) => s + m.kept, 0);
-              const totalOverpaid = earningsHistory.reduce((s, m) => s + m.overpaid, 0);
-              const totalNet = earningsHistory.reduce((s, m) => s + m.net, 0);
+              const totalKept = roundMoney(earningsHistory.reduce((s, m) => s + m.kept, 0));
+              const totalOverpaid = roundMoney(earningsHistory.reduce((s, m) => s + m.overpaid, 0));
+              const totalNet = roundMoney(earningsHistory.reduce((s, m) => s + m.net, 0));
               return (
                 <>
                 <div className="mb-4 grid gap-3 grid-cols-1 sm:grid-cols-3">

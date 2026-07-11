@@ -27,11 +27,10 @@ None of this is a rewrite — it's hardening a system that already works and del
 - **Fixed:** Added a production startup guard (`backend/server.js`) — if `NODE_ENV=production` or `RENDER` is set and credentials are missing, the server logs a FATAL error and refuses to start (`process.exit(1)`) instead of silently opening up. Localhost behavior unchanged (login stays optional). Render already has the credentials set, so normal deploys are unaffected.
 - **Remaining (optional):** flip the unauthenticated default from `"admin"` to `"staff"` — never admin.
 
-### 2. Money precision is inconsistent
-- **Problem:** `roundMoney()` (`backend/server.js:812`) is used on statement totals, but per-truck driver sums and the Compare Pay / earnings aggregations use raw float addition — hence display artifacts like `$850.5399999999998`. Errors accumulate; the `0.01` reconciliation tolerance is a band-aid.
-- **Fix (near-term, pragmatic):** wrap every aggregation boundary in `roundMoney()` — driver-amount totals, Compare Pay `systemAmount`, earnings `kept`/`overpaid`/`net`. Removes both the display artifacts and practical accumulation.
-- **Fix (robust, if volume grows):** store money as **integer cents** in the DB, format to dollars only on display.
-- **Effort:** consistent `roundMoney` ~2-3 hrs; cents migration ~1-2 days.
+### 2. Money precision is inconsistent — ✅ PARTIALLY DONE (2026-07-12)
+- **Problem:** `roundMoney()` (`backend/server.js:812`) is used on statement totals, but per-truck driver sums and the Compare Pay / earnings aggregations used raw float addition — hence display artifacts like `$850.5399999999998`.
+- **Fixed:** Added a matching `roundMoney()` helper on the frontend (`frontend/src/main.jsx`) and applied it to every Compare Pay + Monthly Earnings aggregation (reconciliation `systemAmount`, per-row diffs, column totals, earnings `kept`/`overpaid`/`net` and their totals). The visible artifacts are gone.
+- **Remaining (optional, robust):** for full safety at scale, store money as **integer cents** in the DB and format to dollars only on display (~1-2 days; only if volume grows).
 
 ---
 
