@@ -53,13 +53,13 @@ None of this is a rewrite — it's hardening a system that already works and del
 
 ## 🟡 P2 — Do when resuming feature work (velocity)
 
-### 5. `main.jsx` is a 4,632-line monolith
+### 5. `main.jsx` is a 4,632-line monolith — 🟡 STARTED (2026-07-12)
 - **Problem:** One component holds all state, handlers, and every page. Every change means navigating a giant file; risky to modify.
-- **Fix (incremental, low-risk):**
-  1. Extract each page (Dashboard, DataEntry, Reports, ComparePay, Payments, Prices, Setup) into its own file — one at a time, verifying after each.
-  2. Pull shared data/state into a `useAppData()` hook.
-  3. No big-bang rewrite — migrate page by page.
-- **Effort:** ~2-3 days total, splittable into safe chunks.
+- **Done (first safe slice):** Extracted the pure presentational components (`Button`, `Input`, `Select`, `Field`, `Panel`, `KpiCard`, `MetricCard`, `PageHead`) into `frontend/src/components/ui.jsx` and imported them back. Established the `components/` folder. `main.jsx` 4,632 → 4,548 lines. Zero behavior change (pure move; build + tests green).
+- **Remaining (the big part — do tests-first, not in a freeze):**
+  1. Extract each page (Dashboard, DataEntry, Reports, ComparePay, Payments, Prices, Setup) into its own file — one at a time, verifying after each. This is the hard part: 47 useState + 51 handlers are shared, so it needs a `useAppData()` hook or context to avoid dozens of props per page.
+  2. No big-bang rewrite — migrate page by page.
+- **Effort:** the remaining split is ~2-3 days, splittable into safe chunks.
 
 ### 6. `dist/` is hand-built and committed — ✅ DONE (2026-07-12)
 - **Problem:** Every change needed a manual `vite build` + commit; a forgotten rebuild shipped stale UI.
