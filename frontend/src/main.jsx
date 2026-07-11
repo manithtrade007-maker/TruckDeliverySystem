@@ -800,6 +800,34 @@ function App() {
     return [...byTruck.values()].sort((a, b) => String(a.truckNo).localeCompare(String(b.truckNo)));
   }, [data.deliveries, data.trucks, reconMonth]);
 
+  // Month-by-month earnings from the driver-payment discrepancies.
+  // "kept" = money drivers under-counted (owner's gain); "overpaid" = over-counts.
+  const earningsHistory = useMemo(() => {
+    const TOL = 0.01;
+    const reported = data.driverReportedPayments || [];
+    if (reported.length === 0) return [];
+    const sysByKey = new Map();
+    for (const row of data.deliveries) {
+      const m = row.deliveryDate?.slice(0, 7);
+      if (!m) continue;
+      const key = `${m}|${row.truckNo}`;
+      sysByKey.set(key, (sysByKey.get(key) || 0) + Number(row.truckSalaryAmount || 0));
+    }
+    const byMonth = new Map();
+    for (const r of reported) {
+      const system = sysByKey.get(`${r.month}|${r.truckNo}`) || 0;
+      const diff = system - Number(r.amount || 0);
+      if (!byMonth.has(r.month)) byMonth.set(r.month, { month: r.month, checked: 0, mismatches: 0, kept: 0, overpaid: 0, net: 0 });
+      const mo = byMonth.get(r.month);
+      mo.checked += 1;
+      if (Math.abs(diff) >= TOL) mo.mismatches += 1;
+      if (diff > 0) mo.kept += diff;
+      else if (diff < 0) mo.overpaid += -diff;
+      mo.net += diff;
+    }
+    return [...byMonth.values()].sort((a, b) => b.month.localeCompare(a.month));
+  }, [data.deliveries, data.driverReportedPayments]);
+
   const dashOutstanding = useMemo(() => {
     const allStatements = data.statements || [];
     const allPaymentMonths = data.paymentMonths || [];
@@ -3467,6 +3495,76 @@ function App() {
                         <td className="px-3 py-3 text-right tabular-nums">$ {money(totalDriver)}</td>
                         <td className={`px-3 py-3 text-right tabular-nums ${Math.abs(totalDiff) < TOL ? "text-teal-300" : "text-red-300"}`}>{fmtDiff(totalDiff)}</td>
                         <td className="px-3 py-3"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+                </>
+              );
+            })()}
+          </Panel>
+
+          <Panel>
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="text-lg font-black tracking-tight">Monthly Earnings</h3>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">All months</span>
+            </div>
+            <p className="mb-4 text-xs font-bold text-slate-500">
+              How much you earned from driver under-counts each month. <span className="text-teal-700">Kept</span> = money drivers left on the table; <span className="text-amber-600">Overpaid</span> = over-counts; <span className="font-black">Net</span> = your true gain.
+            </p>
+            {earningsHistory.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-semibold text-slate-400">No driver figures entered yet. Fill in the sheet above for any month to start tracking earnings.</div>
+            ) : (() => {
+              const totalKept = earningsHistory.reduce((s, m) => s + m.kept, 0);
+              const totalOverpaid = earningsHistory.reduce((s, m) => s + m.overpaid, 0);
+              const totalNet = earningsHistory.reduce((s, m) => s + m.net, 0);
+              return (
+                <>
+                <div className="mb-4 grid gap-3 grid-cols-1 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Kept</div>
+                    <div className="text-2xl font-black tabular-nums text-teal-800">$ {money(totalKept)}</div>
+                    <div className="text-[11px] font-medium text-slate-400 mt-0.5">from driver under-counts</div>
+                  </div>
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Overpaid</div>
+                    <div className="text-2xl font-black tabular-nums text-amber-700">$ {money(totalOverpaid)}</div>
+                    <div className="text-[11px] font-medium text-slate-400 mt-0.5">from driver over-counts</div>
+                  </div>
+                  <div className={`rounded-2xl border p-4 ${totalNet >= 0 ? "border-teal-200 bg-teal-50/60" : "border-red-200 bg-red-50/60"}`}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Net Earned</div>
+                    <div className={`text-2xl font-black tabular-nums ${totalNet >= 0 ? "text-teal-800" : "text-red-700"}`}>{totalNet < 0 ? "− " : ""}$ {money(Math.abs(totalNet))}</div>
+                    <div className="text-[11px] font-medium text-slate-400 mt-0.5">kept minus overpaid, all months</div>
+                  </div>
+                </div>
+                <div className="overflow-auto rounded-xl border border-slate-200">
+                  <table className="w-full min-w-[640px] border-collapse bg-white text-sm">
+                    <thead className="bg-slate-900 text-white">
+                      <tr>
+                        <th className="px-3 py-3 text-left font-black">Month</th>
+                        <th className="px-3 py-3 text-center font-black">Off / Checked</th>
+                        <th className="px-3 py-3 text-right font-black">Kept</th>
+                        <th className="px-3 py-3 text-right font-black">Overpaid</th>
+                        <th className="px-3 py-3 text-right font-black">Net</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {earningsHistory.map((m) => (
+                        <tr key={m.month} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                          <td className="px-3 py-3 font-black text-slate-800">{monthName(m.month)}</td>
+                          <td className="px-3 py-3 text-center tabular-nums text-slate-500">{m.mismatches} / {m.checked}</td>
+                          <td className="px-3 py-3 text-right tabular-nums font-bold text-teal-700">$ {money(m.kept)}</td>
+                          <td className="px-3 py-3 text-right tabular-nums font-bold text-amber-600">{m.overpaid > 0 ? `$ ${money(m.overpaid)}` : "—"}</td>
+                          <td className={`px-3 py-3 text-right tabular-nums font-black ${m.net >= 0 ? "text-teal-700" : "text-red-600"}`}>{m.net < 0 ? "− " : ""}$ {money(Math.abs(m.net))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-slate-900 font-black text-white">
+                        <td className="px-3 py-3" colSpan="2">Total</td>
+                        <td className="px-3 py-3 text-right tabular-nums text-teal-300">$ {money(totalKept)}</td>
+                        <td className="px-3 py-3 text-right tabular-nums text-amber-300">$ {money(totalOverpaid)}</td>
+                        <td className={`px-3 py-3 text-right tabular-nums ${totalNet >= 0 ? "text-teal-300" : "text-red-300"}`}>{totalNet < 0 ? "− " : ""}$ {money(Math.abs(totalNet))}</td>
                       </tr>
                     </tfoot>
                   </table>
