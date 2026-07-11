@@ -36,13 +36,11 @@ None of this is a rewrite — it's hardening a system that already works and del
 
 ## 🟠 P1 — Do soon (safety net)
 
-### 3. No automated tests on financial math
+### 3. No automated tests on financial math — ✅ STARTED (2026-07-12)
 - **Problem:** No tests anywhere. Prior calc bugs (`locationBaseKey`, dead recalculate code) prove these happen and stay invisible until a paycheck is wrong.
-- **Fix:**
-  1. Add Node's built-in `node --test` and a `"test"` script (no new dependencies).
-  2. Cover money-critical pure functions: price matching / `findEffectivePrice`, driver-amount calc, `roundMoney`, reconciliation + earnings aggregation.
-  3. Aim for ~15-20 focused tests — enough to catch regressions.
-- **Effort:** ~1 day.
+- **Done:** Added `node --test` harness + `npm test` script (no new dependencies). `backend/server.js` now exports its pure functions and only boots the HTTP server when run directly (so tests can import it). `backend/test/calc.test.js` covers `roundMoney`, `toNumber`, `locationBaseKey`, `locationMatchKey`, and `findEffectivePrice` (9 tests, all passing).
+- **Found:** a minor quirk — `locationMatchKey("Khan …")` double-expands `kh`→`khan` giving `khanan…`; search-only, documented in the test as a future fix.
+- **Remaining:** extend coverage to driver-amount / statement-total calc and the reconciliation + earnings aggregation once those move into testable modules.
 
 ### 4. Workflow footguns / silent data loss
 - **Problem:** Editing a delivery row then clicking **Finish** discards the unsaved edit with no warning (`finishStatement()` calls `resetDeliveryForm()` before saving). Changing Truck No also silently clears To Location, which can strand the user with a disabled "Update Row".

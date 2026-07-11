@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFile, writeFile, mkdir, rename, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { randomBytes, timingSafeEqual, scrypt } from "node:crypto";
 import ExcelJS from "exceljs";
@@ -791,14 +791,14 @@ function normalizeLocationName(value) {
   return normalizeText(value).replace(/^(KH|D)\.\s+/i, (_, p) => p.toUpperCase() + ".");
 }
 
-function locationMatchKey(value) {
+export function locationMatchKey(value) {
   return normalizeText(value)
     .toLowerCase()
     .replace(/\bkh[\s.]*/g, "khan")
     .replace(/[^a-z0-9]+/g, "");
 }
 
-function locationBaseKey(value) {
+export function locationBaseKey(value) {
   return normalizeText(value)
     .replace(/\([^)]*\)/g, "")
     .toLowerCase()
@@ -807,12 +807,12 @@ function locationBaseKey(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
-function toNumber(value) {
+export function toNumber(value) {
   const number = Number(String(value ?? "").replace(/[$,\s]/g, ""));
   return Number.isFinite(number) ? number : 0;
 }
 
-function roundMoney(value) {
+export function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 }
 
@@ -824,7 +824,7 @@ function effectiveDateOf(price) {
   return price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
 }
 
-function findEffectivePrice(data, { fromLocation, toLocation, truckType, deliveryDate }) {
+export function findEffectivePrice(data, { fromLocation, toLocation, truckType, deliveryDate }) {
   const fromKey = normalizeText(fromLocation);
   const toKey = locationBaseKey(toLocation);
   const typeKey = normalizeText(truckType);
@@ -3902,16 +3902,21 @@ const server = createServer(async (req, res) => {
   }
 });
 
-// Safety guard: never let the live site run with the front door open.
-// On production, missing credentials would grant every visitor admin access,
-// so refuse to start (crash loudly) instead of silently opening up.
-if (isProduction && !isAuthEnabled()) {
-  console.error("FATAL: APP_USERNAME and APP_PASSWORD must be set in production. Refusing to start with login disabled.");
-  process.exit(1);
-}
+// Only boot the HTTP server when run directly (`node backend/server.js`),
+// not when this module is imported (e.g. by the test suite).
+const isMainModule = import.meta.url === pathToFileURL(process.argv[1] || "").href;
+if (isMainModule) {
+  // Safety guard: never let the live site run with the front door open.
+  // On production, missing credentials would grant every visitor admin access,
+  // so refuse to start (crash loudly) instead of silently opening up.
+  if (isProduction && !isAuthEnabled()) {
+    console.error("FATAL: APP_USERNAME and APP_PASSWORD must be set in production. Refusing to start with login disabled.");
+    process.exit(1);
+  }
 
-server.listen(port, host, () => {
-  console.log(`Truck Delivery System running at http://${host}:${port}`);
-  console.log(`Data directory: ${dataDir}`);
-  if (!isAuthEnabled()) console.log("Warning: APP_USERNAME and APP_PASSWORD are not set. Login is disabled (local only).");
-});
+  server.listen(port, host, () => {
+    console.log(`Truck Delivery System running at http://${host}:${port}`);
+    console.log(`Data directory: ${dataDir}`);
+    if (!isAuthEnabled()) console.log("Warning: APP_USERNAME and APP_PASSWORD are not set. Login is disabled (local only).");
+  });
+}

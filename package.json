@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "test": "node --test backend/test/*.test.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
