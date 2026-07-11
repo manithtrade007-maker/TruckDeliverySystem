@@ -451,8 +451,8 @@ function App() {
   const [reportTruckNo, setReportTruckNo] = useState("");
   const [deductionEdits, setDeductionEdits] = useState({});
   const [assignModal, setAssignModal] = useState(null);
+  const [activityPage, setActivityPage] = useState(0);
   const [deleteModal, setDeleteModal] = useState({ statement: null, password: "", error: "" });
-  const [showAllActivity, setShowAllActivity] = useState(false);
   const [assignMonth, setAssignMonth] = useState(currentMonth());
   const [paymentsViewMonth, setPaymentsViewMonth] = useState(currentMonth());
   const [quickForm, setQuickForm] = useState({ statementNumber: "", month: currentMonth(), manualAmount: "" });
@@ -776,7 +776,9 @@ function App() {
     const activeMonths = months.filter(m => m.revenue > 0);
     const bestMonth = activeMonths.length ? activeMonths.reduce((best, m) => m.net > best.net ? m : best, activeMonths[0]) : null;
     const trucks = [...byTruck.values()].sort((a, b) => b.net - a.net);
-    return { months, trucks, totalRevenue, totalDriverCost, totalNet, bestMonth };
+    const maxMonthAbs = activeMonths.reduce((mx, m) => Math.max(mx, Math.abs(m.net)), 0);
+    const maxTruckAbs = trucks.reduce((mx, t) => Math.max(mx, Math.abs(t.net)), 0);
+    return { months, activeMonths, trucks, totalRevenue, totalDriverCost, totalNet, bestMonth, maxMonthAbs, maxTruckAbs };
   }, [data.deliveries, data.trucks, reportYear]);
 
   const dashOutstanding = useMemo(() => {
@@ -2141,106 +2143,104 @@ function App() {
               </div>
             </div>
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 mb-4">
-              <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-4 shadow-sm">
-                <div className="text-[10px] font-black uppercase tracking-wider text-teal-600 mb-1">Total Net Profit {reportYear}</div>
-                <div className="text-2xl font-black text-teal-900">${money(yearSummary.totalNet)}</div>
-                <div className="text-xs font-bold text-teal-600 mt-1">Revenue ${money(yearSummary.totalRevenue)} · Driver ${money(yearSummary.totalDriverCost)}</div>
+              <div className="rounded-2xl border border-teal-100 bg-teal-50/50 p-4">
+                <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-teal-600">
+                  <span aria-hidden>💰</span> Total Net Profit {reportYear}
+                </div>
+                <div className="text-3xl font-black tabular-nums text-teal-900">${money(yearSummary.totalNet)}</div>
+                <div className="text-xs font-medium text-slate-500 mt-1">Revenue ${money(yearSummary.totalRevenue)} · Driver ${money(yearSummary.totalDriverCost)}</div>
               </div>
-              <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm">
-                <div className="text-[10px] font-black uppercase tracking-wider text-amber-600 mb-1">Best Month</div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+                <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                  <span aria-hidden>🏆</span> Best Month
+                </div>
                 {yearSummary.bestMonth ? (
                   <>
-                    <div className="text-2xl font-black text-amber-900">{yearSummary.bestMonth.label} {reportYear}</div>
-                    <div className="text-xs font-bold text-amber-600 mt-1">Net ${money(yearSummary.bestMonth.net)}</div>
+                    <div className="text-3xl font-black text-slate-800">{yearSummary.bestMonth.label} <span className="text-lg font-bold text-slate-400">{reportYear}</span></div>
+                    <div className="text-xs font-medium text-slate-500 mt-1">Net <span className="font-bold text-teal-700 tabular-nums">${money(yearSummary.bestMonth.net)}</span></div>
                   </>
-                ) : <div className="text-sm font-bold text-slate-400 mt-1">No data</div>}
+                ) : <div className="text-sm font-semibold text-slate-400 mt-1">No data</div>}
               </div>
-              <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm">
-                <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 mb-1">Best Truck</div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+                <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-blue-600">
+                  <span aria-hidden>🚚</span> Best Truck
+                </div>
                 {yearSummary.trucks[0] ? (
                   <>
-                    <div className="text-2xl font-black text-blue-900">{yearSummary.trucks[0].truckNo}</div>
-                    <div className="text-xs font-bold text-blue-600 mt-1">Net ${money(yearSummary.trucks[0].net)} · {yearSummary.trucks[0].trips} trips</div>
+                    <div className="text-3xl font-black text-slate-800">{yearSummary.trucks[0].truckNo}</div>
+                    <div className="text-xs font-medium text-slate-500 mt-1">Net <span className="font-bold text-teal-700 tabular-nums">${money(yearSummary.trucks[0].net)}</span> · {yearSummary.trucks[0].trips} trips</div>
                   </>
-                ) : <div className="text-sm font-bold text-slate-400 mt-1">No data</div>}
+                ) : <div className="text-sm font-semibold text-slate-400 mt-1">No data</div>}
               </div>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
+              {/* Monthly Breakdown — net profit bars */}
               <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                <div className="bg-slate-900 text-white px-4 py-2.5">
+                <div className="flex items-center justify-between bg-slate-900 text-white px-4 py-2.5">
                   <span className="text-sm font-black">Monthly Breakdown</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Net profit</span>
                 </div>
-                <div className="overflow-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-100 bg-slate-50">
-                        <th className="px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-slate-500">Month</th>
-                        <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Revenue</th>
-                        <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Driver Pay</th>
-                        <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Net Profit</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {yearSummary.months.map((m) => {
-                        const isBest = yearSummary.bestMonth?.month === m.month;
-                        const hasData = m.revenue > 0;
-                        return (
-                          <tr key={m.month} className={`border-b border-slate-50 ${isBest ? "bg-amber-50" : "odd:bg-white even:bg-slate-50/60"}`}>
-                            <td className="px-3 py-2 font-bold text-slate-700">
-                              <span>{m.label}</span>
-                              {isBest && <span className="ml-2 text-[10px] font-black text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full">BEST</span>}
-                            </td>
-                            <td className="px-3 py-2 text-right tabular-nums text-slate-600">{hasData ? `$${money(m.revenue)}` : "—"}</td>
-                            <td className="px-3 py-2 text-right tabular-nums text-amber-600">{hasData ? `$${money(m.driverCost)}` : "—"}</td>
-                            <td className={`px-3 py-2 text-right tabular-nums font-black ${m.net > 0 ? "text-teal-700" : m.net < 0 ? "text-red-600" : "text-slate-300"}`}>
-                              {hasData ? `$${money(m.net)}` : "—"}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      <tr className="bg-slate-900 text-white font-black">
-                        <td className="px-3 py-2.5">Total</td>
-                        <td className="px-3 py-2.5 text-right tabular-nums">${money(yearSummary.totalRevenue)}</td>
-                        <td className="px-3 py-2.5 text-right tabular-nums">${money(yearSummary.totalDriverCost)}</td>
-                        <td className="px-3 py-2.5 text-right tabular-nums">${money(yearSummary.totalNet)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                {yearSummary.activeMonths.length === 0 ? (
+                  <div className="p-8 text-center text-sm font-semibold text-slate-400">No delivery data for {reportYear}</div>
+                ) : (
+                  <div className="p-4 space-y-2">
+                    {yearSummary.activeMonths.map((m) => {
+                      const isBest = yearSummary.bestMonth?.month === m.month;
+                      const positive = m.net >= 0;
+                      const pct = yearSummary.maxMonthAbs > 0 ? Math.max((Math.abs(m.net) / yearSummary.maxMonthAbs) * 100, 2) : 0;
+                      return (
+                        <div key={m.month} title={`Revenue $${money(m.revenue)} · Driver $${money(m.driverCost)}`} className="flex items-center gap-3">
+                          <div className="w-9 shrink-0 text-xs font-bold text-slate-500">{m.label}</div>
+                          <div className="relative h-6 flex-1 rounded-lg bg-slate-100">
+                            <div className={`h-full rounded-lg ${positive ? (isBest ? "bg-teal-500" : "bg-teal-400") : "bg-red-400"}`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className={`flex w-24 shrink-0 items-center justify-end gap-1 text-right text-xs font-black tabular-nums ${positive ? "text-teal-700" : "text-red-600"}`}>
+                            {isBest && <span className="text-amber-500" aria-label="best month">★</span>}
+                            ${money(m.net)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-2.5 text-sm">
+                  <span className="font-black text-slate-700">Total {reportYear}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="hidden text-[11px] font-medium text-slate-400 sm:inline">Rev ${money(yearSummary.totalRevenue)} · Drv ${money(yearSummary.totalDriverCost)}</span>
+                    <span className="font-black tabular-nums text-teal-700">${money(yearSummary.totalNet)}</span>
+                  </div>
                 </div>
               </div>
+              {/* Top Trucks — net profit bars */}
               <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                <div className="bg-slate-900 text-white px-4 py-2.5">
+                <div className="flex items-center justify-between bg-slate-900 text-white px-4 py-2.5">
                   <span className="text-sm font-black">Top Trucks by Net Profit</span>
+                  {yearSummary.trucks.length > 0 && <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{yearSummary.trucks.length} trucks</span>}
                 </div>
                 {yearSummary.trucks.length === 0 ? (
-                  <div className="p-8 text-center text-sm font-bold text-slate-400">No data for {reportYear}</div>
+                  <div className="p-8 text-center text-sm font-semibold text-slate-400">No data for {reportYear}</div>
                 ) : (
-                  <div className="overflow-auto">
-                    <table className="w-full min-w-[380px] text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50">
-                          <th className="px-3 py-2 text-center text-xs font-black uppercase tracking-wide text-slate-500 w-10">#</th>
-                          <th className="px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-slate-500">Truck</th>
-                          <th className="hidden sm:table-cell px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Revenue</th>
-                          <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Net Profit</th>
-                          <th className="px-3 py-2 text-right text-xs font-black uppercase tracking-wide text-slate-500">Trips</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {yearSummary.trucks.map((truck, i) => (
-                          <tr key={truck.truckNo} className="border-b border-slate-50 odd:bg-white even:bg-slate-50/60">
-                            <td className="px-3 py-2.5 text-center font-black text-slate-400">{i + 1}</td>
-                            <td className="px-3 py-2.5">
-                              <div className="font-black text-slate-800">{truck.truckNo}</div>
-                              <div className="text-xs text-slate-400">{truckTypeLabel(truck.truckType)}</div>
-                            </td>
-                            <td className="hidden sm:table-cell px-3 py-2.5 text-right tabular-nums text-slate-600">${money(truck.revenue)}</td>
-                            <td className={`px-3 py-2.5 text-right tabular-nums font-black ${truck.net > 0 ? "text-teal-700" : "text-red-600"}`}>${money(truck.net)}</td>
-                            <td className="px-3 py-2.5 text-right tabular-nums text-slate-500">{truck.trips}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="p-4 space-y-2">
+                    {yearSummary.trucks.map((truck, i) => {
+                      const positive = truck.net >= 0;
+                      const pct = yearSummary.maxTruckAbs > 0 ? Math.max((Math.abs(truck.net) / yearSummary.maxTruckAbs) * 100, 2) : 0;
+                      const medal = ["🥇", "🥈", "🥉"][i];
+                      return (
+                        <div key={truck.truckNo} title={`Revenue $${money(truck.revenue)} · Driver $${money(truck.driverCost)}`} className="flex items-center gap-3">
+                          <div className="w-6 shrink-0 text-center text-base leading-none">
+                            {medal || <span className="text-xs font-black text-slate-300">{i + 1}</span>}
+                          </div>
+                          <div className="w-24 shrink-0 min-w-0">
+                            <div className="truncate text-sm font-black text-slate-800">{truck.truckNo}</div>
+                            <div className="text-[10px] font-medium text-slate-400">{truckTypeLabel(truck.truckType)} · {truck.trips} trips</div>
+                          </div>
+                          <div className="relative h-6 flex-1 rounded-lg bg-slate-100">
+                            <div className={`h-full rounded-lg ${positive ? (i === 0 ? "bg-teal-500" : "bg-teal-400") : "bg-red-400"}`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className={`w-20 shrink-0 text-right text-xs font-black tabular-nums ${positive ? "text-teal-700" : "text-red-600"}`}>${money(truck.net)}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -2251,43 +2251,55 @@ function App() {
           <Panel>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-black tracking-tight">Recent Activity</h3>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">Latest changes</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">{(data.activity || []).length} events</span>
             </div>
-            {(data.activity || []).length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-400">No activity recorded yet.</div>
-            ) : (
-              <>
-                <div className="relative pl-6">
-                  <div className="absolute left-2 top-0 bottom-0 w-px bg-slate-100" />
-                  <div className="grid gap-4">
-                    {(data.activity || []).slice(0, showAllActivity ? undefined : 3).map((item, i) => {
-                      const msg = item.message || "";
-                      const isPrice = msg.toLowerCase().includes("price");
-                      const isTruck = msg.toLowerCase().includes("truck");
-                      const isBackup = msg.toLowerCase().includes("backup");
-                      const dotColor = isPrice ? "bg-amber-400" : isTruck ? "bg-sky-400" : isBackup ? "bg-purple-400" : "bg-teal-400";
-                      const borderColor = isPrice ? "border-amber-100" : isTruck ? "border-sky-100" : isBackup ? "border-purple-100" : "border-teal-100";
-                      const bgColor = isPrice ? "bg-amber-50" : isTruck ? "bg-sky-50" : isBackup ? "bg-purple-50" : "bg-teal-50";
-                      return (
-                        <div key={item.id} className="relative">
-                          <span className={`absolute -left-[18px] top-2 h-3 w-3 rounded-full border-2 border-white ${dotColor}`} />
-                          <div className={`rounded-xl border px-4 py-3 ${borderColor} ${bgColor}`}>
-                            <div className="text-sm font-black text-slate-900">{item.message}</div>
-                            <div className="mt-0.5 text-xs font-bold text-slate-500">{formatDateTime(item.createdAt)}</div>
+            {(() => {
+              const PER_PAGE = 5;
+              const allActivity = data.activity || [];
+              if (allActivity.length === 0) {
+                return <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm font-semibold text-slate-400">No activity recorded yet.</div>;
+              }
+              const totalPages = Math.ceil(allActivity.length / PER_PAGE);
+              const page = Math.min(activityPage, totalPages - 1);
+              const start = page * PER_PAGE;
+              const items = allActivity.slice(start, start + PER_PAGE);
+              return (
+                <>
+                  <div className="relative pl-6">
+                    <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-100" />
+                    <div className="grid gap-3.5">
+                      {items.map((item) => {
+                        const msg = item.message || "";
+                        const isPrice = msg.toLowerCase().includes("price");
+                        const isTruck = msg.toLowerCase().includes("truck");
+                        const isBackup = msg.toLowerCase().includes("backup");
+                        const dotColor = isPrice ? "bg-amber-400" : isTruck ? "bg-sky-400" : isBackup ? "bg-purple-400" : "bg-teal-400";
+                        return (
+                          <div key={item.id} className="relative">
+                            <span className={`absolute -left-[18px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white ${dotColor}`} />
+                            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+                              <div className="text-sm font-semibold text-slate-800">{item.message}</div>
+                              <div className="shrink-0 text-[11px] font-medium text-slate-400 tabular-nums">{formatDateTime(item.createdAt)}</div>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-                {(data.activity || []).length > 3 && (
-                  <button type="button" onClick={() => setShowAllActivity(v => !v)}
-                    className="mt-4 w-full rounded-xl border border-slate-200 py-2 text-xs font-black text-slate-500 hover:border-teal-600 hover:text-teal-700 transition">
-                    {showAllActivity ? "Show less" : `Show all ${data.activity.length} activities`}
-                  </button>
-                )}
-              </>
-            )}
+                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                    <button type="button" disabled={page === 0} onClick={() => setActivityPage(page - 1)}
+                      className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-teal-600 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-600">
+                      ← Recent
+                    </button>
+                    <span className="text-[11px] font-medium text-slate-400 tabular-nums">{start + 1}–{start + items.length} of {allActivity.length}</span>
+                    <button type="button" disabled={page >= totalPages - 1} onClick={() => setActivityPage(page + 1)}
+                      className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-teal-600 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-600">
+                      Previous →
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </Panel>
         </main>
       ) : page === "data-entry" ? (
