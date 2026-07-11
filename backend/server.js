@@ -349,6 +349,7 @@ function normalizeDataShape(data) {
   data.prices ||= [];
   data.activity ||= [];
   data.truckDeductions ||= [];
+  data.driverReportedPayments ||= [];
   data.paymentMonths ||= [];
   data.prices = data.prices.map((price) => ({
     ...price,
@@ -442,6 +443,12 @@ function createSchema(database) {
       garageFee REAL NOT NULL DEFAULT 0,
       PRIMARY KEY (truckNo, month)
     );
+    CREATE TABLE IF NOT EXISTS driver_reported_payments (
+      truckNo TEXT NOT NULL,
+      month TEXT NOT NULL,
+      amount REAL NOT NULL DEFAULT 0,
+      PRIMARY KEY (truckNo, month)
+    );
   `);
 }
 
@@ -450,7 +457,7 @@ function writeDataToDb(data) {
   const normalized = normalizeDataShape(structuredClone(data));
   database.exec("BEGIN");
   try {
-    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions; DELETE FROM payment_months;");
+    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions; DELETE FROM driver_reported_payments; DELETE FROM payment_months;");
     const insertSetting = database.prepare("INSERT INTO settings (key, value) VALUES (?, ?)");
     for (const [key, value] of Object.entries(normalized.settings)) insertSetting.run(key, JSON.stringify(value));
 
@@ -486,6 +493,9 @@ function writeDataToDb(data) {
 
     const insertDeduction = database.prepare("INSERT INTO truck_deductions (truckNo, month, loanDeduction, garageFee) VALUES (?, ?, ?, ?)");
     for (const d of (normalized.truckDeductions || [])) insertDeduction.run(d.truckNo, d.month, toNumber(d.loanDeduction), toNumber(d.garageFee));
+
+    const insertReported = database.prepare("INSERT INTO driver_reported_payments (truckNo, month, amount) VALUES (?, ?, ?)");
+    for (const r of (normalized.driverReportedPayments || [])) insertReported.run(r.truckNo, r.month, toNumber(r.amount));
 
     const insertPaymentMonth = database.prepare("INSERT INTO payment_months (month, received) VALUES (?, ?)");
     for (const pm of (normalized.paymentMonths || [])) insertPaymentMonth.run(pm.month, pm.received ? 1 : 0);
@@ -541,6 +551,7 @@ async function readData() {
     deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
     truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
+    driverReportedPayments: database.prepare("SELECT truckNo, month, amount FROM driver_reported_payments").all(),
     paymentMonths: database.prepare("SELECT month, received FROM payment_months").all().map((r) => ({ ...r, received: Boolean(r.received) }))
   });
 }
@@ -3708,6 +3719,24 @@ async function api(req, res, url, role = "admin") {
       const record = { truckNo, month, loanDeduction: toNumber(loanDeduction), garageFee: toNumber(garageFee) };
       if (index >= 0) data.truckDeductions[index] = record;
       else data.truckDeductions.push(record);
+    });
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/driver-reported-payments") {
+    const { truckNo, month, amount } = await readBody(req);
+    if (!truckNo || !month) throw new Error("truckNo and month are required.");
+    const isBlank = amount === "" || amount === null || amount === undefined;
+    await updateData((data) => {
+      data.driverReportedPayments ||= [];
+      const index = data.driverReportedPayments.findIndex((r) => r.truckNo === truckNo && r.month === month);
+      if (isBlank) {
+        if (index >= 0) data.driverReportedPayments.splice(index, 1);
+        return;
+      }
+      const record = { truckNo, month, amount: toNumber(amount) };
+      if (index >= 0) data.driverReportedPayments[index] = record;
+      else data.driverReportedPayments.push(record);
     });
     return sendJson(res, 200, { ok: true });
   }
