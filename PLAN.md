@@ -64,10 +64,9 @@ None of this is a rewrite — it's hardening a system that already works and del
   3. No big-bang rewrite — migrate page by page.
 - **Effort:** ~2-3 days total, splittable into safe chunks.
 
-### 6. `dist/` is hand-built and committed
-- **Problem:** Every change needs a manual `vite build` + commit; a forgotten rebuild ships stale UI.
-- **Fix:** move the build into Render's deploy step (build command runs `vite build`), then git-ignore `dist/`.
-- **Effort:** ~1-2 hrs.
+### 6. `dist/` is hand-built and committed — ✅ DONE (2026-07-12)
+- **Problem:** Every change needed a manual `vite build` + commit; a forgotten rebuild shipped stale UI.
+- **Fixed:** `render.yaml` already builds on deploy (`npm install && npm run build`), so `frontend/dist/` is now git-ignored and removed from tracking. Render regenerates it every deploy — no more manual rebuild/commit dance. (Local dev uses `npm run dev`; run `npm run build` if serving the built app locally.)
 
 ---
 
