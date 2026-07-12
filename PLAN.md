@@ -53,7 +53,10 @@ None of this is a rewrite — it's hardening a system that already works and del
 
 ## 🟡 P2 — Do when resuming feature work (velocity)
 
-### 5. `main.jsx` is a 4,632-line monolith — 🟡 IN PROGRESS (2026-07-12)
+### 5. `main.jsx` is a 4,632-line monolith — ✅ DONE (2026-07-12)
+- **Page split complete.** All 7 pages extracted into `frontend/src/pages/` (Dashboard, DataEntry, Reports, Payments, Prices, ComparePay, Setup). Shared state/handlers flow through `AppContext` (`useApp()`); each page imports UI/helpers directly. `main.jsx` **4,632 → 1,804 lines**. Verified: build + 9 tests green, and the running app driven through every page via CDP (all render, zero console errors) plus interaction checks (Data Entry entry-action modal, Setup section tabs) with zero exceptions.
+
+<details><summary>Earlier progress notes</summary>
 - **Problem:** One component holds all state, handlers, and every page. Every change means navigating a giant file; risky to modify.
 - **Done so far (all verified: build + 9 tests + app driven through every page via CDP with zero console errors):**
   - `frontend/src/components/ui.jsx` — pure presentational components (`Button`, `Input`, `Select`, `Field`, `Panel`, `KpiCard`, `MetricCard`, `PageHead`).
@@ -65,6 +68,7 @@ None of this is a rewrite — it's hardening a system that already works and del
   1. Extract each page (Dashboard, DataEntry, Reports, ComparePay, Payments, Prices, Setup) into its own file. This is the difficult piece: **47 useState + 51 handlers live in `App` and are shared across pages**, so it needs a `useAppData()` hook or React context to avoid threading dozens of props into each page. Migrate one page at a time, verifying after each.
   2. No big-bang rewrite.
 - **Effort:** the page split is ~2-3 days, splittable into safe chunks. The test harness (#3) is now in place to catch regressions during it.
+</details>
 
 ### 6. `dist/` is hand-built and committed — ✅ DONE (2026-07-12)
 - **Problem:** Every change needed a manual `vite build` + commit; a forgotten rebuild shipped stale UI.
