@@ -53,13 +53,18 @@ None of this is a rewrite — it's hardening a system that already works and del
 
 ## 🟡 P2 — Do when resuming feature work (velocity)
 
-### 5. `main.jsx` is a 4,632-line monolith — 🟡 STARTED (2026-07-12)
+### 5. `main.jsx` is a 4,632-line monolith — 🟡 IN PROGRESS (2026-07-12)
 - **Problem:** One component holds all state, handlers, and every page. Every change means navigating a giant file; risky to modify.
-- **Done (first safe slice):** Extracted the pure presentational components (`Button`, `Input`, `Select`, `Field`, `Panel`, `KpiCard`, `MetricCard`, `PageHead`) into `frontend/src/components/ui.jsx` and imported them back. Established the `components/` folder. `main.jsx` 4,632 → 4,548 lines. Zero behavior change (pure move; build + tests green).
-- **Remaining (the big part — do tests-first, not in a freeze):**
-  1. Extract each page (Dashboard, DataEntry, Reports, ComparePay, Payments, Prices, Setup) into its own file — one at a time, verifying after each. This is the hard part: 47 useState + 51 handlers are shared, so it needs a `useAppData()` hook or context to avoid dozens of props per page.
-  2. No big-bang rewrite — migrate page by page.
-- **Effort:** the remaining split is ~2-3 days, splittable into safe chunks.
+- **Done so far (all verified: build + 9 tests + app driven through every page via CDP with zero console errors):**
+  - `frontend/src/components/ui.jsx` — pure presentational components (`Button`, `Input`, `Select`, `Field`, `Panel`, `KpiCard`, `MetricCard`, `PageHead`).
+  - `frontend/src/lib/format.js` — all pure date/money/location helpers + the Cambodian location-order constants & sorts.
+  - `frontend/src/lib/api.js` — token storage + `api()` fetch wrapper + `downloadFile`.
+  - `frontend/src/components/LoginPage.jsx` — the login screen.
+  - `main.jsx` 4,632 → 4,219 lines. Bundle byte-identical (pure reorganization).
+- **Remaining (the hard part — do carefully, not rushed):**
+  1. Extract each page (Dashboard, DataEntry, Reports, ComparePay, Payments, Prices, Setup) into its own file. This is the difficult piece: **47 useState + 51 handlers live in `App` and are shared across pages**, so it needs a `useAppData()` hook or React context to avoid threading dozens of props into each page. Migrate one page at a time, verifying after each.
+  2. No big-bang rewrite.
+- **Effort:** the page split is ~2-3 days, splittable into safe chunks. The test harness (#3) is now in place to catch regressions during it.
 
 ### 6. `dist/` is hand-built and committed — ✅ DONE (2026-07-12)
 - **Problem:** Every change needed a manual `vite build` + commit; a forgotten rebuild shipped stale UI.
