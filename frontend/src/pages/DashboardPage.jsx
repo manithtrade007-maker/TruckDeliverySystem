@@ -76,33 +76,56 @@ export function DashboardPage() {
             />
           </div>
 
-          {/* Business snapshot */}
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-4 shadow-sm">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-teal-500"></span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-teal-600">Crane — {statementCounts.withCrane} statements</span>
+          {/* Business snapshot — revenue split donut */}
+          {(() => {
+            const total = statementCounts.totalAmount;
+            const cranePct = total > 0 ? (statementCounts.craneAmount / total) * 100 : 0;
+            const noCranePct = total > 0 ? (statementCounts.noCraneAmount / total) * 100 : 0;
+            const legend = [
+              { label: "Crane", amount: statementCounts.craneAmount, count: statementCounts.withCrane, pct: cranePct, dot: "bg-teal-500", pctText: "text-teal-700" },
+              { label: "No Crane", amount: statementCounts.noCraneAmount, count: statementCounts.withoutCrane, pct: noCranePct, dot: "bg-sky-500", pctText: "text-sky-700" },
+            ];
+            return (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 text-[10px] font-black uppercase tracking-wider text-slate-400">Revenue Split · This Month</div>
+                <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
+                  <div className="relative h-40 w-40 shrink-0">
+                    <svg viewBox="0 0 36 36" className="h-40 w-40 -rotate-90">
+                      <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e2e8f0" strokeWidth="3.6" />
+                      {total > 0 && (
+                        <>
+                          <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#14b8a6" strokeWidth="3.6" strokeDasharray={`${cranePct} ${100 - cranePct}`} />
+                          <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#0ea5e9" strokeWidth="3.6" strokeDasharray={`${noCranePct} ${100 - noCranePct}`} strokeDashoffset={`${-cranePct}`} />
+                        </>
+                      )}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Total</div>
+                      <div className="text-lg font-black tabular-nums text-slate-900">${money(total)}</div>
+                      <div className="text-[10px] font-bold text-slate-400">{statementCounts.total} stmt{statementCounts.total !== 1 ? "s" : ""}</div>
+                    </div>
+                  </div>
+                  <div className="grid w-full gap-3">
+                    {legend.map((r) => (
+                      <div key={r.label} className="flex items-center gap-3">
+                        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${r.dot}`} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-sm font-black text-slate-800">{r.label}</span>
+                            <span className="text-sm font-black tabular-nums text-slate-900">${money(r.amount)}</span>
+                          </div>
+                          <div className="flex items-baseline justify-between gap-2 text-[11px] font-bold text-slate-400">
+                            <span>{r.count} statement{r.count !== 1 ? "s" : ""}</span>
+                            <span className={`tabular-nums ${r.pctText}`}>{total > 0 ? r.pct.toFixed(0) : 0}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="text-2xl font-black text-teal-950">${money(statementCounts.craneAmount)}</div>
-              <div className="mt-1 text-xs font-bold text-teal-600">6 crane trucks</div>
-            </div>
-            <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-4 shadow-sm">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-sky-500"></span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-sky-600">No Crane — {statementCounts.withoutCrane} statements</span>
-              </div>
-              <div className="text-2xl font-black text-sky-950">${money(statementCounts.noCraneAmount)}</div>
-              <div className="mt-1 text-xs font-bold text-sky-600">3 no-crane trucks</div>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-slate-400"></span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Total Revenue</span>
-              </div>
-              <div className="text-2xl font-black text-slate-900">${money(statementCounts.totalAmount)}</div>
-              <div className="mt-1 text-xs font-bold text-slate-500">{statementCounts.total} statement{statementCounts.total !== 1 ? "s" : ""} this month</div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Statement earnings list */}
           {statementSummaries.length > 0 && (
