@@ -4,12 +4,13 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { DatabaseSync } from "node:sqlite";
-import { randomBytes, timingSafeEqual, scrypt } from "node:crypto";
 import ExcelJS from "exceljs";
 import {
   money, unitMoney, formatDotDate, currentLocalDate, slug, numericMonthFilePart, monthLabel, truckTypeLabel, statementExportFileName, accountingWorkbook, salaryWorkbook, salaryPdf, monthlyTruckPerformance, priceComparisonWorkbook, priceComparisonPdf, dashboardExport, buildZip, drawRect, drawText, readJpegInfo, buildPdf, tablePdf, statementPdf, dashboardPdf,
   PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT, PDF_PAGE_MARGIN
-} from "./exports.js";
+} from "./lib/exports.js";
+import { sendJson, sendText, readBody, parseQuery } from "./lib/http.js";
+import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, appUsername, appPassword } from "./lib/auth.js";
 import { normalizeText, normalizeCode, normalizeLocationName, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey } from "./lib/calc.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,21 +25,12 @@ const databaseFile = path.join(dataDir, "truck_delivery.db");
 const backupDir = path.join(dataDir, "backups");
 const port = Number(process.env.PORT || 5058);
 const host = process.env.HOST || "0.0.0.0";
-const appUsername = process.env.APP_USERNAME || "";
-const appPassword = process.env.APP_PASSWORD || "";
 // "Production" = the real deployed site (Render sets NODE_ENV=production and RENDER).
 // On localhost neither is set, so login stays optional there for convenience.
 const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
 let saveQueue = Promise.resolve();
 let mutationQueue = Promise.resolve();
 
-// Session store: token → expiresAt
-const sessions = new Map();
-const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
-// Rate limiting: ip → { count, resetAt }
-const loginAttempts = new Map();
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
 
 const craneCompanyPrices = [
   { toLocation: "Khan Kambol (PP)", distanceKm: 19, companyUnitPrice: 9.98 },
@@ -678,107 +670,8 @@ async function updateData(mutator) {
   return operation;
 }
 
-function sendJson(res, status, body) {
-  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
-  res.end(JSON.stringify(body));
-}
 
-function sendText(res, status, body, contentType = "text/plain; charset=utf-8") {
-  res.writeHead(status, { "Content-Type": contentType });
-  res.end(body);
-}
 
-function isAuthEnabled() {
-  return Boolean(appUsername && appPassword);
-}
-
-function safeEqual(a, b) {
-  const bufA = Buffer.from(String(a || ""), "utf8");
-  const bufB = Buffer.from(String(b || ""), "utf8");
-  if (bufA.length !== bufB.length) return false;
-  return timingSafeEqual(bufA, bufB);
-}
-
-function hashPassword(password) {
-  return new Promise((resolve, reject) => {
-    const salt = randomBytes(16).toString("hex");
-    scrypt(password, salt, 64, (err, key) => {
-      if (err) reject(err);
-      else resolve(`${salt}:${key.toString("hex")}`);
-    });
-  });
-}
-
-function verifyPassword(password, stored) {
-  return new Promise((resolve) => {
-    const [salt, key] = (stored || "").split(":");
-    if (!salt || !key) return resolve(false);
-    scrypt(String(password), salt, 64, (err, derivedKey) => {
-      if (err) return resolve(false);
-      try { resolve(timingSafeEqual(Buffer.from(key, "hex"), derivedKey)); }
-      catch { resolve(false); }
-    });
-  });
-}
-
-function createSession(role) {
-  const token = randomBytes(32).toString("hex");
-  sessions.set(token, { role, expiresAt: Date.now() + SESSION_TTL_MS });
-  return token;
-}
-
-function getSessionRole(token) {
-  if (!token) return null;
-  const session = sessions.get(token);
-  if (!session) return null;
-  if (Date.now() > session.expiresAt) { sessions.delete(token); return null; }
-  return session.role;
-}
-
-function getAuthorizedRole(req) {
-  if (!isAuthEnabled()) return "admin";
-  const header = req.headers.authorization || "";
-  if (!header.startsWith("Bearer ")) return null;
-  return getSessionRole(header.slice(7));
-}
-
-function getClientIp(req) {
-  return (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
-}
-
-function isRateLimited(ip) {
-  const now = Date.now();
-  const entry = loginAttempts.get(ip);
-  if (!entry) return false;
-  if (now > entry.resetAt) { loginAttempts.delete(ip); return false; }
-  return entry.count >= MAX_LOGIN_ATTEMPTS;
-}
-
-function recordFailedLogin(ip) {
-  const now = Date.now();
-  const entry = loginAttempts.get(ip);
-  if (!entry || now > entry.resetAt) {
-    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_LOCKOUT_MS });
-  } else {
-    entry.count += 1;
-  }
-}
-
-function isAuthorized(req) {
-  return getAuthorizedRole(req) !== null;
-}
-
-function requestAuth(res) {
-  res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
-  res.end(JSON.stringify({ error: "Login required." }));
-}
-
-async function readBody(req) {
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
-  const raw = Buffer.concat(chunks).toString("utf8");
-  return raw ? JSON.parse(raw) : {};
-}
 
 
 function applyEffectivePriceToDelivery(data, delivery) {
@@ -1004,9 +897,6 @@ function statementsWithCounts(data) {
     .sort((a, b) => a.month.localeCompare(b.month) || Number(a.statementNumber) - Number(b.statementNumber));
 }
 
-function parseQuery(url) {
-  return Object.fromEntries(url.searchParams.entries());
-}
 
 async function api(req, res, url, role = "admin") {
   const data = await readData();
@@ -1132,7 +1022,7 @@ async function api(req, res, url, role = "admin") {
     });
     const xlsBuf2 = Buffer.from(await wb2.xlsx.writeBuffer());
 
-    const sigPath2 = path.join(__dirname, "signature.jpg");
+    const sigPath2 = path.join(__dirname, "assets", "signature.jpg");
     let sigBuf2 = null;
     if (existsSync(sigPath2)) {
       const raw2 = await readFile(sigPath2);
@@ -2082,7 +1972,7 @@ async function api(req, res, url, role = "admin") {
     const summaryPdfBuf = buildPdf(pdfPages);
 
     // ── Signature image (shared across all per-statement exports) ────────────
-    const sigPath = path.join(__dirname, "signature.jpg");
+    const sigPath = path.join(__dirname, "assets", "signature.jpg");
     let sigBuffer = null;
     if (existsSync(sigPath)) {
       const raw = await readFile(sigPath);
@@ -2143,7 +2033,7 @@ async function api(req, res, url, role = "admin") {
       ? data.statements.find((item) => item.id === query.statementId)
       : null;
     const fileName = statementExportFileName(statement, rows);
-    const sigPath = path.join(__dirname, "signature.jpg");
+    const sigPath = path.join(__dirname, "assets", "signature.jpg");
     let sigBuffer = null;
     if (existsSync(sigPath)) {
       const raw = await readFile(sigPath);
@@ -2296,7 +2186,7 @@ const server = createServer(async (req, res) => {
   try {
     if (url.pathname === "/api/health") return sendJson(res, 200, { ok: true });
     if (url.pathname === "/api/logo") {
-      const logoPath = path.join(__dirname, "logo.jpg");
+      const logoPath = path.join(__dirname, "assets", "logo.jpg");
       if (existsSync(logoPath)) {
         const buffer = await readFile(logoPath);
         const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
@@ -2323,14 +2213,14 @@ const server = createServer(async (req, res) => {
       }
       // Check admin (env vars)
       if (safeEqual(body.username || "", appUsername) && safeEqual(body.password || "", appPassword)) {
-        loginAttempts.delete(ip);
+        clearLoginAttempts(ip);
         return sendJson(res, 200, { token: createSession("admin"), role: "admin" });
       }
       // Check staff users in database
       const db = getDb();
       const dbUser = db.prepare("SELECT id, passwordHash, role FROM users WHERE username = ?").get(String(body.username || ""));
       if (dbUser && await verifyPassword(body.password || "", dbUser.passwordHash)) {
-        loginAttempts.delete(ip);
+        clearLoginAttempts(ip);
         return sendJson(res, 200, { token: createSession(dbUser.role), role: dbUser.role });
       }
       recordFailedLogin(ip);
@@ -2341,7 +2231,7 @@ const server = createServer(async (req, res) => {
     // Logout endpoint — invalidates session token
     if (req.method === "POST" && url.pathname === "/api/auth/logout") {
       const header = req.headers.authorization || "";
-      if (header.startsWith("Bearer ")) sessions.delete(header.slice(7));
+      if (header.startsWith("Bearer ")) deleteSession(header.slice(7));
       return sendJson(res, 200, { ok: true });
     }
 

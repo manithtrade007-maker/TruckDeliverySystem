@@ -1,7 +1,7 @@
 // Excel + PDF export builders (accounting, salary, statement, price
 // comparison, dashboard) and the zip/PDF primitives they use.
 import ExcelJS from "exceljs";
-import { normalizeText, locationBaseKey, toNumber, effectiveDateOf } from "./lib/calc.js";
+import { normalizeText, locationBaseKey, toNumber, effectiveDateOf } from "./calc.js";
 
 export const PDF_PAGE_WIDTH = 595; // A4 portrait width in points
 export const PDF_PAGE_HEIGHT = 842; // A4 portrait height in points
