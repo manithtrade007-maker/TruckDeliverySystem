@@ -8,7 +8,7 @@ import {
   locationBaseKey,
   locationMatchKey,
   findEffectivePrice,
-} from "../server.js";
+} from "../lib/calc.js";
 
 test("roundMoney snaps floating-point crumbs to clean cents", () => {
   assert.equal(roundMoney(0.1 + 0.2), 0.3);              // classic float artifact
