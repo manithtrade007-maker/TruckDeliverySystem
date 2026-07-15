@@ -533,7 +533,7 @@ async function ensureDataStore() {
   }
 }
 
-async function readData() {
+export async function readData() {
   await ensureDataStore();
   const database = getDb();
   const settings = {};

@@ -10,7 +10,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "start": "node backend/server.js",
-    "test": "node --test backend/test/*.test.js"
+    "test": "node --test backend/test/*.test.js",
+    "audit-prices": "node backend/scripts/audit-prices.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
