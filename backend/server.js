@@ -1262,10 +1262,24 @@ async function api(req, res, url, role = "admin") {
           effectiveDateOf(item) === price.effectiveDate
         )
       );
+      const previous = index >= 0 ? { ...data.prices[index] } : null;
       if (index >= 0) data.prices[index] = price;
       else data.prices.push(price);
       const recalcCount = recalculateDeliveriesForPriceRoutes(data, [price]);
-      addActivity(data, `${index >= 0 ? "Updated" : "Added"} ${truckTypeLabel(price.truckType)} price for ${price.toLocation}, effective ${price.effectiveDate}${recalcCount ? `, recalculated ${recalcCount} delivery row${recalcCount > 1 ? "s" : ""}` : ""}.`, "price");
+      const priceStr = (v) => `$${Number(v || 0)}`;
+      const label = truckTypeLabel(price.truckType);
+      let msg;
+      if (!previous) {
+        msg = `Added ${label} price for ${price.toLocation}: company ${priceStr(price.companyUnitPrice)}, driver ${priceStr(price.truckSalaryUnitPrice)}, effective ${price.effectiveDate}`;
+      } else {
+        const changes = [];
+        if (toNumber(previous.companyUnitPrice) !== toNumber(price.companyUnitPrice)) changes.push(`company ${priceStr(previous.companyUnitPrice)} → ${priceStr(price.companyUnitPrice)}`);
+        if (toNumber(previous.truckSalaryUnitPrice) !== toNumber(price.truckSalaryUnitPrice)) changes.push(`driver ${priceStr(previous.truckSalaryUnitPrice)} → ${priceStr(price.truckSalaryUnitPrice)}`);
+        const detail = changes.length ? changes.join(", ") : `company ${priceStr(price.companyUnitPrice)}, driver ${priceStr(price.truckSalaryUnitPrice)}`;
+        msg = `Updated ${label} price for ${price.toLocation}: ${detail}, effective ${price.effectiveDate}`;
+      }
+      msg += recalcCount ? `, recalculated ${recalcCount} delivery row${recalcCount > 1 ? "s" : ""}` : "";
+      addActivity(data, msg + ".", "price");
       return price;
     });
     return sendJson(res, 200, price);
