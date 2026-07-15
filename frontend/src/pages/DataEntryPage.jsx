@@ -4,7 +4,7 @@ import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMone
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
 export function DataEntryPage() {
-  const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, locations, missingPrice, openStatement, quickForm, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveQuickStatement, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setQuickForm, setReportMonth, setShowQuickEntry, setStatementForm, showQuickEntry, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
+  const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
   return (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           {!selectedViewStatement && !selectedStatement && !showStatementWorkspace && (
@@ -194,55 +194,6 @@ export function DataEntryPage() {
               </Panel>
             );
           })()}
-
-          {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
-            <Panel className="lg:col-span-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-black tracking-tight">Historical Quick Entry</h3>
-                  <p className="text-xs font-bold text-slate-500 mt-0.5">For past statements before this system — enter statement number, month, and amount directly.</p>
-                </div>
-                <Button type="button" variant="secondary" onClick={() => setShowQuickEntry((v) => !v)}>
-                  {showQuickEntry ? "Hide" : "Add Past Statement"}
-                </Button>
-              </div>
-              {showQuickEntry && (
-                <form onSubmit={saveQuickStatement} className="mt-4 grid gap-3 md:grid-cols-4 border-t border-slate-100 pt-4">
-                  <Field label="Statement Number">
-                    <Input
-                      type="number"
-                      placeholder="e.g. 1531"
-                      required
-                      value={quickForm.statementNumber}
-                      onChange={(e) => setQuickForm({ ...quickForm, statementNumber: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Month">
-                    <Input
-                      type="month"
-                      required
-                      value={quickForm.month}
-                      onChange={(e) => setQuickForm({ ...quickForm, month: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Amount ($)">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      placeholder="e.g. 2914.60"
-                      required
-                      value={quickForm.manualAmount}
-                      onChange={(e) => setQuickForm({ ...quickForm, manualAmount: e.target.value })}
-                    />
-                  </Field>
-                  <Field label=" ">
-                    <Button type="submit">Save Statement</Button>
-                  </Field>
-                </form>
-              )}
-            </Panel>
-          )}
 
           {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
             <Panel id="all-statements-panel" className="lg:col-span-2">

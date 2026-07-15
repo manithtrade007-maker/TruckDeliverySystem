@@ -1112,38 +1112,6 @@ async function api(req, res, url, role = "admin") {
     return sendJson(res, 200, { ok: true });
   }
 
-  if (req.method === "POST" && url.pathname === "/api/statements/quick") {
-    requireAdmin();
-    const body = await readBody(req);
-    const month = normalizeText(body.month);
-    const statementNumber = Number(body.statementNumber);
-    const manualAmount = toNumber(body.manualAmount);
-    if (!month) throw new Error("Month is required.");
-    if (!Number.isInteger(statementNumber) || statementNumber <= 0) throw new Error("Statement number must be a positive number.");
-    if (manualAmount <= 0) throw new Error("Amount must be greater than zero.");
-    const statement = await updateData((data) => {
-      const duplicate = data.statements.some((s) => s.month === month && Number(s.statementNumber) === statementNumber);
-      if (duplicate) throw new Error("Statement number already exists in this month.");
-      const now = new Date().toISOString();
-      const newStatement = {
-        id: crypto.randomUUID(),
-        month,
-        statementNumber,
-        statementDate: `${month}-01`,
-        truckType: "With Crane",
-        status: "Finished",
-        paymentMonth: null,
-        isManual: true,
-        manualAmount,
-        createdAt: now,
-        updatedAt: now
-      };
-      data.statements.push(newStatement);
-      return newStatement;
-    });
-    return sendJson(res, 200, statement);
-  }
-
   if (req.method === "POST" && url.pathname.startsWith("/api/statements/") && url.pathname.endsWith("/assign-payment")) {
     requireAdmin();
     const id = decodeURIComponent(url.pathname.split("/")[3]);

@@ -34,8 +34,6 @@ function App() {
   const [deleteModal, setDeleteModal] = useState({ statement: null, password: "", error: "" });
   const [assignMonth, setAssignMonth] = useState(currentMonth());
   const [paymentsViewMonth, setPaymentsViewMonth] = useState(currentMonth());
-  const [quickForm, setQuickForm] = useState({ statementNumber: "", month: currentMonth(), manualAmount: "" });
-  const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [entryTruckType, setEntryTruckType] = useState("With Crane");
   const [entryActionTruckType, setEntryActionTruckType] = useState("");
   const [showStatementWorkspace, setShowStatementWorkspace] = useState(false);
@@ -1460,20 +1458,6 @@ function App() {
     }
   }
 
-  async function saveQuickStatement(e) {
-    e.preventDefault();
-    try {
-      await api("/api/statements/quick", {
-        method: "POST",
-        body: JSON.stringify(quickForm)
-      });
-      setQuickForm({ statementNumber: "", month: quickForm.month, manualAmount: "" });
-      await loadData();
-      flash(`Statement ${quickForm.statementNumber} added.`);
-    } catch (err) {
-      flash(err.message, "error");
-    }
-  }
 
   async function assignPayment(statementId, paymentMonth) {
     try {
@@ -1544,13 +1528,13 @@ function App() {
     fixLocationNames, flash, fromLocations, getDeduction, getNextStatementNumber, goToEmptyPrice, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, isEditingTruck, loadBackups,
     loadData, loadStaffUsers, locations, loggedIn, logout, matchesSetupLocationSearch, missingPrice, monthlyRows, monthlyTotals, navItems, newStatement, newUserForm,
     normalizeLocationSpacing, notice, openStatement, page, paymentsViewMonth, priceCompareDate, priceCompareDates, priceCompareProvince, priceCompareProvinces, priceCompareRows, priceForm, priceLookupReady,
-    pricePeriods, pricePeriodsMonth, quickForm, recalculateAllPrices, reconEdits, reconMonth, reconciliation, reopenStatement, reportMonth, reportTruckNo, reportYear, resetDeliveryForm,
-    restoreBackup, saveDeduction, saveDelivery, saveDriverPrice, savePrice, saveQuickStatement, saveReported, saveSettings, saveStaffPassword, saveStatement, saveTruck, selectedDriverPaymentSection,
+    pricePeriods, pricePeriodsMonth, recalculateAllPrices, reconEdits, reconMonth, reconciliation, reopenStatement, reportMonth, reportTruckNo, reportYear, resetDeliveryForm,
+    restoreBackup, saveDeduction, saveDelivery, saveDriverPrice, savePrice, saveReported, saveSettings, saveStaffPassword, saveStatement, saveTruck, selectedDriverPaymentSection,
     selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, sendToTelegram, setActiveField, setActivityPage, setAssignModal, setAssignMonth, setBackupFiles, setBulkLocationFilter,
     setBulkPriceForm, setData, setDeductionEdits, setDeleteModal, setDeliveryForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setEmptyPriceResult, setEntryActionTruckType, setEntryTruckType, setExpandStatementEdit,
-    setFilters, setLoggedIn, setNewUserForm, setNotice, setPage, setPaymentsViewMonth, setPriceCompareDate, setPriceCompareProvince, setPriceForm, setPricePeriodsMonth, setQuickForm, setReconEdits,
-    setReconMonth, setReportMonth, setReportTruckNo, setReportYear, setSelectedStatementId, setSettingsForm, setSetupLocationSearch, setSetupSection, setShowAdvancedTools, setShowQuickEntry, setShowStatementWorkspace, setStaffUsers,
-    setStatementForm, setTelegramConfigured, setTruckForm, setUserRole, setViewStatementId, settingsForm, setupLocationSearch, setupLocationSearchKey, setupSection, showAdvancedTools, showQuickEntry, showStatementWorkspace,
+    setFilters, setLoggedIn, setNewUserForm, setNotice, setPage, setPaymentsViewMonth, setPriceCompareDate, setPriceCompareProvince, setPriceForm, setPricePeriodsMonth, setReconEdits,
+    setReconMonth, setReportMonth, setReportTruckNo, setReportYear, setSelectedStatementId, setSettingsForm, setSetupLocationSearch, setSetupSection, setShowAdvancedTools, setShowStatementWorkspace, setStaffUsers,
+    setStatementForm, setTelegramConfigured, setTruckForm, setUserRole, setViewStatementId, settingsForm, setupLocationSearch, setupLocationSearchKey, setupSection, showAdvancedTools, showStatementWorkspace,
     staffUsers, startEntryAction, statementCounts, statementForm, statementRows, statementSummaries, switchEntryTruckType, telegramConfigured, togglePaymentReceived, totals, truckForm, truckInputRef,
     truckMissing, truckOptions, truckPerformance, truckTypeMismatch, typedTruck, userRole, viewStatement, viewStatementId, viewStatementRows, viewTotals, visibleStatements, yearSummary,
   };
