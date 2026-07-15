@@ -68,3 +68,53 @@ export function priceRouteKey({ fromLocation, toLocation, truckType }) {
     locationBaseKey(toLocation)
   ].join("||");
 }
+
+// Apply the effective price to a delivery: sets company + driver unit prices
+// and amounts (qty x unit price, rounded). Returns true if anything changed.
+export function applyEffectivePriceToDelivery(data, delivery) {
+  const effectivePrice = findEffectivePrice(data, {
+    fromLocation: delivery.fromLocation,
+    toLocation: delivery.toLocation,
+    truckType: delivery.truckType,
+    deliveryDate: delivery.deliveryDate
+  });
+  if (!effectivePrice) return false;
+
+  const qtyTon = toNumber(delivery.qtyTon);
+  const nextDistanceKm = toNumber(effectivePrice.distanceKm);
+  const nextCompanyPrice = toNumber(effectivePrice.companyUnitPrice);
+  const nextDriverPrice = toNumber(effectivePrice.truckSalaryUnitPrice);
+  let changed = false;
+
+  if (nextDistanceKm > 0 && nextDistanceKm !== toNumber(delivery.distanceKm)) {
+    delivery.distanceKm = nextDistanceKm;
+    changed = true;
+  }
+
+  if (nextCompanyPrice > 0) {
+    const nextCompanyAmount = roundMoney(qtyTon * nextCompanyPrice);
+    if (
+      nextCompanyPrice !== toNumber(delivery.companyUnitPrice) ||
+      nextCompanyAmount !== toNumber(delivery.companyTotalAmount)
+    ) {
+      delivery.companyUnitPrice = nextCompanyPrice;
+      delivery.companyTotalAmount = nextCompanyAmount;
+      changed = true;
+    }
+  }
+
+  if (nextDriverPrice > 0) {
+    const nextDriverAmount = roundMoney(qtyTon * nextDriverPrice);
+    if (
+      nextDriverPrice !== toNumber(delivery.truckSalaryUnitPrice) ||
+      nextDriverAmount !== toNumber(delivery.truckSalaryAmount)
+    ) {
+      delivery.truckSalaryUnitPrice = nextDriverPrice;
+      delivery.truckSalaryAmount = nextDriverAmount;
+      changed = true;
+    }
+  }
+
+  if (changed) delivery.updatedAt = new Date().toISOString();
+  return changed;
+}

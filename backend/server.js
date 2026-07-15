@@ -11,7 +11,7 @@ import {
 } from "./lib/exports.js";
 import { sendJson, sendText, readBody, parseQuery } from "./lib/http.js";
 import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, appUsername, appPassword } from "./lib/auth.js";
-import { normalizeText, normalizeCode, normalizeLocationName, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey } from "./lib/calc.js";
+import { normalizeText, normalizeCode, normalizeLocationName, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -674,53 +674,6 @@ async function updateData(mutator) {
 
 
 
-function applyEffectivePriceToDelivery(data, delivery) {
-  const effectivePrice = findEffectivePrice(data, {
-    fromLocation: delivery.fromLocation,
-    toLocation: delivery.toLocation,
-    truckType: delivery.truckType,
-    deliveryDate: delivery.deliveryDate
-  });
-  if (!effectivePrice) return false;
-
-  const qtyTon = toNumber(delivery.qtyTon);
-  const nextDistanceKm = toNumber(effectivePrice.distanceKm);
-  const nextCompanyPrice = toNumber(effectivePrice.companyUnitPrice);
-  const nextDriverPrice = toNumber(effectivePrice.truckSalaryUnitPrice);
-  let changed = false;
-
-  if (nextDistanceKm > 0 && nextDistanceKm !== toNumber(delivery.distanceKm)) {
-    delivery.distanceKm = nextDistanceKm;
-    changed = true;
-  }
-
-  if (nextCompanyPrice > 0) {
-    const nextCompanyAmount = roundMoney(qtyTon * nextCompanyPrice);
-    if (
-      nextCompanyPrice !== toNumber(delivery.companyUnitPrice) ||
-      nextCompanyAmount !== toNumber(delivery.companyTotalAmount)
-    ) {
-      delivery.companyUnitPrice = nextCompanyPrice;
-      delivery.companyTotalAmount = nextCompanyAmount;
-      changed = true;
-    }
-  }
-
-  if (nextDriverPrice > 0) {
-    const nextDriverAmount = roundMoney(qtyTon * nextDriverPrice);
-    if (
-      nextDriverPrice !== toNumber(delivery.truckSalaryUnitPrice) ||
-      nextDriverAmount !== toNumber(delivery.truckSalaryAmount)
-    ) {
-      delivery.truckSalaryUnitPrice = nextDriverPrice;
-      delivery.truckSalaryAmount = nextDriverAmount;
-      changed = true;
-    }
-  }
-
-  if (changed) delivery.updatedAt = new Date().toISOString();
-  return changed;
-}
 
 function recalculateDeliveriesForPriceRoutes(data, prices) {
   const routeKeys = new Set(prices.map((price) => priceRouteKey(price)));
