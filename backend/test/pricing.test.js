@@ -46,6 +46,13 @@ test("location matches regardless of prefix/parentheses/spacing formatting", () 
   }
 });
 
+test("GS01 and Warehouse-09 use the same route price", () => {
+  const gs01Delivery = makeDelivery({ fromLocation: "GS01" });
+  assert.equal(applyEffectivePriceToDelivery(data, gs01Delivery), true);
+  assert.equal(gs01Delivery.companyUnitPrice, 15.01);
+  assert.equal(gs01Delivery.truckSalaryUnitPrice, 14.01);
+});
+
 test("effective date picks the correct price version (no time-travel)", () => {
   const jan = makeDelivery({ deliveryDate: "2026-03-10" }); // before May increase
   applyEffectivePriceToDelivery(data, jan);

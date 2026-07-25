@@ -7,6 +7,7 @@ import {
   toNumber,
   locationBaseKey,
   locationMatchKey,
+  fromLocationMatchKey,
   findEffectivePrice,
 } from "../lib/calc.js";
 
@@ -29,6 +30,11 @@ test("toNumber parses currency-formatted strings", () => {
   assert.equal(toNumber(""), 0);
   assert.equal(toNumber("abc"), 0);
   assert.equal(toNumber(null), 0);
+});
+
+test("GS01 and Warehouse-09 are the same price origin", () => {
+  assert.equal(fromLocationMatchKey("GS01"), fromLocationMatchKey("Warehouse-09"));
+  assert.equal(fromLocationMatchKey(" gs-01 "), fromLocationMatchKey("warehouse 09"));
 });
 
 test("locationBaseKey treats prefixes and parentheses as equivalent", () => {

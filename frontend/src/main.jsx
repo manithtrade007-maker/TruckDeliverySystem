@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "./components/ui.jsx";
-import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "./lib/format.js";
+import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "./lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "./lib/api.js";
 import { LoginPage } from "./components/LoginPage.jsx";
 import { AppCtx } from "./AppContext.js";
@@ -189,7 +189,7 @@ function App() {
   const selectedPrice = selectedTruck
     ? data.prices
         .filter((price) => price.active !== false)
-        .filter((price) => price.fromLocation === data.settings.defaultFromLocation)
+        .filter((price) => fromLocationMatchKey(price.fromLocation) === fromLocationMatchKey(data.settings.defaultFromLocation))
         .filter((price) => price.toLocation === deliveryForm.toLocation)
         .filter((price) => price.truckType === selectedTruck.truckType)
         .filter((price) => priceEffectiveDate(price) <= (deliveryForm.deliveryDate || today()))
@@ -520,7 +520,7 @@ function App() {
     const periodMap = new Map();
     for (const d of deliveriesInMonth) {
       const price = data.prices
-        .filter((p) => p.active !== false && p.fromLocation === (data.settings.defaultFromLocation || d.fromLocation) && locationBaseKey(p.toLocation) === locationBaseKey(d.toLocation) && p.truckType === d.truckType)
+        .filter((p) => p.active !== false && fromLocationMatchKey(p.fromLocation) === fromLocationMatchKey(data.settings.defaultFromLocation || d.fromLocation) && locationBaseKey(p.toLocation) === locationBaseKey(d.toLocation) && p.truckType === d.truckType)
         .filter((p) => priceEffectiveDate(p) <= d.deliveryDate)
         .sort((a, b) => priceEffectiveDate(b).localeCompare(priceEffectiveDate(a)))[0];
       const effectiveKey = price ? priceEffectiveDate(price) : "unknown";
@@ -557,7 +557,7 @@ function App() {
     const fromLocation = bulkPriceForm.fromLocation || data.settings.defaultFromLocation;
     const routeMap = new Map();
     data.prices
-      .filter((price) => price.fromLocation === fromLocation)
+      .filter((price) => fromLocationMatchKey(price.fromLocation) === fromLocationMatchKey(fromLocation))
       .filter((price) => price.truckType === bulkPriceForm.truckType)
       .forEach((price) => {
         const key = locationBaseKey(price.toLocation);
@@ -590,7 +590,7 @@ function App() {
         const truckSalaryUnitPrice = priceType === "company" ? "" : parseMoney(driverPriceText);
         const currentPrice = data.prices
           .filter((price) => price.active !== false)
-          .filter((price) => price.fromLocation === fromLocation)
+          .filter((price) => fromLocationMatchKey(price.fromLocation) === fromLocationMatchKey(fromLocation))
           .filter((price) => price.toLocation === matchedLocation)
           .filter((price) => price.truckType === bulkPriceForm.truckType)
           .filter((price) => priceEffectiveDate(price) <= bulkPriceForm.effectiveDate)
@@ -645,7 +645,7 @@ function App() {
     const fromLocation = bulkPriceForm.fromLocation || data.settings.defaultFromLocation;
     const seen = new Set();
     data.prices
-      .filter((p) => p.fromLocation === fromLocation && p.truckType === bulkPriceForm.truckType && p.active !== false)
+      .filter((p) => fromLocationMatchKey(p.fromLocation) === fromLocationMatchKey(fromLocation) && p.truckType === bulkPriceForm.truckType && p.active !== false)
       .forEach((p) => seen.add(priceEffectiveDate(p)));
     return [...seen].sort((a, b) => b.localeCompare(a));
   }, [bulkPriceForm.fromLocation, bulkPriceForm.truckType, data.prices, data.settings.defaultFromLocation]);
@@ -655,7 +655,7 @@ function App() {
     const seen = new Set();
     const result = [];
     data.prices
-      .filter((p) => p.fromLocation === fromLocation && p.truckType === bulkPriceForm.truckType && p.active !== false)
+      .filter((p) => fromLocationMatchKey(p.fromLocation) === fromLocationMatchKey(fromLocation) && p.truckType === bulkPriceForm.truckType && p.active !== false)
       .forEach((p) => {
         const key = locationBaseKey(p.toLocation);
         if (!seen.has(key)) { seen.add(key); result.push(p.toLocation); }

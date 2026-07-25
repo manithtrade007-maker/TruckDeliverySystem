@@ -26,8 +26,12 @@ const locationMatchKey = (value) =>
     .replace(/\bkh[\s.]*/g, "khan")
     .replace(/[^a-z0-9]+/g, "");
 const locationBaseKey = (value) => locationMatchKey(String(value || "").replace(/\([^)]*\)/g, "").replace(/^\s*d\s*\.\s*/i, ""));
+const fromLocationMatchKey = (value) => {
+  const key = String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+  return key === "gs01" || key === "warehouse09" ? "warehouse09" : key;
+};
 const priceEffectiveDate = (price) => price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`;
-const routeKey = (price) => [price.fromLocation, locationBaseKey(price.toLocation), price.truckType].join("::");
+const routeKey = (price) => [fromLocationMatchKey(price.fromLocation), locationBaseKey(price.toLocation), price.truckType].join("::");
 const CRANE_LOCATION_ORDER = [
   // PP (14)
   "KH.Kambol (PP)",
@@ -204,5 +208,5 @@ function groupPriceHistory(prices) {
 }
 
 export {
-  localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory
+  localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory
 };

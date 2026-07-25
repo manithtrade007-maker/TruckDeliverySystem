@@ -11,7 +11,7 @@ import {
 } from "./lib/exports.js";
 import { sendJson, sendText, readBody, parseQuery } from "./lib/http.js";
 import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, appUsername, appPassword } from "./lib/auth.js";
-import { normalizeText, normalizeCode, normalizeLocationName, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
+import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1212,7 +1212,7 @@ async function api(req, res, url, role = "admin") {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(price.effectiveDate)) throw new Error("Effective Date is required.");
       const duplicateRoute = data.prices.find((item) =>
         item.id !== price.id &&
-        item.fromLocation === price.fromLocation &&
+        fromLocationMatchKey(item.fromLocation) === fromLocationMatchKey(price.fromLocation) &&
         item.truckType === price.truckType &&
         locationBaseKey(item.toLocation) === locationBaseKey(price.toLocation) &&
         item.toLocation !== price.toLocation &&
@@ -1224,7 +1224,7 @@ async function api(req, res, url, role = "admin") {
       const index = data.prices.findIndex((item) =>
         item.id === price.id ||
         (
-          item.fromLocation === price.fromLocation &&
+          fromLocationMatchKey(item.fromLocation) === fromLocationMatchKey(price.fromLocation) &&
           item.toLocation === price.toLocation &&
           item.truckType === price.truckType &&
           effectiveDateOf(item) === price.effectiveDate
@@ -1270,7 +1270,7 @@ async function api(req, res, url, role = "admin") {
         // Find the canonical price list name for this route
         const matchedPrice = data.prices.find(
           (p) =>
-            p.fromLocation === delivery.fromLocation &&
+            fromLocationMatchKey(p.fromLocation) === fromLocationMatchKey(delivery.fromLocation) &&
             p.truckType === delivery.truckType &&
             locationBaseKey(p.toLocation) === deliveryKey
         );
@@ -1297,7 +1297,7 @@ async function api(req, res, url, role = "admin") {
       if (toNumber(delivery.truckSalaryUnitPrice) !== 0) continue;
       const allForRoute = data.prices.filter(
         (p) =>
-          p.fromLocation === delivery.fromLocation &&
+          fromLocationMatchKey(p.fromLocation) === fromLocationMatchKey(delivery.fromLocation) &&
           locationBaseKey(p.toLocation) === locationBaseKey(delivery.toLocation) &&
           p.truckType === delivery.truckType
       );
@@ -1352,7 +1352,7 @@ async function api(req, res, url, role = "admin") {
       const routes = new Map();
       for (const price of data.prices) {
         if (price.truckType !== "Without Crane") continue;
-        const key = `${price.fromLocation}||${locationBaseKey(price.toLocation)}`;
+        const key = `${fromLocationMatchKey(price.fromLocation)}||${locationBaseKey(price.toLocation)}`;
         if (!routes.has(key)) routes.set(key, []);
         routes.get(key).push(price);
       }
@@ -1377,7 +1377,7 @@ async function api(req, res, url, role = "admin") {
           // Only delete if no deliveries fall before the newer entry's effective date
           const hasOldDeliveries = data.deliveries.some(
             (d) =>
-              d.fromLocation === old.fromLocation &&
+              fromLocationMatchKey(d.fromLocation) === fromLocationMatchKey(old.fromLocation) &&
               locationBaseKey(d.toLocation) === locationBaseKey(old.toLocation) &&
               d.truckType === old.truckType &&
               d.deliveryDate < effectiveDateOf(newest)
@@ -1434,7 +1434,7 @@ async function api(req, res, url, role = "admin") {
         seenRows.set(rowKey, row.line || saved.length + 1);
         const matchedRoute = data.prices.find(
           (price) =>
-            price.fromLocation === fromLocation &&
+            fromLocationMatchKey(price.fromLocation) === fromLocationMatchKey(fromLocation) &&
             locationBaseKey(price.toLocation) === locationBaseKey(toLocation) &&
             price.truckType === truckType
         );
@@ -1472,7 +1472,7 @@ async function api(req, res, url, role = "admin") {
           active: true
         };
         const index = data.prices.findIndex((item) =>
-          item.fromLocation === price.fromLocation &&
+          fromLocationMatchKey(item.fromLocation) === fromLocationMatchKey(price.fromLocation) &&
           item.toLocation === price.toLocation &&
           item.truckType === price.truckType &&
           effectiveDateOf(item) === price.effectiveDate
@@ -1489,41 +1489,7 @@ async function api(req, res, url, role = "admin") {
       }
       if (saved.length < 1) throw new Error("No valid price rows found.");
 
-      let recalculatedDeliveries = 0;
-      if (priceType === "driver" || priceType === "both") {
-        const savedRouteKeys = new Set(saved.map((price) => [
-          price.fromLocation,
-          price.truckType,
-          locationBaseKey(price.toLocation)
-        ].join("||")));
-
-        for (const delivery of data.deliveries) {
-          const routeKey = [
-            delivery.fromLocation,
-            delivery.truckType,
-            locationBaseKey(delivery.toLocation)
-          ].join("||");
-          if (!savedRouteKeys.has(routeKey)) continue;
-          const effectivePrice = findEffectivePrice(data, {
-            fromLocation: delivery.fromLocation,
-            toLocation: delivery.toLocation,
-            truckType: delivery.truckType,
-            deliveryDate: delivery.deliveryDate
-          });
-          if (!effectivePrice) continue;
-          const nextDriverPrice = toNumber(effectivePrice.truckSalaryUnitPrice);
-          const nextDriverAmount = roundMoney(toNumber(delivery.qtyTon) * nextDriverPrice);
-          if (
-            nextDriverPrice !== toNumber(delivery.truckSalaryUnitPrice) ||
-            nextDriverAmount !== toNumber(delivery.truckSalaryAmount)
-          ) {
-            delivery.truckSalaryUnitPrice = nextDriverPrice;
-            delivery.truckSalaryAmount = nextDriverAmount;
-            delivery.updatedAt = new Date().toISOString();
-            recalculatedDeliveries += 1;
-          }
-        }
-      }
+      const recalculatedDeliveries = recalculateDeliveriesForPriceRoutes(data, saved);
 
       addActivity(
         data,
@@ -1617,7 +1583,7 @@ async function api(req, res, url, role = "admin") {
       if (!price) throw new Error("Price not found.");
       const hasDeliveryHistory = data.deliveries.some(
         (delivery) =>
-          delivery.fromLocation === price.fromLocation &&
+          fromLocationMatchKey(delivery.fromLocation) === fromLocationMatchKey(price.fromLocation) &&
           delivery.toLocation === price.toLocation &&
           delivery.truckType === price.truckType &&
           delivery.deliveryDate >= effectiveDateOf(price)

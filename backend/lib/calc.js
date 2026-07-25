@@ -8,6 +8,13 @@ export function normalizeCode(value) {
   return normalizeText(value).replace(/\s+/g, "");
 }
 
+// GS01 and Warehouse-09 are two names for the same loading origin.
+// Keep the stored/displayed value unchanged, but use one key for price matching.
+export function fromLocationMatchKey(value) {
+  const key = normalizeText(value).toLowerCase().replace(/[^a-z0-9]+/g, "");
+  return key === "gs01" || key === "warehouse09" ? "warehouse09" : key;
+}
+
 // Remove extra space after KH. or D. prefix: "KH. Kambol" → "KH.Kambol"
 export function normalizeLocationName(value) {
   return normalizeText(value).replace(/^(KH|D)\.\s+/i, (_, p) => p.toUpperCase() + ".");
@@ -47,13 +54,13 @@ export function effectiveDateOf(price) {
 }
 
 export function findEffectivePrice(data, { fromLocation, toLocation, truckType, deliveryDate }) {
-  const fromKey = normalizeText(fromLocation);
+  const fromKey = fromLocationMatchKey(fromLocation);
   const toKey = locationBaseKey(toLocation);
   const typeKey = normalizeText(truckType);
 
   return data.prices
     .filter((item) => item.active !== false)
-    .filter((item) => normalizeText(item.fromLocation) === fromKey)
+    .filter((item) => fromLocationMatchKey(item.fromLocation) === fromKey)
     .filter((item) => locationBaseKey(item.toLocation) === toKey)
     .filter((item) => normalizeText(item.truckType) === typeKey)
     .filter((item) => effectiveDateOf(item) <= deliveryDate)
@@ -63,7 +70,7 @@ export function findEffectivePrice(data, { fromLocation, toLocation, truckType, 
 
 export function priceRouteKey({ fromLocation, toLocation, truckType }) {
   return [
-    normalizeText(fromLocation),
+    fromLocationMatchKey(fromLocation),
     normalizeText(truckType),
     locationBaseKey(toLocation)
   ].join("||");
