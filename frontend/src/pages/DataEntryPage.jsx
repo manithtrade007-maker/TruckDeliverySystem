@@ -12,6 +12,11 @@ export function DataEntryPage() {
   const [savingDriveLink, setSavingDriveLink] = useState(false);
   const [removingDriveLinkId, setRemovingDriveLinkId] = useState("");
   const [removingUploadedPdfId, setRemovingUploadedPdfId] = useState("");
+  const [driveFolderOpen, setDriveFolderOpen] = useState(false);
+  const [driveFolderUrl, setDriveFolderUrl] = useState("");
+  const [driveFolderPreview, setDriveFolderPreview] = useState(null);
+  const [scanningDriveFolder, setScanningDriveFolder] = useState(false);
+  const [applyingDriveFolder, setApplyingDriveFolder] = useState(false);
 
   function normalizeDriveFileUrl(value) {
     let parsed;
@@ -113,6 +118,47 @@ export function DataEntryPage() {
       setRemovingUploadedPdfId("");
     }
   }
+
+  function openDriveFolderSync() {
+    setDriveFolderPreview(null);
+    setDriveFolderOpen(true);
+  }
+
+  async function scanDriveFolder(event) {
+    event.preventDefault();
+    try {
+      setScanningDriveFolder(true);
+      const preview = await api("/api/drive-folder/preview", {
+        method: "POST",
+        body: JSON.stringify({ folderUrl: driveFolderUrl, month: reportMonth })
+      });
+      setDriveFolderPreview(preview);
+    } catch (error) {
+      flash(`Drive scan error: ${error.message}`, "error");
+    } finally {
+      setScanningDriveFolder(false);
+    }
+  }
+
+  async function applyDriveFolderLinks() {
+    if (!driveFolderPreview?.readyCount) return;
+    try {
+      setApplyingDriveFolder(true);
+      const result = await api("/api/drive-folder/apply", {
+        method: "POST",
+        body: JSON.stringify({ folderUrl: driveFolderUrl, month: reportMonth })
+      });
+      await loadData();
+      flash(`Google Drive sync complete: ${result.linkedCount} PDF link${result.linkedCount === 1 ? "" : "s"} added.`);
+      setDriveFolderOpen(false);
+      setDriveFolderPreview(null);
+      setDriveFolderUrl("");
+    } catch (error) {
+      flash(`Drive sync error: ${error.message}`, "error");
+    } finally {
+      setApplyingDriveFolder(false);
+    }
+  }
   return (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           {!selectedViewStatement && !selectedStatement && !showStatementWorkspace && (
@@ -211,6 +257,91 @@ export function DataEntryPage() {
                     ) : "Save Link"}
                   </Button>
                   <Button type="button" variant="quiet" disabled={savingDriveLink} onClick={() => setDriveLinkStatement(null)}>Cancel</Button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {driveFolderOpen && (
+            <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 backdrop-blur-sm sm:items-center sm:p-4">
+              <form onSubmit={scanDriveFolder} className="flex max-h-[92vh] w-full max-w-3xl flex-col rounded-t-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20 sm:rounded-3xl">
+                <div>
+                  <h3 className="text-xl font-black tracking-tight">Sync Google Drive Folder</h3>
+                  <p className="mt-1 text-sm font-bold text-slate-500">
+                    Match PDFs named like 1570.pdf to statements in {monthName(reportMonth)}. Review everything before linking.
+                  </p>
+                </div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-[180px_minmax(0,1fr)]">
+                  <Field label="Statement Month">
+                    <Input type="month" value={reportMonth} disabled />
+                  </Field>
+                  <Field label="Google Drive Folder Link">
+                    <Input
+                      type="url"
+                      required
+                      autoFocus
+                      placeholder="https://drive.google.com/drive/folders/..."
+                      value={driveFolderUrl}
+                      onChange={(event) => {
+                        setDriveFolderUrl(event.target.value);
+                        setDriveFolderPreview(null);
+                      }}
+                    />
+                  </Field>
+                </div>
+
+                {driveFolderPreview && (
+                  <div className="mt-5 min-h-0 overflow-auto rounded-2xl border border-slate-200">
+                    <div className="sticky top-0 z-10 grid grid-cols-2 gap-2 border-b border-slate-200 bg-slate-50 p-3 sm:grid-cols-4">
+                      <div><div className="text-[10px] font-black uppercase text-slate-400">Folder</div><div className="truncate text-sm font-black text-slate-800" title={driveFolderPreview.folder.name}>{driveFolderPreview.folder.name}</div></div>
+                      <div><div className="text-[10px] font-black uppercase text-slate-400">PDF Files</div><div className="text-sm font-black text-slate-800">{driveFolderPreview.fileCount}</div></div>
+                      <div><div className="text-[10px] font-black uppercase text-emerald-600">Ready</div><div className="text-sm font-black text-emerald-700">{driveFolderPreview.readyCount}</div></div>
+                      <div><div className="text-[10px] font-black uppercase text-amber-600">Skipped</div><div className="text-sm font-black text-amber-700">{driveFolderPreview.skippedCount}</div></div>
+                    </div>
+                    <table className="w-full min-w-[620px] border-collapse text-sm">
+                      <thead className="bg-slate-900 text-white">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-black">PDF File</th>
+                          <th className="px-3 py-2 text-center font-black">Statement</th>
+                          <th className="px-3 py-2 text-center font-black">Result</th>
+                          <th className="px-3 py-2 text-left font-black">Details</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {driveFolderPreview.rows.map((row) => (
+                          <tr key={row.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                            <td className="px-3 py-2 font-black text-slate-800">
+                              <button type="button" className="hover:text-teal-700 hover:underline" onClick={() => window.open(row.url, "_blank", "noopener,noreferrer")}>{row.name}</button>
+                            </td>
+                            <td className="px-3 py-2 text-center font-black text-slate-700">{row.statementNumber ?? "—"}</td>
+                            <td className="px-3 py-2 text-center">
+                              <span className={`rounded-full px-2 py-1 text-[11px] font-black ${row.status === "ready" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>
+                                {row.status === "ready" ? "Ready" : "Skipped"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-xs font-bold text-slate-500">{row.reason}</td>
+                          </tr>
+                        ))}
+                        {driveFolderPreview.rows.length === 0 && (
+                          <tr><td colSpan="4" className="px-4 py-8 text-center font-bold text-slate-400">No PDF files were found in this folder.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                  <Button type="submit" variant="secondary" disabled={scanningDriveFolder || applyingDriveFolder}>
+                    {scanningDriveFolder ? (
+                      <span className="inline-flex items-center gap-2"><span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-teal-700" />Scanning…</span>
+                    ) : driveFolderPreview ? "Scan Again" : "Scan Folder"}
+                  </Button>
+                  <Button type="button" disabled={!driveFolderPreview?.readyCount || scanningDriveFolder || applyingDriveFolder} onClick={applyDriveFolderLinks}>
+                    {applyingDriveFolder ? (
+                      <span className="inline-flex items-center gap-2"><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />Linking…</span>
+                    ) : `Link ${driveFolderPreview?.readyCount || 0} PDFs`}
+                  </Button>
+                  <Button type="button" variant="quiet" disabled={scanningDriveFolder || applyingDriveFolder} onClick={() => setDriveFolderOpen(false)}>Cancel</Button>
                 </div>
               </form>
             </div>
@@ -380,9 +511,19 @@ export function DataEntryPage() {
             <Panel id="all-statements-panel" className="lg:col-span-2">
               <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <h2 className="text-lg font-black tracking-tight">All Statements</h2>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-600">
-                  Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {isAdmin && (
+                    <Button type="button" variant="secondary" onClick={openDriveFolderSync} className="min-h-9 px-3 py-1.5">
+                      <span className="mr-2" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M5.1 15a8 8 0 0 0 13.2 2.9L20 14"/><path d="M18.9 9A8 8 0 0 0 5.7 6.1L4 10"/></svg>
+                      </span>
+                      Sync Drive Folder
+                    </Button>
+                  )}
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-600">
+                    Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}
+                  </span>
+                </div>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Month"><Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} /></Field>

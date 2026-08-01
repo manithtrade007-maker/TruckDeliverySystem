@@ -12,6 +12,7 @@ import {
 import { sendJson, sendText, readBody, parseQuery } from "./lib/http.js";
 import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, appUsername, appPassword } from "./lib/auth.js";
 import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
+import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1109,6 +1110,59 @@ async function api(req, res, url, role = "admin") {
     const body = await readBody(req);
     const statement = await updateData((data) => saveStatement(data, body));
     return sendJson(res, 200, statement);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/drive-folder/preview") {
+    requireAdmin();
+    const body = await readBody(req);
+    const month = normalizeText(body.month);
+    const driveFolder = await listGoogleDriveFolderPdfs(body.folderUrl);
+    const preview = buildDriveFolderPreview({
+      files: driveFolder.files,
+      statements: data.statements,
+      month,
+      hasUploadedPdf: (statement) => existsSync(statementPdfPath(statement.id))
+    });
+    return sendJson(res, 200, { folder: driveFolder.folder, ...preview });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/drive-folder/apply") {
+    requireAdmin();
+    const body = await readBody(req);
+    const month = normalizeText(body.month);
+    const driveFolder = await listGoogleDriveFolderPdfs(body.folderUrl);
+    const result = await updateData((currentData) => {
+      const preview = buildDriveFolderPreview({
+        files: driveFolder.files,
+        statements: currentData.statements,
+        month,
+        hasUploadedPdf: (statement) => existsSync(statementPdfPath(statement.id))
+      });
+      const linkedStatementNumbers = [];
+      const now = new Date().toISOString();
+      for (const row of preview.rows.filter((item) => item.status === "ready")) {
+        const statement = currentData.statements.find((item) => item.id === row.statementId);
+        if (!statement || statement.drivePdfUrl || existsSync(statementPdfPath(statement.id))) continue;
+        statement.drivePdfUrl = row.url;
+        statement.drivePdfOriginalName = row.name;
+        statement.updatedAt = now;
+        linkedStatementNumbers.push(Number(statement.statementNumber));
+      }
+      if (linkedStatementNumbers.length) {
+        addActivity(
+          currentData,
+          `Linked ${linkedStatementNumbers.length} statement PDF${linkedStatementNumbers.length === 1 ? "" : "s"} from Google Drive for ${monthLabel(month)}.`,
+          "document"
+        );
+      }
+      return {
+        folder: driveFolder.folder,
+        linkedCount: linkedStatementNumbers.length,
+        linkedStatementNumbers,
+        skippedCount: preview.skippedCount
+      };
+    });
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   const statementDriveLinkMatch = url.pathname.match(/^\/api\/statements\/([^/]+)\/drive-link$/);
