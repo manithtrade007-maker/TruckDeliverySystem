@@ -54,4 +54,48 @@ async function downloadFile(url) {
   URL.revokeObjectURL(objectUrl);
 }
 
-export { getToken, getRole, setToken, setRole, api, downloadFile };
+async function uploadPdf(url, file) {
+  const token = getToken();
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/pdf",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    },
+    body: file
+  });
+  if (response.status === 401) {
+    setToken("");
+    window.dispatchEvent(new CustomEvent("auth-logout"));
+    throw new Error("Session expired. Please sign in again.");
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "PDF upload failed.");
+  return data;
+}
+
+async function viewPdf(url) {
+  const popup = window.open("", "_blank");
+  const token = getToken();
+  try {
+    const response = await fetch(url, token ? { headers: { "Authorization": `Bearer ${token}` } } : {});
+    if (response.status === 401) {
+      setToken("");
+      window.dispatchEvent(new CustomEvent("auth-logout"));
+      throw new Error("Session expired. Please sign in again.");
+    }
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "PDF could not be opened.");
+    }
+    const objectUrl = URL.createObjectURL(await response.blob());
+    if (popup) popup.location.href = objectUrl;
+    else window.location.href = objectUrl;
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+  } catch (error) {
+    if (popup) popup.close();
+    throw error;
+  }
+}
+
+export { getToken, getRole, setToken, setRole, api, downloadFile, uploadPdf, viewPdf };

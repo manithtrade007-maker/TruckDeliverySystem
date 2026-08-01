@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { readFile, writeFile, mkdir, rename, readdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename, readdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -23,6 +23,8 @@ const dataFile = path.join(dataDir, "data.json");
 const dataTempFile = path.join(dataDir, "data.json.tmp");
 const databaseFile = path.join(dataDir, "truck_delivery.db");
 const backupDir = path.join(dataDir, "backups");
+const statementPdfDir = path.join(dataDir, "statement-pdfs");
+const maxStatementPdfBytes = 30 * 1024 * 1024;
 const port = Number(process.env.PORT || 5058);
 const host = process.env.HOST || "0.0.0.0";
 // "Production" = the real deployed site (Render sets NODE_ENV=production and RENDER).
@@ -363,6 +365,32 @@ function normalizeDataShape(data) {
   return data;
 }
 
+function statementPdfPath(statementId) {
+  const safeId = Buffer.from(String(statementId)).toString("base64url");
+  return path.join(statementPdfDir, `${safeId}.pdf`);
+}
+
+async function readPdfBody(req) {
+  const declaredSize = Number(req.headers["content-length"] || 0);
+  if (declaredSize > maxStatementPdfBytes) {
+    throw Object.assign(new Error("PDF must be 30 MB or smaller."), { status: 413 });
+  }
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > maxStatementPdfBytes) {
+      throw Object.assign(new Error("PDF must be 30 MB or smaller."), { status: 413 });
+    }
+    chunks.push(chunk);
+  }
+  const buffer = Buffer.concat(chunks);
+  if (buffer.length < 5 || buffer.subarray(0, 5).toString("ascii") !== "%PDF-") {
+    throw new Error("Please select a valid PDF file.");
+  }
+  return buffer;
+}
+
 function createSchema(database) {
   database.exec(`
     CREATE TABLE IF NOT EXISTS settings (
@@ -512,6 +540,7 @@ async function dataFromJsonFile() {
 async function ensureDataStore() {
   await mkdir(dataDir, { recursive: true });
   await mkdir(backupDir, { recursive: true });
+  await mkdir(statementPdfDir, { recursive: true });
   const database = getDb();
   createSchema(database);
   try { database.exec("ALTER TABLE deliveries ADD COLUMN highlighted INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
@@ -841,6 +870,7 @@ function statementsWithCounts(data) {
       const rows = data.deliveries.filter((delivery) => delivery.statementId === statement.id);
       return {
         ...statement,
+        hasScannedPdf: existsSync(statementPdfPath(statement.id)),
         rowCount: rows.length,
         totalQtyTon: roundMoney(rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0)),
         companyTotalAmount: statement.isManual ? toNumber(statement.manualAmount) : roundMoney(rows.reduce((sum, row) => sum + toNumber(row.companyTotalAmount), 0)),
@@ -1053,6 +1083,48 @@ async function api(req, res, url, role = "admin") {
     return sendJson(res, 200, statement);
   }
 
+  const statementPdfMatch = url.pathname.match(/^\/api\/statements\/([^/]+)\/pdf$/);
+  if (statementPdfMatch && req.method === "PUT") {
+    const id = decodeURIComponent(statementPdfMatch[1]);
+    const statement = data.statements.find((item) => item.id === id);
+    if (!statement) throw Object.assign(new Error("Statement not found."), { status: 404 });
+    if ((req.headers["content-type"] || "").split(";")[0].trim().toLowerCase() !== "application/pdf") {
+      throw new Error("Please select a PDF file.");
+    }
+    const filePath = statementPdfPath(id);
+    if (existsSync(filePath)) {
+      throw Object.assign(new Error("This statement already has a PDF."), { status: 409 });
+    }
+    const pdf = await readPdfBody(req);
+    const tempPath = `${filePath}.${crypto.randomUUID()}.tmp`;
+    try {
+      await writeFile(tempPath, pdf, { flag: "wx" });
+      await rename(tempPath, filePath);
+    } catch (error) {
+      await unlink(tempPath).catch(() => {});
+      throw error;
+    }
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (statementPdfMatch && req.method === "GET") {
+    const id = decodeURIComponent(statementPdfMatch[1]);
+    const statement = data.statements.find((item) => item.id === id);
+    if (!statement) throw Object.assign(new Error("Statement not found."), { status: 404 });
+    const filePath = statementPdfPath(id);
+    if (!existsSync(filePath)) throw Object.assign(new Error("No PDF has been uploaded for this statement."), { status: 404 });
+    const pdf = await readFile(filePath);
+    const fileName = `Statement-${statement.statementNumber}-${statement.month}-Scan.pdf`;
+    res.writeHead(200, {
+      "Content-Type": "application/pdf",
+      "Content-Length": pdf.length,
+      "Content-Disposition": `inline; filename="${fileName}"`,
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff"
+    });
+    return res.end(pdf);
+  }
+
   if (req.method === "POST" && url.pathname.startsWith("/api/statements/") && url.pathname.endsWith("/finish")) {
     const id = decodeURIComponent(url.pathname.split("/")[3]);
     const statement = await updateData((data) => {
@@ -1108,6 +1180,9 @@ async function api(req, res, url, role = "admin") {
       data.deliveries = data.deliveries.filter((item) => item.statementId !== id);
       addActivity(data, `Deleted statement ${statement.statementNumber} (${statement.status}).`, "statement");
       return { ok: true };
+    });
+    await unlink(statementPdfPath(id)).catch((error) => {
+      if (error.code !== "ENOENT") throw error;
     });
     return sendJson(res, 200, { ok: true });
   }

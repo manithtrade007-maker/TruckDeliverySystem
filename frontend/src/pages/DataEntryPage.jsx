@@ -1,10 +1,32 @@
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
-import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
+import { downloadFile, uploadPdf, viewPdf } from "../lib/api.js";
 
 export function DataEntryPage() {
-  const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
+  const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
+
+  async function handlePdfUpload(statement, event) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        throw new Error("Please select a PDF file.");
+      }
+      await uploadPdf(`/api/statements/${encodeURIComponent(statement.id)}/pdf`, file);
+      await loadData();
+      flash(`PDF uploaded for Statement ${statement.statementNumber}.`);
+    } catch (error) {
+      flash(error.message, "error");
+    } finally {
+      input.value = "";
+    }
+  }
+
+  function handlePdfView(statement) {
+    viewPdf(`/api/statements/${encodeURIComponent(statement.id)}/pdf`).catch((error) => flash(error.message, "error"));
+  }
   return (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           {!selectedViewStatement && !selectedStatement && !showStatementWorkspace && (
@@ -72,6 +94,14 @@ export function DataEntryPage() {
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="secondary" onClick={backToStatementList}>Back to Statements</Button>
                   <Button type="button" variant="secondary" onClick={() => openStatement(selectedViewStatement)}>Edit</Button>
+                  {selectedViewStatement.hasScannedPdf ? (
+                    <Button type="button" variant="secondary" onClick={() => handlePdfView(selectedViewStatement)}>View PDF</Button>
+                  ) : (
+                    <label className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-200">
+                      Upload PDF
+                      <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={(event) => handlePdfUpload(selectedViewStatement, event)} />
+                    </label>
+                  )}
                   <Button
                     type="button"
                     onClick={() => {
@@ -223,6 +253,7 @@ export function DataEntryPage() {
                       <th className="hidden sm:table-cell px-3 py-2.5 text-center font-black">Rows</th>
                       <th className="px-3 py-2.5 text-right font-black">Amount</th>
                       {isAdmin && <th className="hidden md:table-cell px-3 py-2.5 text-center font-black">Pay Month</th>}
+                      <th className="px-3 py-2.5 text-center font-black">Scan</th>
                       <th className="px-3 py-2.5 text-right font-black">Actions</th>
                     </tr>
                   </thead>
@@ -269,6 +300,19 @@ export function DataEntryPage() {
                               </button>
                             </td>
                           )}
+                          <td className="px-3 py-2.5 text-center">
+                            {statement.hasScannedPdf ? (
+                              <button type="button" onClick={() => handlePdfView(statement)}
+                                className="whitespace-nowrap rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700 hover:bg-teal-100 transition">
+                                View PDF
+                              </button>
+                            ) : (
+                              <label className="inline-flex cursor-pointer whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-black text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">
+                                Upload PDF
+                                <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={(event) => handlePdfUpload(statement, event)} />
+                              </label>
+                            )}
+                          </td>
                           <td className="px-3 py-2.5">
                             <div className="flex items-center justify-end gap-1">
                               <button type="button" onClick={() => viewStatement(statement)}
