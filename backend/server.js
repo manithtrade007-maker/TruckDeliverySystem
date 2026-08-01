@@ -1206,6 +1206,22 @@ async function api(req, res, url, role = "admin") {
     return res.end(pdf);
   }
 
+  if (statementPdfMatch && req.method === "DELETE") {
+    const id = decodeURIComponent(statementPdfMatch[1]);
+    const statement = data.statements.find((item) => item.id === id);
+    if (!statement) throw Object.assign(new Error("Statement not found."), { status: 404 });
+    const filePath = statementPdfPath(id);
+    if (!existsSync(filePath)) throw Object.assign(new Error("This statement has no uploaded PDF."), { status: 404 });
+    await unlink(filePath);
+    await updateData((currentData) => {
+      const currentStatement = currentData.statements.find((item) => item.id === id);
+      if (!currentStatement) throw new Error("Statement not found.");
+      currentStatement.scannedPdfOriginalName = null;
+      currentStatement.updatedAt = new Date().toISOString();
+    });
+    return sendJson(res, 200, { ok: true });
+  }
+
   if (req.method === "POST" && url.pathname.startsWith("/api/statements/") && url.pathname.endsWith("/finish")) {
     const id = decodeURIComponent(url.pathname.split("/")[3]);
     const statement = await updateData((data) => {

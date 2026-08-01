@@ -11,6 +11,7 @@ export function DataEntryPage() {
   const [verifiedDriveUrl, setVerifiedDriveUrl] = useState("");
   const [savingDriveLink, setSavingDriveLink] = useState(false);
   const [removingDriveLinkId, setRemovingDriveLinkId] = useState("");
+  const [removingUploadedPdfId, setRemovingUploadedPdfId] = useState("");
 
   function normalizeDriveFileUrl(value) {
     let parsed;
@@ -93,6 +94,23 @@ export function DataEntryPage() {
       flash(`Remove link error: ${error.message}`, "error");
     } finally {
       setRemovingDriveLinkId("");
+    }
+  }
+
+  async function removeUploadedPdf(statement) {
+    const confirmed = window.confirm(
+      `Remove the old uploaded PDF from Statement ${statement.statementNumber}?\n\nThe statement and all of its delivery data will remain unchanged.`
+    );
+    if (!confirmed) return;
+    try {
+      setRemovingUploadedPdfId(statement.id);
+      await api(`/api/statements/${encodeURIComponent(statement.id)}/pdf`, { method: "DELETE" });
+      await loadData();
+      flash(`Uploaded PDF removed from Statement ${statement.statementNumber}. All statement data was kept.`);
+    } catch (error) {
+      flash(`Remove PDF error: ${error.message}`, "error");
+    } finally {
+      setRemovingUploadedPdfId("");
     }
   }
   return (
@@ -227,6 +245,10 @@ export function DataEntryPage() {
                       <span className="max-w-[260px] truncate text-xs font-bold text-slate-500" title={selectedViewStatement.scannedPdfOriginalName || "Scanned PDF"}>
                         {selectedViewStatement.scannedPdfOriginalName || "Scanned PDF"}
                       </span>
+                      <button type="button" disabled={removingUploadedPdfId === selectedViewStatement.id} onClick={() => removeUploadedPdf(selectedViewStatement)}
+                        className="whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs font-black text-red-600 transition hover:bg-red-100 disabled:cursor-wait disabled:opacity-60">
+                        {removingUploadedPdfId === selectedViewStatement.id ? "Removing…" : "Remove Uploaded PDF"}
+                      </button>
                     </div>
                   ) : (
                     <Button type="button" variant="secondary" onClick={() => startDriveLink(selectedViewStatement)}>Add Drive Link</Button>
@@ -453,6 +475,10 @@ export function DataEntryPage() {
                                 <span className="max-w-[160px] truncate text-[11px] font-bold text-slate-500" title={statement.scannedPdfOriginalName || "Scanned PDF"}>
                                   {statement.scannedPdfOriginalName || "Scanned PDF"}
                                 </span>
+                                <button type="button" disabled={removingUploadedPdfId === statement.id} onClick={() => removeUploadedPdf(statement)}
+                                  className="text-[11px] font-black text-red-500 hover:text-red-700 disabled:cursor-wait disabled:opacity-60">
+                                  {removingUploadedPdfId === statement.id ? "Removing…" : "Remove Uploaded PDF"}
+                                </button>
                               </div>
                             ) : (
                               <button type="button" onClick={() => startDriveLink(statement)}
