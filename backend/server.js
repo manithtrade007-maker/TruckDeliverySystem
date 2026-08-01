@@ -1135,6 +1135,19 @@ async function api(req, res, url, role = "admin") {
     return sendJson(res, 200, { ok: true, ...result });
   }
 
+  if (statementDriveLinkMatch && req.method === "DELETE") {
+    const id = decodeURIComponent(statementDriveLinkMatch[1]);
+    await updateData((currentData) => {
+      const statement = currentData.statements.find((item) => item.id === id);
+      if (!statement) throw Object.assign(new Error("Statement not found."), { status: 404 });
+      if (!statement.drivePdfUrl) throw Object.assign(new Error("This statement has no Google Drive PDF link."), { status: 404 });
+      statement.drivePdfUrl = null;
+      statement.drivePdfOriginalName = null;
+      statement.updatedAt = new Date().toISOString();
+    });
+    return sendJson(res, 200, { ok: true });
+  }
+
   const statementPdfMatch = url.pathname.match(/^\/api\/statements\/([^/]+)\/pdf$/);
   if (statementPdfMatch && req.method === "PUT") {
     const id = decodeURIComponent(statementPdfMatch[1]);

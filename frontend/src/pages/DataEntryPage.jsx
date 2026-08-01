@@ -10,6 +10,7 @@ export function DataEntryPage() {
   const [driveLinkForm, setDriveLinkForm] = useState({ url: "", originalName: "" });
   const [verifiedDriveUrl, setVerifiedDriveUrl] = useState("");
   const [savingDriveLink, setSavingDriveLink] = useState(false);
+  const [removingDriveLinkId, setRemovingDriveLinkId] = useState("");
 
   function normalizeDriveFileUrl(value) {
     let parsed;
@@ -76,6 +77,23 @@ export function DataEntryPage() {
 
   function openDrivePdf(statement) {
     window.open(statement.drivePdfUrl, "_blank", "noopener,noreferrer");
+  }
+
+  async function removeDriveLink(statement) {
+    const confirmed = window.confirm(
+      `Remove the PDF link from Statement ${statement.statementNumber}?\n\nThe PDF will remain in Google Drive.`
+    );
+    if (!confirmed) return;
+    try {
+      setRemovingDriveLinkId(statement.id);
+      await api(`/api/statements/${encodeURIComponent(statement.id)}/drive-link`, { method: "DELETE" });
+      await loadData();
+      flash(`Link removed from Statement ${statement.statementNumber}. The Google Drive PDF was not deleted.`);
+    } catch (error) {
+      flash(`Remove link error: ${error.message}`, "error");
+    } finally {
+      setRemovingDriveLinkId("");
+    }
   }
   return (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
@@ -198,6 +216,10 @@ export function DataEntryPage() {
                       <span className="max-w-[260px] truncate text-xs font-bold text-slate-500" title={selectedViewStatement.drivePdfOriginalName || `${selectedViewStatement.statementNumber}.pdf`}>
                         {selectedViewStatement.drivePdfOriginalName || `${selectedViewStatement.statementNumber}.pdf`}
                       </span>
+                      <button type="button" disabled={removingDriveLinkId === selectedViewStatement.id} onClick={() => removeDriveLink(selectedViewStatement)}
+                        className="whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs font-black text-red-600 transition hover:bg-red-100 disabled:cursor-wait disabled:opacity-60">
+                        {removingDriveLinkId === selectedViewStatement.id ? "Removing…" : "Remove Link"}
+                      </button>
                     </div>
                   ) : selectedViewStatement.hasScannedPdf ? (
                     <div className="flex min-w-0 items-center gap-2">
@@ -417,6 +439,10 @@ export function DataEntryPage() {
                                 <span className="max-w-[160px] truncate text-[11px] font-bold text-slate-500" title={statement.drivePdfOriginalName || `${statement.statementNumber}.pdf`}>
                                   {statement.drivePdfOriginalName || `${statement.statementNumber}.pdf`}
                                 </span>
+                                <button type="button" disabled={removingDriveLinkId === statement.id} onClick={() => removeDriveLink(statement)}
+                                  className="text-[11px] font-black text-red-500 hover:text-red-700 disabled:cursor-wait disabled:opacity-60">
+                                  {removingDriveLinkId === statement.id ? "Removing…" : "Remove Link"}
+                                </button>
                               </div>
                             ) : statement.hasScannedPdf ? (
                               <div className="flex flex-col items-center gap-1">
