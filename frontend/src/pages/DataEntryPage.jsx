@@ -2,39 +2,80 @@ import { useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
-import { downloadFile, uploadPdf, viewPdf } from "../lib/api.js";
+import { api, downloadFile, viewPdf } from "../lib/api.js";
 
 export function DataEntryPage() {
   const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
-  const [uploadingStatementId, setUploadingStatementId] = useState("");
+  const [driveLinkStatement, setDriveLinkStatement] = useState(null);
+  const [driveLinkForm, setDriveLinkForm] = useState({ url: "", originalName: "" });
+  const [verifiedDriveUrl, setVerifiedDriveUrl] = useState("");
+  const [savingDriveLink, setSavingDriveLink] = useState(false);
 
-  async function handlePdfUpload(statement, event) {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    if (!file) return;
+  function normalizeDriveFileUrl(value) {
+    let parsed;
     try {
-      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-        throw new Error("Please select a PDF file.");
-      }
-      if (file.size > 50 * 1024 * 1024) {
-        throw new Error("PDF must be 50 MB or smaller.");
-      }
-      const confirmed = window.confirm(`Upload this file to Statement ${statement.statementNumber}?\n\n${file.name}`);
-      if (!confirmed) return;
-      setUploadingStatementId(statement.id);
-      await uploadPdf(`/api/statements/${encodeURIComponent(statement.id)}/pdf`, file);
-      await loadData();
-      flash(`Upload successful: ${file.name} attached to Statement ${statement.statementNumber}.`);
+      parsed = new URL(String(value || "").trim());
+    } catch {
+      throw new Error("Enter a valid Google Drive PDF link.");
+    }
+    if (parsed.protocol !== "https:" || parsed.hostname !== "drive.google.com") {
+      throw new Error("The document link must come from Google Drive.");
+    }
+    const pathMatch = parsed.pathname.match(/^\/file\/d\/([A-Za-z0-9_-]+)/);
+    const fileId = pathMatch?.[1] || parsed.searchParams.get("id");
+    if (!fileId || !/^[A-Za-z0-9_-]{10,}$/.test(fileId)) {
+      if (parsed.pathname.includes("/folders/")) throw new Error("Paste the individual PDF link, not the folder link.");
+      throw new Error("Enter a valid Google Drive PDF link.");
+    }
+    return `https://drive.google.com/file/d/${fileId}/view`;
+  }
+
+  function startDriveLink(statement) {
+    setDriveLinkStatement(statement);
+    setDriveLinkForm({ url: "", originalName: `${statement.statementNumber}.pdf` });
+    setVerifiedDriveUrl("");
+  }
+
+  function checkDriveLink() {
+    try {
+      const url = normalizeDriveFileUrl(driveLinkForm.url);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setVerifiedDriveUrl(url);
     } catch (error) {
-      flash(`Upload error for Statement ${statement.statementNumber}: ${error.message}`, "error");
+      flash(error.message, "error");
+    }
+  }
+
+  async function saveDriveLink(event) {
+    event.preventDefault();
+    if (!driveLinkStatement) return;
+    try {
+      const url = normalizeDriveFileUrl(driveLinkForm.url);
+      if (url !== verifiedDriveUrl) throw new Error("Click Check PDF before saving this link.");
+      if (!driveLinkForm.originalName.trim().toLowerCase().endsWith(".pdf")) {
+        throw new Error("Document name must end with .pdf.");
+      }
+      setSavingDriveLink(true);
+      await api(`/api/statements/${encodeURIComponent(driveLinkStatement.id)}/drive-link`, {
+        method: "POST",
+        body: JSON.stringify({ url, originalName: driveLinkForm.originalName })
+      });
+      await loadData();
+      flash(`Link saved: ${driveLinkForm.originalName.trim()} attached to Statement ${driveLinkStatement.statementNumber}.`);
+      setDriveLinkStatement(null);
+    } catch (error) {
+      flash(`Link error: ${error.message}`, "error");
     } finally {
-      setUploadingStatementId("");
-      input.value = "";
+      setSavingDriveLink(false);
     }
   }
 
   function handlePdfView(statement) {
     viewPdf(`/api/statements/${encodeURIComponent(statement.id)}/pdf`).catch((error) => flash(error.message, "error"));
+  }
+
+  function openDrivePdf(statement) {
+    window.open(statement.drivePdfUrl, "_blank", "noopener,noreferrer");
   }
   return (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
@@ -91,6 +132,54 @@ export function DataEntryPage() {
             </div>
           )}
 
+          {driveLinkStatement && (
+            <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 backdrop-blur-sm sm:items-center sm:p-4">
+              <form onSubmit={saveDriveLink} className="w-full max-w-lg rounded-t-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20 sm:rounded-3xl">
+                <h3 className="text-xl font-black tracking-tight">Add PDF Link — Statement {driveLinkStatement.statementNumber}</h3>
+                <p className="mt-1 text-sm font-bold text-slate-500">Paste the link for this statement's individual PDF, check it, then save.</p>
+                <div className="mt-5 grid gap-4">
+                  <Field label="Google Drive PDF Link">
+                    <Input
+                      type="url"
+                      required
+                      autoFocus
+                      placeholder="https://drive.google.com/file/d/.../view"
+                      value={driveLinkForm.url}
+                      onChange={(event) => {
+                        setDriveLinkForm({ ...driveLinkForm, url: event.target.value });
+                        setVerifiedDriveUrl("");
+                      }}
+                    />
+                  </Field>
+                  <Field label="Document Name">
+                    <Input
+                      required
+                      value={driveLinkForm.originalName}
+                      onChange={(event) => setDriveLinkForm({ ...driveLinkForm, originalName: event.target.value })}
+                    />
+                  </Field>
+                  {verifiedDriveUrl && (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700">
+                      Link opened for checking. Save only if it is the correct PDF.
+                    </div>
+                  )}
+                </div>
+                <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                  <Button type="button" variant="secondary" onClick={checkDriveLink}>Check PDF</Button>
+                  <Button type="submit" disabled={savingDriveLink || !verifiedDriveUrl}>
+                    {savingDriveLink ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                        Saving…
+                      </span>
+                    ) : "Save Link"}
+                  </Button>
+                  <Button type="button" variant="quiet" disabled={savingDriveLink} onClick={() => setDriveLinkStatement(null)}>Cancel</Button>
+                </div>
+              </form>
+            </div>
+          )}
+
           {selectedViewStatement && (
             <Panel className="lg:col-span-2">
               <div className="mb-4 flex flex-col gap-3">
@@ -103,11 +192,13 @@ export function DataEntryPage() {
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="secondary" onClick={backToStatementList}>Back to Statements</Button>
                   <Button type="button" variant="secondary" onClick={() => openStatement(selectedViewStatement)}>Edit</Button>
-                  {uploadingStatementId === selectedViewStatement.id ? (
-                    <span className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-black text-slate-700">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-teal-700" />
-                      Uploading…
-                    </span>
+                  {selectedViewStatement.drivePdfUrl ? (
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Button type="button" variant="secondary" onClick={() => openDrivePdf(selectedViewStatement)}>View PDF</Button>
+                      <span className="max-w-[260px] truncate text-xs font-bold text-slate-500" title={selectedViewStatement.drivePdfOriginalName || `${selectedViewStatement.statementNumber}.pdf`}>
+                        {selectedViewStatement.drivePdfOriginalName || `${selectedViewStatement.statementNumber}.pdf`}
+                      </span>
+                    </div>
                   ) : selectedViewStatement.hasScannedPdf ? (
                     <div className="flex min-w-0 items-center gap-2">
                       <Button type="button" variant="secondary" onClick={() => handlePdfView(selectedViewStatement)}>View PDF</Button>
@@ -116,10 +207,7 @@ export function DataEntryPage() {
                       </span>
                     </div>
                   ) : (
-                    <label className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-200">
-                      Upload PDF
-                      <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={(event) => handlePdfUpload(selectedViewStatement, event)} />
-                    </label>
+                    <Button type="button" variant="secondary" onClick={() => startDriveLink(selectedViewStatement)}>Add Drive Link</Button>
                   )}
                   <Button
                     type="button"
@@ -272,7 +360,7 @@ export function DataEntryPage() {
                       <th className="hidden sm:table-cell px-3 py-2.5 text-center font-black">Rows</th>
                       <th className="px-3 py-2.5 text-right font-black">Amount</th>
                       {isAdmin && <th className="hidden md:table-cell px-3 py-2.5 text-center font-black">Pay Month</th>}
-                      <th className="px-3 py-2.5 text-center font-black">Scan</th>
+                      <th className="px-3 py-2.5 text-center font-black">Document</th>
                       <th className="px-3 py-2.5 text-right font-black">Actions</th>
                     </tr>
                   </thead>
@@ -320,11 +408,16 @@ export function DataEntryPage() {
                             </td>
                           )}
                           <td className="px-3 py-2.5 text-center">
-                            {uploadingStatementId === statement.id ? (
-                              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-black text-slate-600">
-                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-teal-700" />
-                                Uploading…
-                              </span>
+                            {statement.drivePdfUrl ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <button type="button" onClick={() => openDrivePdf(statement)}
+                                  className="whitespace-nowrap rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700 hover:bg-teal-100 transition">
+                                  View PDF
+                                </button>
+                                <span className="max-w-[160px] truncate text-[11px] font-bold text-slate-500" title={statement.drivePdfOriginalName || `${statement.statementNumber}.pdf`}>
+                                  {statement.drivePdfOriginalName || `${statement.statementNumber}.pdf`}
+                                </span>
+                              </div>
                             ) : statement.hasScannedPdf ? (
                               <div className="flex flex-col items-center gap-1">
                                 <button type="button" onClick={() => handlePdfView(statement)}
@@ -336,10 +429,10 @@ export function DataEntryPage() {
                                 </span>
                               </div>
                             ) : (
-                              <label className="inline-flex cursor-pointer whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-black text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">
-                                Upload PDF
-                                <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={(event) => handlePdfUpload(statement, event)} />
-                              </label>
+                              <button type="button" onClick={() => startDriveLink(statement)}
+                                className="whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-black text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">
+                                Add Drive Link
+                              </button>
                             )}
                           </td>
                           <td className="px-3 py-2.5">

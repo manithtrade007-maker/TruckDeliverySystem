@@ -370,6 +370,25 @@ function statementPdfPath(statementId) {
   return path.join(statementPdfDir, `${safeId}.pdf`);
 }
 
+function normalizeGoogleDriveFileUrl(value) {
+  let parsed;
+  try {
+    parsed = new URL(String(value || "").trim());
+  } catch (_) {
+    throw new Error("Enter a valid Google Drive PDF link.");
+  }
+  if (parsed.protocol !== "https:" || parsed.hostname !== "drive.google.com") {
+    throw new Error("The document link must come from Google Drive.");
+  }
+  const pathMatch = parsed.pathname.match(/^\/file\/d\/([A-Za-z0-9_-]+)/);
+  const fileId = pathMatch?.[1] || parsed.searchParams.get("id");
+  if (!fileId || !/^[A-Za-z0-9_-]{10,}$/.test(fileId)) {
+    if (parsed.pathname.includes("/folders/")) throw new Error("Paste the individual PDF link, not the folder link.");
+    throw new Error("Enter a valid Google Drive PDF link.");
+  }
+  return `https://drive.google.com/file/d/${fileId}/view`;
+}
+
 async function readPdfBody(req) {
   const declaredSize = Number(req.headers["content-length"] || 0);
   if (declaredSize > maxStatementPdfBytes) {
@@ -426,6 +445,8 @@ function createSchema(database) {
       isManual INTEGER NOT NULL DEFAULT 0,
       manualAmount REAL NOT NULL DEFAULT 0,
       scannedPdfOriginalName TEXT,
+      drivePdfUrl TEXT,
+      drivePdfOriginalName TEXT,
       createdAt TEXT,
       updatedAt TEXT
     );
@@ -499,11 +520,11 @@ function writeDataToDb(data) {
     }
 
     const insertStatement = database.prepare(`
-      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, scannedPdfOriginalName, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, scannedPdfOriginalName, drivePdfUrl, drivePdfOriginalName, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const statement of normalized.statements) {
-      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.paymentMonth || null, statement.isManual ? 1 : 0, toNumber(statement.manualAmount), statement.scannedPdfOriginalName || null, statement.createdAt || "", statement.updatedAt || "");
+      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.paymentMonth || null, statement.isManual ? 1 : 0, toNumber(statement.manualAmount), statement.scannedPdfOriginalName || null, statement.drivePdfUrl || null, statement.drivePdfOriginalName || null, statement.createdAt || "", statement.updatedAt || "");
     }
 
     const insertDelivery = database.prepare(`
@@ -549,6 +570,8 @@ async function ensureDataStore() {
   try { database.exec("ALTER TABLE statements ADD COLUMN isManual INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
   try { database.exec("ALTER TABLE statements ADD COLUMN manualAmount REAL NOT NULL DEFAULT 0"); } catch (_) {}
   try { database.exec("ALTER TABLE statements ADD COLUMN scannedPdfOriginalName TEXT"); } catch (_) {}
+  try { database.exec("ALTER TABLE statements ADD COLUMN drivePdfUrl TEXT"); } catch (_) {}
+  try { database.exec("ALTER TABLE statements ADD COLUMN drivePdfOriginalName TEXT"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, passwordHash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'staff', createdAt TEXT NOT NULL)"); } catch (_) {}
   const hasRows = database.prepare(`
@@ -575,7 +598,7 @@ export async function readData() {
     settings,
     trucks: database.prepare("SELECT truckNo, truckType, driverName, phone, active FROM trucks ORDER BY truckNo").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     prices: database.prepare("SELECT id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active FROM prices ORDER BY truckType, toLocation, effectiveDate").all().map((row) => ({ ...row, active: Boolean(row.active) })),
-    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, scannedPdfOriginalName, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all().map((r) => ({ ...r, isManual: Boolean(r.isManual) })),
+    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, scannedPdfOriginalName, drivePdfUrl, drivePdfOriginalName, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all().map((r) => ({ ...r, isManual: Boolean(r.isManual) })),
     deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
     truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
@@ -767,6 +790,8 @@ function saveStatement(data, input) {
     truckType,
     status: input.status || existing?.status || "Draft",
     scannedPdfOriginalName: existing?.scannedPdfOriginalName || null,
+    drivePdfUrl: existing?.drivePdfUrl || null,
+    drivePdfOriginalName: existing?.drivePdfOriginalName || null,
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -1084,6 +1109,30 @@ async function api(req, res, url, role = "admin") {
     const body = await readBody(req);
     const statement = await updateData((data) => saveStatement(data, body));
     return sendJson(res, 200, statement);
+  }
+
+  const statementDriveLinkMatch = url.pathname.match(/^\/api\/statements\/([^/]+)\/drive-link$/);
+  if (statementDriveLinkMatch && req.method === "POST") {
+    const id = decodeURIComponent(statementDriveLinkMatch[1]);
+    const body = await readBody(req);
+    const drivePdfUrl = normalizeGoogleDriveFileUrl(body.url);
+    const rawName = String(body.originalName || "").split(/[\\/]/).pop();
+    const drivePdfOriginalName = rawName.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
+    if (!drivePdfOriginalName.toLowerCase().endsWith(".pdf")) {
+      throw new Error("Document name must end with .pdf.");
+    }
+    const result = await updateData((currentData) => {
+      const statement = currentData.statements.find((item) => item.id === id);
+      if (!statement) throw Object.assign(new Error("Statement not found."), { status: 404 });
+      if (statement.drivePdfUrl) {
+        throw Object.assign(new Error("This statement already has a Google Drive PDF link."), { status: 409 });
+      }
+      statement.drivePdfUrl = drivePdfUrl;
+      statement.drivePdfOriginalName = drivePdfOriginalName;
+      statement.updatedAt = new Date().toISOString();
+      return { drivePdfUrl, drivePdfOriginalName };
+    });
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   const statementPdfMatch = url.pathname.match(/^\/api\/statements\/([^/]+)\/pdf$/);
