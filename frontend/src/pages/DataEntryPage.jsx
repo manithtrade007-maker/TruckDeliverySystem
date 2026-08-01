@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
@@ -5,6 +6,7 @@ import { downloadFile, uploadPdf, viewPdf } from "../lib/api.js";
 
 export function DataEntryPage() {
   const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
+  const [uploadingStatementId, setUploadingStatementId] = useState("");
 
   async function handlePdfUpload(statement, event) {
     const input = event.currentTarget;
@@ -17,12 +19,16 @@ export function DataEntryPage() {
       if (file.size > 50 * 1024 * 1024) {
         throw new Error("PDF must be 50 MB or smaller.");
       }
+      const confirmed = window.confirm(`Upload this file to Statement ${statement.statementNumber}?\n\n${file.name}`);
+      if (!confirmed) return;
+      setUploadingStatementId(statement.id);
       await uploadPdf(`/api/statements/${encodeURIComponent(statement.id)}/pdf`, file);
       await loadData();
-      flash(`Upload successful: PDF attached to Statement ${statement.statementNumber}.`);
+      flash(`Upload successful: ${file.name} attached to Statement ${statement.statementNumber}.`);
     } catch (error) {
       flash(`Upload error for Statement ${statement.statementNumber}: ${error.message}`, "error");
     } finally {
+      setUploadingStatementId("");
       input.value = "";
     }
   }
@@ -97,8 +103,18 @@ export function DataEntryPage() {
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="secondary" onClick={backToStatementList}>Back to Statements</Button>
                   <Button type="button" variant="secondary" onClick={() => openStatement(selectedViewStatement)}>Edit</Button>
-                  {selectedViewStatement.hasScannedPdf ? (
-                    <Button type="button" variant="secondary" onClick={() => handlePdfView(selectedViewStatement)}>View PDF</Button>
+                  {uploadingStatementId === selectedViewStatement.id ? (
+                    <span className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-black text-slate-700">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-teal-700" />
+                      Uploading…
+                    </span>
+                  ) : selectedViewStatement.hasScannedPdf ? (
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Button type="button" variant="secondary" onClick={() => handlePdfView(selectedViewStatement)}>View PDF</Button>
+                      <span className="max-w-[260px] truncate text-xs font-bold text-slate-500" title={selectedViewStatement.scannedPdfOriginalName || "Scanned PDF"}>
+                        {selectedViewStatement.scannedPdfOriginalName || "Scanned PDF"}
+                      </span>
+                    </div>
                   ) : (
                     <label className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-200">
                       Upload PDF
@@ -304,11 +320,21 @@ export function DataEntryPage() {
                             </td>
                           )}
                           <td className="px-3 py-2.5 text-center">
-                            {statement.hasScannedPdf ? (
-                              <button type="button" onClick={() => handlePdfView(statement)}
-                                className="whitespace-nowrap rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700 hover:bg-teal-100 transition">
-                                View PDF
-                              </button>
+                            {uploadingStatementId === statement.id ? (
+                              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-black text-slate-600">
+                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-teal-700" />
+                                Uploading…
+                              </span>
+                            ) : statement.hasScannedPdf ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <button type="button" onClick={() => handlePdfView(statement)}
+                                  className="whitespace-nowrap rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700 hover:bg-teal-100 transition">
+                                  View PDF
+                                </button>
+                                <span className="max-w-[160px] truncate text-[11px] font-bold text-slate-500" title={statement.scannedPdfOriginalName || "Scanned PDF"}>
+                                  {statement.scannedPdfOriginalName || "Scanned PDF"}
+                                </span>
+                              </div>
                             ) : (
                               <label className="inline-flex cursor-pointer whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-black text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">
                                 Upload PDF

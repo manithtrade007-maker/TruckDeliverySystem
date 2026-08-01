@@ -425,6 +425,7 @@ function createSchema(database) {
       paymentMonth TEXT,
       isManual INTEGER NOT NULL DEFAULT 0,
       manualAmount REAL NOT NULL DEFAULT 0,
+      scannedPdfOriginalName TEXT,
       createdAt TEXT,
       updatedAt TEXT
     );
@@ -498,11 +499,11 @@ function writeDataToDb(data) {
     }
 
     const insertStatement = database.prepare(`
-      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO statements (id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, scannedPdfOriginalName, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const statement of normalized.statements) {
-      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.paymentMonth || null, statement.isManual ? 1 : 0, toNumber(statement.manualAmount), statement.createdAt || "", statement.updatedAt || "");
+      insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.paymentMonth || null, statement.isManual ? 1 : 0, toNumber(statement.manualAmount), statement.scannedPdfOriginalName || null, statement.createdAt || "", statement.updatedAt || "");
     }
 
     const insertDelivery = database.prepare(`
@@ -547,6 +548,7 @@ async function ensureDataStore() {
   try { database.exec("ALTER TABLE statements ADD COLUMN paymentMonth TEXT"); } catch (_) {}
   try { database.exec("ALTER TABLE statements ADD COLUMN isManual INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
   try { database.exec("ALTER TABLE statements ADD COLUMN manualAmount REAL NOT NULL DEFAULT 0"); } catch (_) {}
+  try { database.exec("ALTER TABLE statements ADD COLUMN scannedPdfOriginalName TEXT"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, passwordHash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'staff', createdAt TEXT NOT NULL)"); } catch (_) {}
   const hasRows = database.prepare(`
@@ -573,7 +575,7 @@ export async function readData() {
     settings,
     trucks: database.prepare("SELECT truckNo, truckType, driverName, phone, active FROM trucks ORDER BY truckNo").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     prices: database.prepare("SELECT id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active FROM prices ORDER BY truckType, toLocation, effectiveDate").all().map((row) => ({ ...row, active: Boolean(row.active) })),
-    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all().map((r) => ({ ...r, isManual: Boolean(r.isManual) })),
+    statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, scannedPdfOriginalName, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all().map((r) => ({ ...r, isManual: Boolean(r.isManual) })),
     deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
     truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
@@ -764,6 +766,7 @@ function saveStatement(data, input) {
     statementDate,
     truckType,
     status: input.status || existing?.status || "Draft",
+    scannedPdfOriginalName: existing?.scannedPdfOriginalName || null,
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -1096,15 +1099,30 @@ async function api(req, res, url, role = "admin") {
       throw Object.assign(new Error("This statement already has a PDF."), { status: 409 });
     }
     const pdf = await readPdfBody(req);
+    let originalName = "Scanned-statement.pdf";
+    try {
+      const decodedName = decodeURIComponent(String(req.headers["x-file-name"] || ""));
+      const cleanName = decodedName.split(/[\\/]/).pop().replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
+      if (cleanName.toLowerCase().endsWith(".pdf")) originalName = cleanName;
+    } catch (_) {}
     const tempPath = `${filePath}.${crypto.randomUUID()}.tmp`;
+    let pdfSaved = false;
     try {
       await writeFile(tempPath, pdf, { flag: "wx" });
       await rename(tempPath, filePath);
+      pdfSaved = true;
+      await updateData((currentData) => {
+        const currentStatement = currentData.statements.find((item) => item.id === id);
+        if (!currentStatement) throw new Error("Statement not found.");
+        currentStatement.scannedPdfOriginalName = originalName;
+        currentStatement.updatedAt = new Date().toISOString();
+      });
     } catch (error) {
       await unlink(tempPath).catch(() => {});
+      if (pdfSaved) await unlink(filePath).catch(() => {});
       throw error;
     }
-    return sendJson(res, 200, { ok: true });
+    return sendJson(res, 200, { ok: true, originalName });
   }
 
   if (statementPdfMatch && req.method === "GET") {
@@ -1115,10 +1133,11 @@ async function api(req, res, url, role = "admin") {
     if (!existsSync(filePath)) throw Object.assign(new Error("No PDF has been uploaded for this statement."), { status: 404 });
     const pdf = await readFile(filePath);
     const fileName = `Statement-${statement.statementNumber}-${statement.month}-Scan.pdf`;
+    const originalName = statement.scannedPdfOriginalName || fileName;
     res.writeHead(200, {
       "Content-Type": "application/pdf",
       "Content-Length": pdf.length,
-      "Content-Disposition": `inline; filename="${fileName}"`,
+      "Content-Disposition": `inline; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(originalName)}`,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff"
     });

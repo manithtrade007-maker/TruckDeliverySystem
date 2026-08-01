@@ -60,6 +60,7 @@ async function uploadPdf(url, file) {
     method: "PUT",
     headers: {
       "Content-Type": "application/pdf",
+      "X-File-Name": encodeURIComponent(file.name),
       ...(token ? { "Authorization": `Bearer ${token}` } : {})
     },
     body: file
