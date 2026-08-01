@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
@@ -15,8 +15,25 @@ export function DataEntryPage() {
   const [driveFolderOpen, setDriveFolderOpen] = useState(false);
   const [driveFolderUrl, setDriveFolderUrl] = useState("");
   const [driveFolderPreview, setDriveFolderPreview] = useState(null);
+  const [savedDriveFolder, setSavedDriveFolder] = useState(null);
   const [scanningDriveFolder, setScanningDriveFolder] = useState(false);
   const [applyingDriveFolder, setApplyingDriveFolder] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin || !reportMonth) {
+      setSavedDriveFolder(null);
+      return undefined;
+    }
+    let cancelled = false;
+    api(`/api/drive-folder/config?month=${encodeURIComponent(reportMonth)}`)
+      .then((result) => {
+        if (!cancelled) setSavedDriveFolder(result.folder);
+      })
+      .catch(() => {
+        if (!cancelled) setSavedDriveFolder(null);
+      });
+    return () => { cancelled = true; };
+  }, [isAdmin, reportMonth]);
 
   function normalizeDriveFileUrl(value) {
     let parsed;
@@ -120,24 +137,33 @@ export function DataEntryPage() {
   }
 
   function openDriveFolderSync() {
+    const folderUrl = savedDriveFolder?.url || "";
     setDriveFolderPreview(null);
+    setDriveFolderUrl(folderUrl);
     setDriveFolderOpen(true);
+    if (folderUrl) performDriveFolderScan(folderUrl);
   }
 
-  async function scanDriveFolder(event) {
-    event.preventDefault();
+  async function performDriveFolderScan(folderUrlToScan) {
     try {
       setScanningDriveFolder(true);
       const preview = await api("/api/drive-folder/preview", {
         method: "POST",
-        body: JSON.stringify({ folderUrl: driveFolderUrl, month: reportMonth })
+        body: JSON.stringify({ folderUrl: folderUrlToScan, month: reportMonth })
       });
       setDriveFolderPreview(preview);
+      setSavedDriveFolder(preview.savedFolder);
+      setDriveFolderUrl(preview.savedFolder?.url || folderUrlToScan);
     } catch (error) {
       flash(`Drive scan error: ${error.message}`, "error");
     } finally {
       setScanningDriveFolder(false);
     }
+  }
+
+  function scanDriveFolder(event) {
+    event.preventDefault();
+    return performDriveFolderScan(driveFolderUrl);
   }
 
   async function applyDriveFolderLinks() {
@@ -157,6 +183,23 @@ export function DataEntryPage() {
       flash(`Drive sync error: ${error.message}`, "error");
     } finally {
       setApplyingDriveFolder(false);
+    }
+  }
+
+  async function disconnectDriveFolder() {
+    const confirmed = window.confirm(
+      `Forget the saved Google Drive folder for ${monthName(reportMonth)}?\n\nExisting statement PDF links and Google Drive files will not be removed.`
+    );
+    if (!confirmed) return;
+    try {
+      await api(`/api/drive-folder/config?month=${encodeURIComponent(reportMonth)}`, { method: "DELETE" });
+      setSavedDriveFolder(null);
+      setDriveFolderPreview(null);
+      setDriveFolderUrl("");
+      setDriveFolderOpen(false);
+      flash(`Google Drive folder disconnected for ${monthName(reportMonth)}. Existing PDF links were kept.`);
+    } catch (error) {
+      flash(`Disconnect error: ${error.message}`, "error");
     }
   }
   return (
@@ -289,6 +332,19 @@ export function DataEntryPage() {
                     />
                   </Field>
                 </div>
+
+                {savedDriveFolder && (
+                  <div className="mt-3 flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-wide text-emerald-600">Remembered for {monthName(reportMonth)}</div>
+                      <div className="truncate text-sm font-black text-emerald-800" title={savedDriveFolder.name}>{savedDriveFolder.name}</div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" disabled={scanningDriveFolder || applyingDriveFolder} onClick={() => { setDriveFolderUrl(""); setDriveFolderPreview(null); }} className="rounded-lg border border-emerald-200 bg-white px-2.5 py-1 text-xs font-black text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">Change Folder</button>
+                      <button type="button" disabled={scanningDriveFolder || applyingDriveFolder} onClick={disconnectDriveFolder} className="rounded-lg border border-red-200 bg-white px-2.5 py-1 text-xs font-black text-red-600 hover:bg-red-50 disabled:opacity-50">Disconnect</button>
+                    </div>
+                  </div>
+                )}
 
                 {driveFolderPreview && (
                   <div className="mt-5 min-h-0 overflow-auto rounded-2xl border border-slate-200">
@@ -517,8 +573,13 @@ export function DataEntryPage() {
                       <span className="mr-2" aria-hidden="true">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M5.1 15a8 8 0 0 0 13.2 2.9L20 14"/><path d="M18.9 9A8 8 0 0 0 5.7 6.1L4 10"/></svg>
                       </span>
-                      Sync Drive Folder
+                      {savedDriveFolder ? "Scan Again" : "Connect Drive Folder"}
                     </Button>
+                  )}
+                  {isAdmin && savedDriveFolder && (
+                    <span className="max-w-[220px] truncate text-xs font-bold text-emerald-700" title={savedDriveFolder.name}>
+                      {savedDriveFolder.name}
+                    </span>
                   )}
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-600">
                     Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}

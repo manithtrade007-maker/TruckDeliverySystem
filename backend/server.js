@@ -343,6 +343,7 @@ function getDb() {
 
 function normalizeDataShape(data) {
   data.settings ||= { ...defaultData.settings };
+  data.settings.driveFoldersByMonth ||= {};
   data.statements ||= [];
   data.deliveries ||= [];
   data.trucks ||= [];
@@ -1112,25 +1113,74 @@ async function api(req, res, url, role = "admin") {
     return sendJson(res, 200, statement);
   }
 
+  if (req.method === "GET" && url.pathname === "/api/drive-folder/config") {
+    requireAdmin();
+    const month = normalizeText(query.month);
+    if (!/^\d{4}-\d{2}$/.test(month)) throw new Error("Select a valid statement month.");
+    return sendJson(res, 200, { month, folder: data.settings.driveFoldersByMonth?.[month] || null });
+  }
+
+  if (req.method === "DELETE" && url.pathname === "/api/drive-folder/config") {
+    requireAdmin();
+    const month = normalizeText(query.month);
+    if (!/^\d{4}-\d{2}$/.test(month)) throw new Error("Select a valid statement month.");
+    const removed = await updateData((currentData) => {
+      currentData.settings.driveFoldersByMonth ||= {};
+      const existing = currentData.settings.driveFoldersByMonth[month];
+      if (!existing) return null;
+      delete currentData.settings.driveFoldersByMonth[month];
+      addActivity(currentData, `Disconnected the Google Drive folder for ${monthLabel(month)}.`, "document");
+      return existing;
+    });
+    return sendJson(res, 200, { ok: true, removed });
+  }
+
   if (req.method === "POST" && url.pathname === "/api/drive-folder/preview") {
     requireAdmin();
     const body = await readBody(req);
     const month = normalizeText(body.month);
-    const driveFolder = await listGoogleDriveFolderPdfs(body.folderUrl);
+    if (!/^\d{4}-\d{2}$/.test(month)) throw new Error("Select a valid statement month.");
+    const savedFolder = data.settings.driveFoldersByMonth?.[month];
+    const folderUrl = normalizeText(body.folderUrl) || savedFolder?.url;
+    if (!folderUrl) throw new Error("Paste the Google Drive folder link for this month.");
+    const driveFolder = await listGoogleDriveFolderPdfs(folderUrl);
     const preview = buildDriveFolderPreview({
       files: driveFolder.files,
       statements: data.statements,
       month,
       hasUploadedPdf: (statement) => existsSync(statementPdfPath(statement.id))
     });
-    return sendJson(res, 200, { folder: driveFolder.folder, ...preview });
+    const folderConfig = {
+      id: driveFolder.folder.id,
+      name: driveFolder.folder.name,
+      url: `https://drive.google.com/drive/folders/${driveFolder.folder.id}`,
+      updatedAt: new Date().toISOString()
+    };
+    if (!savedFolder || savedFolder.id !== folderConfig.id || savedFolder.name !== folderConfig.name) {
+      await updateData((currentData) => {
+        currentData.settings.driveFoldersByMonth ||= {};
+        const previous = currentData.settings.driveFoldersByMonth[month];
+        currentData.settings.driveFoldersByMonth[month] = folderConfig;
+        addActivity(
+          currentData,
+          `${previous ? "Changed" : "Connected"} the Google Drive folder for ${monthLabel(month)} to ${folderConfig.name}.`,
+          "document"
+        );
+      });
+    } else {
+      folderConfig.updatedAt = savedFolder.updatedAt || folderConfig.updatedAt;
+    }
+    return sendJson(res, 200, { folder: driveFolder.folder, savedFolder: folderConfig, ...preview });
   }
 
   if (req.method === "POST" && url.pathname === "/api/drive-folder/apply") {
     requireAdmin();
     const body = await readBody(req);
     const month = normalizeText(body.month);
-    const driveFolder = await listGoogleDriveFolderPdfs(body.folderUrl);
+    if (!/^\d{4}-\d{2}$/.test(month)) throw new Error("Select a valid statement month.");
+    const folderUrl = normalizeText(body.folderUrl) || data.settings.driveFoldersByMonth?.[month]?.url;
+    if (!folderUrl) throw new Error("No Google Drive folder is connected for this month.");
+    const driveFolder = await listGoogleDriveFolderPdfs(folderUrl);
     const result = await updateData((currentData) => {
       const preview = buildDriveFolderPreview({
         files: driveFolder.files,
