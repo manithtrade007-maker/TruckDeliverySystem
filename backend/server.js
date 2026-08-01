@@ -24,7 +24,7 @@ const dataTempFile = path.join(dataDir, "data.json.tmp");
 const databaseFile = path.join(dataDir, "truck_delivery.db");
 const backupDir = path.join(dataDir, "backups");
 const statementPdfDir = path.join(dataDir, "statement-pdfs");
-const maxStatementPdfBytes = 30 * 1024 * 1024;
+const maxStatementPdfBytes = 50 * 1024 * 1024;
 const port = Number(process.env.PORT || 5058);
 const host = process.env.HOST || "0.0.0.0";
 // "Production" = the real deployed site (Render sets NODE_ENV=production and RENDER).
@@ -373,14 +373,14 @@ function statementPdfPath(statementId) {
 async function readPdfBody(req) {
   const declaredSize = Number(req.headers["content-length"] || 0);
   if (declaredSize > maxStatementPdfBytes) {
-    throw Object.assign(new Error("PDF must be 30 MB or smaller."), { status: 413 });
+    throw Object.assign(new Error("PDF must be 50 MB or smaller."), { status: 413 });
   }
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
     if (size > maxStatementPdfBytes) {
-      throw Object.assign(new Error("PDF must be 30 MB or smaller."), { status: 413 });
+      throw Object.assign(new Error("PDF must be 50 MB or smaller."), { status: 413 });
     }
     chunks.push(chunk);
   }

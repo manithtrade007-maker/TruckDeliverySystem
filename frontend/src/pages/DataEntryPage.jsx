@@ -14,11 +14,14 @@ export function DataEntryPage() {
       if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
         throw new Error("Please select a PDF file.");
       }
+      if (file.size > 50 * 1024 * 1024) {
+        throw new Error("PDF must be 50 MB or smaller.");
+      }
       await uploadPdf(`/api/statements/${encodeURIComponent(statement.id)}/pdf`, file);
       await loadData();
-      flash(`PDF uploaded for Statement ${statement.statementNumber}.`);
+      flash(`Upload successful: PDF attached to Statement ${statement.statementNumber}.`);
     } catch (error) {
-      flash(error.message, "error");
+      flash(`Upload error for Statement ${statement.statementNumber}: ${error.message}`, "error");
     } finally {
       input.value = "";
     }
