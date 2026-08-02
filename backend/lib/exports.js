@@ -579,13 +579,16 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
   const truckType = truckTypeLabel(rows[0]?.truckType || truck.truckType || query.truckType || "No Data");
   const driverName = rows[0]?.driverName || truck.driverName || "-";
   const reportMonth = monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
-  const totalDriverAmount = rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0);
-  const netPay = totalDriverAmount - loanDeduction - garageFee;
+  const totalDriverAmount = Number(rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0).toFixed(2));
+  const netPay = Number((totalDriverAmount - loanDeduction - garageFee).toFixed(2));
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = data.settings.companyName || "N&M LOGISTIC";
   workbook.created = new Date();
   workbook.modified = new Date();
+  workbook.calcProperties.fullCalcOnLoad = true;
+  workbook.calcProperties.forceFullCalc = true;
+  workbook.calcProperties.calcMode = "auto";
 
   const worksheet = workbook.addWorksheet("Driver Payment", {
     pageSetup: {
@@ -680,7 +683,10 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
       row.toLocation || "",
       Number(row.qtyTon || 0),
       Number(row.truckSalaryUnitPrice || 0),
-      Number(row.truckSalaryAmount || 0)
+      {
+        formula: `ROUND(F${rowNumber}*G${rowNumber},2)`,
+        result: Number(row.truckSalaryAmount || 0)
+      }
     ];
     styleRange(rowNumber, rowNumber, 1, 8, {
       font: baseFont,
@@ -695,9 +701,15 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
   worksheet.getRow(totalRowNumber).height = 20;
   worksheet.mergeCells(totalRowNumber, 1, totalRowNumber, 5);
   worksheet.getCell(totalRowNumber, 1).value = "Total";
-  worksheet.getCell(totalRowNumber, 6).value = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
+  const lastDataRowNumber = rows.length + 4;
+  const totalQty = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
+  worksheet.getCell(totalRowNumber, 6).value = rows.length
+    ? { formula: `SUM(F5:F${lastDataRowNumber})`, result: totalQty }
+    : 0;
   worksheet.getCell(totalRowNumber, 6).numFmt = '0.00000"T"';
-  worksheet.getCell(totalRowNumber, 8).value = totalDriverAmount;
+  worksheet.getCell(totalRowNumber, 8).value = rows.length
+    ? { formula: `SUM(H5:H${lastDataRowNumber})`, result: totalDriverAmount }
+    : 0;
   worksheet.getCell(totalRowNumber, 8).numFmt = '"$"0.00';
   styleRange(totalRowNumber, totalRowNumber, 1, 8, {
     font: boldFont,
@@ -706,37 +718,40 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
   worksheet.getCell(totalRowNumber, 1).alignment = { horizontal: "left", vertical: "middle" };
   worksheet.getCell(totalRowNumber, 8).alignment = { horizontal: "right", vertical: "middle" };
 
-  // Extra total rows (loan deduction, garage fee, net pay)
-  let nextRow = totalRowNumber + 1;
-  if (loanDeduction > 0) {
-    worksheet.getRow(nextRow).height = 18;
-    worksheet.mergeCells(nextRow, 1, nextRow, 7);
-    worksheet.getCell(nextRow, 1).value = "Loan Deduction";
-    worksheet.getCell(nextRow, 8).value = `$ ${money(loanDeduction)}`;
-    styleRange(nextRow, nextRow, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
-    worksheet.getCell(nextRow, 8).alignment = { horizontal: "right", vertical: "middle" };
-    nextRow++;
-  }
-  if (garageFee > 0) {
-    worksheet.getRow(nextRow).height = 18;
-    worksheet.mergeCells(nextRow, 1, nextRow, 7);
-    worksheet.getCell(nextRow, 1).value = "Garage Fee";
-    worksheet.getCell(nextRow, 8).value = `$ ${money(garageFee)}`;
-    styleRange(nextRow, nextRow, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
-    worksheet.getCell(nextRow, 8).alignment = { horizontal: "right", vertical: "middle" };
-    nextRow++;
-  }
-  if (loanDeduction > 0 || garageFee > 0) {
-    worksheet.getRow(nextRow).height = 18;
-    worksheet.mergeCells(nextRow, 1, nextRow, 7);
-    worksheet.getCell(nextRow, 1).value = "Net Pay";
-    worksheet.getCell(nextRow, 8).value = `$ ${money(netPay)}`;
-    styleRange(nextRow, nextRow, 1, 8, { font: boldFont, alignment: { vertical: "middle" } });
-    worksheet.getCell(nextRow, 8).alignment = { horizontal: "right", vertical: "middle" };
-    nextRow++;
-  }
+  // Keep all deduction rows available so editing either value in Excel
+  // automatically updates Net Pay, even when the exported value starts at zero.
+  const loanRowNumber = totalRowNumber + 1;
+  const garageRowNumber = totalRowNumber + 2;
+  const netPayRowNumber = totalRowNumber + 3;
 
-  worksheet.pageSetup.printArea = `A1:H${nextRow - 1}`;
+  worksheet.getRow(loanRowNumber).height = 18;
+  worksheet.mergeCells(loanRowNumber, 1, loanRowNumber, 7);
+  worksheet.getCell(loanRowNumber, 1).value = "Loan Deduction";
+  worksheet.getCell(loanRowNumber, 8).value = loanDeduction;
+  worksheet.getCell(loanRowNumber, 8).numFmt = '"$"0.00';
+  styleRange(loanRowNumber, loanRowNumber, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
+  worksheet.getCell(loanRowNumber, 8).alignment = { horizontal: "right", vertical: "middle" };
+
+  worksheet.getRow(garageRowNumber).height = 18;
+  worksheet.mergeCells(garageRowNumber, 1, garageRowNumber, 7);
+  worksheet.getCell(garageRowNumber, 1).value = "Garage Fee";
+  worksheet.getCell(garageRowNumber, 8).value = garageFee;
+  worksheet.getCell(garageRowNumber, 8).numFmt = '"$"0.00';
+  styleRange(garageRowNumber, garageRowNumber, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
+  worksheet.getCell(garageRowNumber, 8).alignment = { horizontal: "right", vertical: "middle" };
+
+  worksheet.getRow(netPayRowNumber).height = 18;
+  worksheet.mergeCells(netPayRowNumber, 1, netPayRowNumber, 7);
+  worksheet.getCell(netPayRowNumber, 1).value = "Net Pay";
+  worksheet.getCell(netPayRowNumber, 8).value = {
+    formula: `H${totalRowNumber}-H${loanRowNumber}-H${garageRowNumber}`,
+    result: netPay
+  };
+  worksheet.getCell(netPayRowNumber, 8).numFmt = '"$"0.00';
+  styleRange(netPayRowNumber, netPayRowNumber, 1, 8, { font: boldFont, alignment: { vertical: "middle" } });
+  worksheet.getCell(netPayRowNumber, 8).alignment = { horizontal: "right", vertical: "middle" };
+
+  worksheet.pageSetup.printArea = `A1:H${netPayRowNumber}`;
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
 }
@@ -1488,4 +1503,3 @@ export function dashboardPdf(rows, month) {
     }
   });
 }
-
