@@ -1,4 +1,5 @@
 .DS_Store
+backend/data.json
 backend/data.backup-*.json
 backend/backups/
 backend/*.db
