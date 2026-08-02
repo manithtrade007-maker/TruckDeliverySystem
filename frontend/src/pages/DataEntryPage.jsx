@@ -1,75 +1,63 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
-import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateInput, parseDateInput, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
+import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateInput, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { api, downloadFile, viewPdf } from "../lib/api.js";
 
 function DeliveryDateInput({ value, onChange, disabled, style, onFocus, onBlur }) {
-  const [text, setText] = useState(() => formatDateInput(value));
-  const textInputRef = useRef(null);
-  const lastEmittedValueRef = useRef(value || "");
-
-  useEffect(() => {
-    if ((value || "") === lastEmittedValueRef.current) return;
-    lastEmittedValueRef.current = value || "";
-    setText(formatDateInput(value));
-    textInputRef.current?.setCustomValidity("");
-  }, [value]);
-
-  function updateDateText(rawValue) {
-    const digits = rawValue.replace(/\D/g, "").slice(0, 8);
-    const formatted = digits.length <= 2
-      ? digits
-      : digits.length <= 4
-        ? `${digits.slice(0, 2)}/${digits.slice(2)}`
-        : `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-    const isoDate = parseDateInput(formatted);
-    setText(formatted);
-    lastEmittedValueRef.current = isoDate;
-    onChange(isoDate);
-    textInputRef.current?.setCustomValidity(
-      formatted && !isoDate ? "Enter a valid date as DD/MM/YYYY." : ""
-    );
-  }
+  const nativeInputRef = useRef(null);
 
   function selectNativeDate(event) {
     const isoDate = event.target.value;
-    lastEmittedValueRef.current = isoDate;
-    setText(formatDateInput(isoDate));
-    textInputRef.current?.setCustomValidity("");
     onChange(isoDate);
+  }
+
+  function openDatePicker() {
+    if (disabled) return;
+    const picker = nativeInputRef.current;
+    if (!picker) return;
+    try {
+      picker.showPicker();
+    } catch (_) {
+      picker.focus();
+      picker.click();
+    }
   }
 
   return (
     <div className="relative">
       <Input
-        ref={textInputRef}
         type="text"
         required
+        readOnly
         disabled={disabled}
-        inputMode="numeric"
-        autoComplete="off"
-        maxLength="10"
         placeholder="DD/MM/YYYY"
         aria-label="Delivery Date in day month year format"
-        className="w-full pr-12 tabular-nums"
+        className="w-full cursor-pointer pr-12 tabular-nums"
         style={style}
-        value={text}
+        value={formatDateInput(value)}
         onFocus={onFocus}
         onBlur={onBlur}
-        onChange={(event) => updateDateText(event.target.value)}
+        onClick={openDatePicker}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openDatePicker();
+          }
+        }}
       />
-      <svg aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-600" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <button type="button" disabled={disabled} aria-label="Open delivery date calendar" onClick={openDatePicker} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-600 hover:text-teal-700 disabled:cursor-not-allowed disabled:text-slate-400">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </button>
       <input
+        ref={nativeInputRef}
         type="date"
         tabIndex="-1"
-        aria-label="Open delivery date calendar"
+        aria-hidden="true"
         disabled={disabled}
         value={value || ""}
-        onFocus={onFocus}
-        onBlur={onBlur}
         onChange={selectNativeDate}
-        className="absolute inset-y-0 right-0 w-12 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        className="pointer-events-none absolute right-3 top-1/2 h-px w-px -translate-y-1/2 opacity-0"
       />
     </div>
   );
