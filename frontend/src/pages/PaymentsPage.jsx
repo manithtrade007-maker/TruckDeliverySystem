@@ -45,14 +45,15 @@ export function PaymentsPage() {
           </tr>
         );
 
-        // Received history: payment months marked as received, sorted newest first
+        // Received history: payment months marked as received, sorted oldest first
+        // so the cards read left to right in calendar order (1, 2, 3, ...).
         const receivedHistory = allPaymentMonths
           .filter((pm) => pm.received)
           .map((pm) => {
             const pmStatements = allStatements.filter((s) => s.paymentMonth === pm.month);
             return { month: pm.month, total: sumAmount(pmStatements), count: pmStatements.length };
           })
-          .sort((a, b) => b.month.localeCompare(a.month));
+          .sort((a, b) => a.month.localeCompare(b.month));
 
         return (
           <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
