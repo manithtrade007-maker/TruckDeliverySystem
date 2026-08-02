@@ -166,6 +166,27 @@ const formatDate = (value) => {
   if (!match) return text;
   return `${match[3]}.${match[2]}.${match[1]}`;
 };
+const formatDateInput = (value) => {
+  const text = String(value || "");
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return "";
+  return `${match[3]}/${match[2]}/${match[1]}`;
+};
+const parseDateInput = (value) => {
+  const match = String(value || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return "";
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    year < 1 ||
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) return "";
+  return `${match[3]}-${match[2]}-${match[1]}`;
+};
 const formatDateTime = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value || "";
@@ -208,5 +229,5 @@ function groupPriceHistory(prices) {
 }
 
 export {
-  localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory
+  localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateInput, parseDateInput, formatDateTime, monthName, groupPriceHistory
 };

@@ -1,8 +1,79 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
-import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
+import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateInput, parseDateInput, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { api, downloadFile, viewPdf } from "../lib/api.js";
+
+function DeliveryDateInput({ value, onChange, disabled, style, onFocus, onBlur }) {
+  const [text, setText] = useState(() => formatDateInput(value));
+  const textInputRef = useRef(null);
+  const lastEmittedValueRef = useRef(value || "");
+
+  useEffect(() => {
+    if ((value || "") === lastEmittedValueRef.current) return;
+    lastEmittedValueRef.current = value || "";
+    setText(formatDateInput(value));
+    textInputRef.current?.setCustomValidity("");
+  }, [value]);
+
+  function updateDateText(rawValue) {
+    const digits = rawValue.replace(/\D/g, "").slice(0, 8);
+    const formatted = digits.length <= 2
+      ? digits
+      : digits.length <= 4
+        ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+        : `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    const isoDate = parseDateInput(formatted);
+    setText(formatted);
+    lastEmittedValueRef.current = isoDate;
+    onChange(isoDate);
+    textInputRef.current?.setCustomValidity(
+      formatted && !isoDate ? "Enter a valid date as DD/MM/YYYY." : ""
+    );
+  }
+
+  function selectNativeDate(event) {
+    const isoDate = event.target.value;
+    lastEmittedValueRef.current = isoDate;
+    setText(formatDateInput(isoDate));
+    textInputRef.current?.setCustomValidity("");
+    onChange(isoDate);
+  }
+
+  return (
+    <div className="relative">
+      <Input
+        ref={textInputRef}
+        type="text"
+        required
+        disabled={disabled}
+        inputMode="numeric"
+        autoComplete="off"
+        maxLength="10"
+        placeholder="DD/MM/YYYY"
+        aria-label="Delivery Date in day month year format"
+        className="w-full pr-12 tabular-nums"
+        style={style}
+        value={text}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onChange={(event) => updateDateText(event.target.value)}
+      />
+      <svg aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-600" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <input
+        type="date"
+        tabIndex="-1"
+        aria-label="Open delivery date calendar"
+        disabled={disabled}
+        value={value || ""}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onChange={selectNativeDate}
+        className="absolute inset-y-0 right-0 w-12 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+      />
+    </div>
+  );
+}
 
 export function DataEntryPage() {
   const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
@@ -827,7 +898,16 @@ export function DataEntryPage() {
                   </span>
                 </div>
                 <form ref={deliveryFormRef} className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
-                  <Field label="Delivery Date"><Input type="date" required disabled={!canEditRows} style={activeField === "deliveryDate" ? { backgroundColor: "#fef08a" } : {}} onFocus={() => setActiveField("deliveryDate")} onBlur={() => setActiveField("")} value={deliveryForm.deliveryDate} onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })} /></Field>
+                  <Field label="Delivery Date">
+                    <DeliveryDateInput
+                      disabled={!canEditRows}
+                      style={activeField === "deliveryDate" ? { backgroundColor: "#fef08a" } : {}}
+                      onFocus={() => setActiveField("deliveryDate")}
+                      onBlur={() => setActiveField("")}
+                      value={deliveryForm.deliveryDate}
+                      onChange={(deliveryDate) => setDeliveryForm({ ...deliveryForm, deliveryDate })}
+                    />
+                  </Field>
                   <Field label={
                     <span className="flex items-center justify-between">
                       <span>Invoice No</span>
