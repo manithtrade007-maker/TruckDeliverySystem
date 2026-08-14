@@ -7,8 +7,10 @@ import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/
 export function DashboardPage() {
   const { activeTruckCount, activityPage, availableYears, dashOutstanding, data, flash, isAdmin, monthlyTotals, page, reportMonth, reportYear, setActivityPage, setPage, setReportMonth, setReportTruckNo, setReportYear, statementCounts, statementSummaries, telegramConfigured, truckPerformance, yearSummary } = useApp();
   const [automation, setAutomation] = useState(null);
+  const [recovery, setRecovery] = useState(null);
   const loadAutomation = () => api("/api/monthly-automation/status").then(setAutomation).catch(() => setAutomation(null));
-  useEffect(() => { if (isAdmin) loadAutomation(); }, [isAdmin]);
+  const loadRecovery = () => api("/api/recovery/status").then(setRecovery).catch(() => setRecovery(null));
+  useEffect(() => { if (isAdmin) { loadAutomation(); loadRecovery(); } }, [isAdmin]);
   const automationMonth = (value) => value ? new Date(`${value}-01T00:00:00`).toLocaleString("default", { month: "long", year: "numeric" }) : "—";
   return (
         <main className="mx-auto grid max-w-[1500px] gap-5 p-4 pb-20 lg:pb-4">
@@ -54,6 +56,16 @@ export function DashboardPage() {
               <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Next Bundle</div><div className="mt-0.5 font-black text-slate-800">{automationMonth(automation.pendingMonth || automation.next?.bundleMonth)}</div></div>
               <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Schedule</div><div className="mt-0.5 font-black text-slate-800">5th · 9:00 AM Cambodia</div></div>
               <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Last Sent</div><div className="mt-0.5 font-black text-slate-800">{automation.last ? `${automationMonth(automation.last.month)} · ${automation.last.method}` : "Not sent yet"}</div>{automation.current?.status === "failed" && <div className="mt-1 text-xs font-bold text-red-600">Retry scheduled</div>}</div>
+            </div>
+          )}
+
+          {isAdmin && recovery && (
+            <div className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${recovery.failed ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50/70"}`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div><span className="font-black text-slate-800">Recovery Backup:</span> <span className="font-bold text-slate-600">{recovery.lastVerified ? `${recovery.lastVerified.fileName} · verified` : "waiting for first verified backup"}</span></div>
+                <div className="text-xs font-black uppercase tracking-wide text-slate-500">After changes · Nightly · Every Sunday</div>
+              </div>
+              {recovery.failed && <div className="mt-1 text-xs font-bold text-red-700">Last attempt failed and will retry: {recovery.failed.error}</div>}
             </div>
           )}
 

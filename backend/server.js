@@ -1,7 +1,9 @@
 import { createServer } from "node:http";
-import { readFile, writeFile, mkdir, rename, readdir, unlink } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename, readdir, unlink, mkdtemp, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import ExcelJS from "exceljs";
@@ -14,7 +16,8 @@ import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, 
 import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
 import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
 import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
-import { nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth } from "./lib/monthly-automation.js";
+import { cambodiaDateParts, nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth } from "./lib/monthly-automation.js";
+import { buildRecoveryArchive, inspectRecoveryArchive } from "./lib/recovery-backup.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +29,7 @@ const dataFile = path.join(dataDir, "data.json");
 const dataTempFile = path.join(dataDir, "data.json.tmp");
 const databaseFile = path.join(dataDir, "truck_delivery.db");
 const backupDir = path.join(dataDir, "backups");
+const recoveryBackupDir = path.join(dataDir, "recovery-backups");
 const statementPdfDir = path.join(dataDir, "statement-pdfs");
 const maxStatementPdfBytes = 50 * 1024 * 1024;
 const port = Number(process.env.PORT || 5058);
@@ -307,7 +311,8 @@ const defaultData = {
   statements: [],
   deliveries: [],
   activity: [],
-  monthlyBundleSends: []
+  monthlyBundleSends: [],
+  recoveryBackups: []
 };
 
 function baselinePrices() {
@@ -356,6 +361,7 @@ function normalizeDataShape(data) {
   data.driverReportedPayments ||= [];
   data.paymentMonths ||= [];
   data.monthlyBundleSends ||= [];
+  data.recoveryBackups ||= [];
   data.prices = data.prices.map((price) => ({
     ...price,
     effectiveDate: price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`
@@ -514,6 +520,20 @@ function createSchema(database) {
       error TEXT,
       updatedAt TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS recovery_backups (
+      id TEXT PRIMARY KEY,
+      status TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      fingerprint TEXT,
+      fileName TEXT,
+      fileSize INTEGER NOT NULL DEFAULT 0,
+      createdAt TEXT NOT NULL,
+      sentAt TEXT,
+      verifiedAt TEXT,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      nextAttemptAt TEXT,
+      error TEXT
+    );
   `);
 }
 
@@ -522,7 +542,7 @@ function writeDataToDb(data) {
   const normalized = normalizeDataShape(structuredClone(data));
   database.exec("BEGIN");
   try {
-    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions; DELETE FROM driver_reported_payments; DELETE FROM payment_months; DELETE FROM monthly_bundle_sends;");
+    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions; DELETE FROM driver_reported_payments; DELETE FROM payment_months; DELETE FROM monthly_bundle_sends; DELETE FROM recovery_backups;");
     const insertSetting = database.prepare("INSERT INTO settings (key, value) VALUES (?, ?)");
     for (const [key, value] of Object.entries(normalized.settings)) insertSetting.run(key, JSON.stringify(value));
 
@@ -573,6 +593,15 @@ function writeDataToDb(data) {
       insertMonthlySend.run(item.month, item.status, item.method || "automatic", Number(item.attempts || 0), item.fileName || null,
         Number(item.fileCount || 0), item.sentAt || null, item.nextAttemptAt || null, item.error || null, item.updatedAt || new Date().toISOString());
     }
+
+    const insertRecovery = database.prepare(`
+      INSERT INTO recovery_backups (id, status, reason, fingerprint, fileName, fileSize, createdAt, sentAt, verifiedAt, attempts, nextAttemptAt, error)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const item of normalized.recoveryBackups) {
+      insertRecovery.run(item.id, item.status, item.reason, item.fingerprint || null, item.fileName || null, Number(item.fileSize || 0),
+        item.createdAt, item.sentAt || null, item.verifiedAt || null, Number(item.attempts || 0), item.nextAttemptAt || null, item.error || null);
+    }
     database.exec("COMMIT");
   } catch (error) {
     database.exec("ROLLBACK");
@@ -589,6 +618,7 @@ async function dataFromJsonFile() {
 async function ensureDataStore() {
   await mkdir(dataDir, { recursive: true });
   await mkdir(backupDir, { recursive: true });
+  await mkdir(recoveryBackupDir, { recursive: true });
   await mkdir(statementPdfDir, { recursive: true });
   const database = getDb();
   createSchema(database);
@@ -601,6 +631,7 @@ async function ensureDataStore() {
   try { database.exec("ALTER TABLE statements ADD COLUMN drivePdfOriginalName TEXT"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS monthly_bundle_sends (month TEXT PRIMARY KEY, status TEXT NOT NULL, method TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, fileName TEXT, fileCount INTEGER NOT NULL DEFAULT 0, sentAt TEXT, nextAttemptAt TEXT, error TEXT, updatedAt TEXT NOT NULL)"); } catch (_) {}
+  try { database.exec("CREATE TABLE IF NOT EXISTS recovery_backups (id TEXT PRIMARY KEY, status TEXT NOT NULL, reason TEXT NOT NULL, fingerprint TEXT, fileName TEXT, fileSize INTEGER NOT NULL DEFAULT 0, createdAt TEXT NOT NULL, sentAt TEXT, verifiedAt TEXT, attempts INTEGER NOT NULL DEFAULT 0, nextAttemptAt TEXT, error TEXT)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, passwordHash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'staff', createdAt TEXT NOT NULL)"); } catch (_) {}
   const hasRows = database.prepare(`
     SELECT
@@ -632,7 +663,8 @@ export async function readData() {
     truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
     driverReportedPayments: database.prepare("SELECT truckNo, month, amount FROM driver_reported_payments").all(),
     paymentMonths: database.prepare("SELECT month, received FROM payment_months").all().map((r) => ({ ...r, received: Boolean(r.received) })),
-    monthlyBundleSends: database.prepare("SELECT month, status, method, attempts, fileName, fileCount, sentAt, nextAttemptAt, error, updatedAt FROM monthly_bundle_sends ORDER BY month DESC").all()
+    monthlyBundleSends: database.prepare("SELECT month, status, method, attempts, fileName, fileCount, sentAt, nextAttemptAt, error, updatedAt FROM monthly_bundle_sends ORDER BY month DESC").all(),
+    recoveryBackups: database.prepare("SELECT id, status, reason, fingerprint, fileName, fileSize, createdAt, sentAt, verifiedAt, attempts, nextAttemptAt, error FROM recovery_backups ORDER BY createdAt DESC LIMIT 100").all()
   });
 }
 
@@ -675,7 +707,6 @@ async function ensureDailyBackup(data) {
   const alreadyBackedUp = files.some((file) => file.startsWith(`backup-auto-${todayKey}`));
   if (!alreadyBackedUp) {
     await createBackup(data, "auto");
-    sendBackupToTelegram(data, "Daily Auto Backup").catch(() => {});
   }
 }
 
@@ -739,6 +770,117 @@ async function createMonthlyBundle(data, month) {
       return existsSync(filePath) ? readFile(filePath) : null;
     }
   });
+}
+
+function recoveryFingerprint(data) {
+  const businessData = {
+    settings: data.settings, trucks: data.trucks, prices: data.prices, statements: data.statements,
+    deliveries: data.deliveries, truckDeductions: data.truckDeductions,
+    driverReportedPayments: data.driverReportedPayments, paymentMonths: data.paymentMonths
+  };
+  return createHash("sha256").update(JSON.stringify(businessData)).digest("hex");
+}
+
+async function createDatabaseSnapshot() {
+  const tempDir = await mkdtemp(path.join(tmpdir(), "nm-logistic-recovery-"));
+  const snapshotPath = path.join(tempDir, "truck_delivery.db");
+  try {
+    const escaped = snapshotPath.replaceAll("'", "''");
+    getDb().exec(`VACUUM INTO '${escaped}'`);
+    return await readFile(snapshotPath);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+async function createRecoveryArchive(data, reason) {
+  const statementPdfs = [];
+  for (const name of await readdir(statementPdfDir).catch(() => [])) {
+    if (!name.endsWith(".pdf")) continue;
+    statementPdfs.push({ name, data: await readFile(path.join(statementPdfDir, name)) });
+  }
+  const archive = await buildRecoveryArchive({ data, database: await createDatabaseSnapshot(), statementPdfs, reason });
+  const verified = await inspectRecoveryArchive(archive.buffer);
+  await usersFromDatabaseBuffer(verified.database);
+  await mkdir(recoveryBackupDir, { recursive: true });
+  await writeFile(path.join(recoveryBackupDir, archive.filename), archive.buffer);
+  const files = (await readdir(recoveryBackupDir)).filter((name) => name.endsWith(".zip")).sort().reverse();
+  for (const oldName of files.slice(30)) await unlink(path.join(recoveryBackupDir, oldName)).catch(() => {});
+  return archive;
+}
+
+let recoveryBackupRunning = false;
+let recoveryChangeTimer = null;
+
+function scheduleRecoveryAfterChange() {
+  if (recoveryChangeTimer) clearTimeout(recoveryChangeTimer);
+  recoveryChangeTimer = setTimeout(() => {
+    recoveryChangeTimer = null;
+    runRecoveryBackup({ reason: "after-change" }).catch((error) => console.error("After-change recovery backup failed:", error));
+  }, 15 * 60 * 1000);
+  recoveryChangeTimer.unref();
+}
+
+async function runRecoveryBackup({ reason = "scheduled", force = false } = {}) {
+  if (recoveryBackupRunning) return { created: false, reason: "already_running" };
+  recoveryBackupRunning = true;
+  const id = crypto.randomUUID();
+  try {
+    const data = await readData();
+    const fingerprint = recoveryFingerprint(data);
+    const latestVerified = (data.recoveryBackups || []).find((item) => ["sent", "local_only"].includes(item.status));
+    if (!force && latestVerified?.fingerprint === fingerprint) return { created: false, reason: "unchanged" };
+    await updateData((current) => {
+      current.recoveryBackups ||= [];
+      current.recoveryBackups.unshift({ id, status: "creating", reason, fingerprint, fileName: null, fileSize: 0,
+        createdAt: new Date().toISOString(), sentAt: null, verifiedAt: null, attempts: 1, nextAttemptAt: null, error: null });
+    }, { skipDailyBackup: true, skipRecoverySchedule: true });
+
+    const freshData = await readData();
+    const archive = await createRecoveryArchive(freshData, reason);
+    let status = "local_only";
+    let sentAt = null;
+    if (getTelegramConfig()) {
+      await sendFileToTelegram(archive.buffer, archive.filename,
+        `N&M Logistic - Verified Recovery Backup\nReason: ${reason}\nCreated: ${archive.manifest.createdAt}\nStatements: ${archive.manifest.counts.statements} | Deliveries: ${archive.manifest.counts.deliveries} | PDFs: ${archive.manifest.counts.statementPdfs}`);
+      status = "sent";
+      sentAt = new Date().toISOString();
+    }
+    await updateData((current) => {
+      const record = current.recoveryBackups?.find((item) => item.id === id);
+      if (!record) return;
+      Object.assign(record, { status, fileName: archive.filename, fileSize: archive.buffer.length, sentAt,
+        verifiedAt: new Date().toISOString(), nextAttemptAt: null, error: null });
+      addActivity(current, `Verified recovery backup created: ${archive.filename}${status === "sent" ? " and sent to Telegram" : " (local only)"}.`, "backup");
+    }, { skipDailyBackup: true, skipRecoverySchedule: true });
+    return { created: true, status, filename: archive.filename, size: archive.buffer.length };
+  } catch (error) {
+    await updateData((current) => {
+      const record = current.recoveryBackups?.find((item) => item.id === id);
+      if (!record) return;
+      record.status = "failed";
+      record.error = String(error.message || error).slice(0, 500);
+      record.nextAttemptAt = new Date(Date.now() + retryDelayMs(record.attempts)).toISOString();
+      addActivity(current, `Recovery backup failed: ${record.error}`, "error");
+    }, { skipDailyBackup: true, skipRecoverySchedule: true });
+    throw error;
+  } finally {
+    recoveryBackupRunning = false;
+  }
+}
+
+async function runRecoveryScheduleCheck(now = new Date()) {
+  const data = await readData();
+  const failed = (data.recoveryBackups || []).find((item) => item.status === "failed" && (!item.nextAttemptAt || item.nextAttemptAt <= now.toISOString()));
+  if (failed) return runRecoveryBackup({ reason: "retry", force: true });
+  const local = cambodiaDateParts(now);
+  if (local.hour !== 23 || local.minute < 45) return { created: false, reason: "not_due" };
+  const todayKey = `${local.year}-${String(local.month).padStart(2, "0")}-${String(local.day).padStart(2, "0")}`;
+  const alreadyToday = (data.recoveryBackups || []).some((item) => item.createdAt?.slice(0, 10) === todayKey && ["sent", "local_only", "creating"].includes(item.status));
+  if (alreadyToday) return { created: false, reason: "already_today" };
+  const lastWeekly = (data.recoveryBackups || []).find((item) => item.reason?.startsWith("weekly") && ["sent", "local_only"].includes(item.status));
+  const weeklyDue = local.weekday === "Sun" || !lastWeekly || Date.parse(lastWeekly.createdAt) <= now.getTime() - 7 * 24 * 60 * 60 * 1000;
+  return runRecoveryBackup({ reason: local.weekday === "Sun" ? "weekly" : weeklyDue ? "weekly-catchup" : "nightly", force: weeklyDue });
 }
 
 let monthlyAutomationRunning = false;
@@ -813,6 +955,72 @@ function validateRestoreData(data) {
   if (!Array.isArray(data.deliveries)) throw new Error("Backup is missing deliveries.");
 }
 
+async function readRawRequest(req, maxBytes = 200 * 1024 * 1024) {
+  const declared = Number(req.headers["content-length"] || 0);
+  if (declared > maxBytes) throw Object.assign(new Error("Recovery file is too large."), { status: 413 });
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > maxBytes) throw Object.assign(new Error("Recovery file is too large."), { status: 413 });
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
+async function usersFromDatabaseBuffer(buffer) {
+  const tempDir = await mkdtemp(path.join(tmpdir(), "nm-logistic-users-"));
+  const filePath = path.join(tempDir, "backup.db");
+  try {
+    await writeFile(filePath, buffer);
+    const source = new DatabaseSync(filePath, { readOnly: true });
+    try {
+      const integrity = Object.values(source.prepare("PRAGMA quick_check").get())[0];
+      if (integrity !== "ok") throw new Error(`Recovery database integrity check failed: ${integrity}`);
+      const tables = new Set(source.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
+      for (const required of ["settings", "trucks", "prices", "statements", "deliveries", "users"]) {
+        if (!tables.has(required)) throw new Error(`Recovery database is missing the ${required} table.`);
+      }
+      return source.prepare("SELECT id, username, passwordHash, role, createdAt FROM users").all();
+    } finally { source.close(); }
+  } finally { await rm(tempDir, { recursive: true, force: true }); }
+}
+
+async function restoreRecoveryArchive(buffer) {
+  const inspected = await inspectRecoveryArchive(buffer);
+  validateRestoreData(inspected.data);
+  const current = await readData();
+  await createRecoveryArchive(current, "before-restore");
+  const users = await usersFromDatabaseBuffer(inspected.database);
+  await updateData((data) => {
+    for (const key of Object.keys(data)) delete data[key];
+    Object.assign(data, inspected.data);
+    data.activity ||= [];
+    addActivity(data, `Restored verified recovery backup from ${inspected.manifest.createdAt}.`, "backup");
+  }, { skipDailyBackup: true, skipRecoverySchedule: true });
+  const database = getDb();
+  database.exec("BEGIN");
+  try {
+    database.exec("DELETE FROM users");
+    const insert = database.prepare("INSERT INTO users (id, username, passwordHash, role, createdAt) VALUES (?, ?, ?, ?, ?)");
+    for (const user of users) insert.run(user.id, user.username, user.passwordHash, user.role, user.createdAt);
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+  for (const name of await readdir(statementPdfDir).catch(() => [])) {
+    if (name.endsWith(".pdf")) await unlink(path.join(statementPdfDir, name));
+  }
+  for (const [name, contents] of Object.entries(inspected.files)) {
+    if (!name.startsWith("statement-pdfs/")) continue;
+    const fileName = path.basename(name);
+    if (!fileName.endsWith(".pdf")) continue;
+    await writeFile(path.join(statementPdfDir, fileName), contents);
+  }
+  return { manifest: inspected.manifest, users: users.length };
+}
+
 async function saveData(data) {
   const body = JSON.stringify(data, null, 2);
   saveQueue = saveQueue.then(async () => {
@@ -829,6 +1037,7 @@ async function updateData(mutator, options = {}) {
     if (!options.skipDailyBackup) await ensureDailyBackup(data);
     const result = await mutator(data);
     await saveData(data);
+    if (!options.skipRecoverySchedule) scheduleRecoveryAfterChange();
     return result;
   });
   mutationQueue = operation.catch(() => {});
@@ -1076,6 +1285,43 @@ async function api(req, res, url, role = "admin") {
       "Content-Disposition": `attachment; filename="${fileName}"`
     });
     return res.end(JSON.stringify(data, null, 2));
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/recovery/status") {
+    requireAdmin();
+    const runs = data.recoveryBackups || [];
+    return sendJson(res, 200, {
+      configured: Boolean(getTelegramConfig()),
+      lastVerified: runs.find((item) => ["sent", "local_only"].includes(item.status)) || null,
+      lastSent: runs.find((item) => item.status === "sent") || null,
+      failed: runs.find((item) => item.status === "failed") || null,
+      schedule: "15 minutes after changes, nightly check at 11:45 PM, full backup every Sunday",
+      timeZone: "Asia/Phnom_Penh"
+    });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/recovery/create") {
+    requireAdmin();
+    const result = await runRecoveryBackup({ reason: "manual", force: true });
+    return sendJson(res, 200, result);
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/recovery/download") {
+    requireAdmin();
+    const requested = path.basename(normalizeText(query.file));
+    const available = (await readdir(recoveryBackupDir).catch(() => [])).filter((name) => name.endsWith(".zip")).sort().reverse();
+    const fileName = requested || available[0];
+    if (!fileName || !available.includes(fileName)) throw Object.assign(new Error("No recovery backup is available."), { status: 404 });
+    const buffer = await readFile(path.join(recoveryBackupDir, fileName));
+    res.writeHead(200, { "Content-Type": "application/zip", "Content-Length": buffer.length, "Content-Disposition": `attachment; filename="${fileName}"` });
+    return res.end(buffer);
+  }
+
+  if (req.method === "PUT" && url.pathname === "/api/recovery/restore") {
+    requireAdmin();
+    if ((req.headers["content-type"] || "").split(";")[0] !== "application/zip") throw new Error("Please select a recovery ZIP file.");
+    const result = await restoreRecoveryArchive(await readRawRequest(req));
+    return sendJson(res, 200, { ok: true, createdAt: result.manifest.createdAt, users: result.users });
   }
 
   if (req.method === "POST" && url.pathname === "/api/backup/create") {
@@ -2226,5 +2472,8 @@ if (isMainModule) {
     startupCheck.unref();
     const monthlyCheck = setInterval(() => runMonthlyBundleAutomation().catch((error) => console.error("Monthly automation check failed:", error)), 60 * 60 * 1000);
     monthlyCheck.unref();
+    scheduleRecoveryAfterChange();
+    const recoveryCheck = setInterval(() => runRecoveryScheduleCheck().catch((error) => console.error("Recovery schedule check failed:", error)), 5 * 60 * 1000);
+    recoveryCheck.unref();
   });
 }

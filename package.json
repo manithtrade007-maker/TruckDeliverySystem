@@ -11,12 +11,14 @@
     "build": "vite build",
     "start": "node backend/server.js",
     "test": "node --test backend/test/*.test.js",
+    "restore": "node backend/scripts/restore-recovery.js",
     "audit-prices": "node backend/scripts/audit-prices.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
     "@vitejs/plugin-react": "^6.0.1",
     "exceljs": "^4.4.0",
+    "jszip": "^3.10.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.3.0",

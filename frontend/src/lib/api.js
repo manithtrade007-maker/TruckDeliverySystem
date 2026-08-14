@@ -75,6 +75,23 @@ async function uploadPdf(url, file) {
   return data;
 }
 
+async function uploadRecovery(url, file) {
+  const token = getToken();
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/zip", ...(token ? { "Authorization": `Bearer ${token}` } : {}) },
+    body: file
+  });
+  if (response.status === 401) {
+    setToken("");
+    window.dispatchEvent(new CustomEvent("auth-logout"));
+    throw new Error("Session expired. Please sign in again.");
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Recovery restore failed.");
+  return data;
+}
+
 async function viewPdf(url) {
   const popup = window.open("", "_blank");
   const token = getToken();
@@ -99,4 +116,4 @@ async function viewPdf(url) {
   }
 }
 
-export { getToken, getRole, setToken, setRole, api, downloadFile, uploadPdf, viewPdf };
+export { getToken, getRole, setToken, setRole, api, downloadFile, uploadPdf, uploadRecovery, viewPdf };

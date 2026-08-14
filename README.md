@@ -26,7 +26,7 @@ http://localhost:5058
 - Company price and driver price management with effective dates.
 - Driver payment report by truck.
 - Excel/PDF exports.
-- Backup download and manual backup.
+- Verified recovery ZIPs with automatic Telegram delivery and restore tools.
 
 ## Data Storage
 
@@ -35,6 +35,7 @@ The app uses SQLite and stores data in:
 ```text
 backend/truck_delivery.db
 backend/backups/
+backend/recovery-backups/
 ```
 
 For online hosting, set `DATA_DIR` to a persistent disk folder:
@@ -48,6 +49,7 @@ Then data will be stored in:
 ```text
 /var/data/truck_delivery.db
 /var/data/backups/
+/var/data/recovery-backups/
 ```
 
 Important: do not host this app without persistent storage, or business data may be lost when the server restarts.
@@ -94,6 +96,28 @@ Before entering official business data online:
 5. Confirm the test statement is still there.
 6. Download a backup.
 7. Then delete test operation data if needed and start official entry.
+
+## Recovery Backups
+
+A recovery ZIP contains `data.json`, a consistent SQLite snapshot (including staff users), uploaded statement PDFs, a manifest, and SHA-256 checksums. The system verifies every archive before marking it successful.
+
+Automatic behavior uses Cambodia time:
+
+- 15 minutes after the last data change: create a backup if business data changed.
+- 11:45 PM nightly: check for changes not yet backed up.
+- Sunday night: create a full backup even when nothing changed.
+- Failed Telegram deliveries retry automatically.
+- The newest 30 recovery ZIPs remain on the persistent disk.
+
+Admins can create, download, and restore a recovery ZIP from Setup. Legacy JSON restore remains supported.
+
+If the application or active database cannot start, stop the server and restore offline:
+
+```bash
+npm run restore -- /path/to/nm-logistic-recovery.zip /var/data
+```
+
+The command verifies checksums and makes a safety copy of the current database and PDFs before replacement. Environment secrets such as `APP_PASSWORD` and `TELEGRAM_BOT_TOKEN` are intentionally not stored in backups and must be configured separately.
 
 ## Future Production Upgrade
 

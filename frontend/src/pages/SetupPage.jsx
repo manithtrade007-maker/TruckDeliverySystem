@@ -1,10 +1,19 @@
+import { useEffect, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
 export function SetupPage() {
-  const { activeCompanyPriceCounts, activeCompanyPriceRows, applyBulkPriceUpdate, backupFiles, bulkExistingDates, bulkPriceForm, bulkPriceRows, companyPriceGroups, createManualBackup, createStaffUser, data, deletePrice, deletePricesByDate, deleteStaffUser, deleteTruck, downloadBackup, driverPriceForm, driverPriceGroups, editPasswordId, editPasswordValue, isAdmin, isEditingTruck, locations, newUserForm, priceCompareDates, priceForm, saveDriverPrice, savePrice, saveSettings, saveStaffPassword, saveTruck, sendToTelegram, setBulkLocationFilter, setBulkPriceForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setNewUserForm, setPriceForm, setSettingsForm, setSetupLocationSearch, setSetupSection, setTruckForm, settingsForm, setupLocationSearch, setupSection, staffUsers, telegramConfigured, truckForm } = useApp();
+  const { activeCompanyPriceCounts, activeCompanyPriceRows, applyBulkPriceUpdate, bulkExistingDates, bulkPriceForm, bulkPriceRows, companyPriceGroups, createManualBackup, createStaffUser, data, deletePrice, deletePricesByDate, deleteStaffUser, deleteTruck, downloadBackup, driverPriceForm, driverPriceGroups, editPasswordId, editPasswordValue, isAdmin, isEditingTruck, locations, newUserForm, priceCompareDates, priceForm, restoreBackup, saveDriverPrice, savePrice, saveSettings, saveStaffPassword, saveTruck, setBulkLocationFilter, setBulkPriceForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setNewUserForm, setPriceForm, setSettingsForm, setSetupLocationSearch, setSetupSection, setTruckForm, settingsForm, setupLocationSearch, setupSection, staffUsers, telegramConfigured, truckForm } = useApp();
+  const [recoveryStatus, setRecoveryStatus] = useState(null);
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+    const load = () => api("/api/recovery/status").then(setRecoveryStatus).catch(() => setRecoveryStatus(null));
+    load();
+    const timer = setInterval(load, 60000);
+    return () => clearInterval(timer);
+  }, [isAdmin]);
   return (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
@@ -672,21 +681,17 @@ export function SetupPage() {
                       )}
                     </div>
                     <p className="text-sm font-bold text-slate-500">
-                      Automatic backup runs before the first data change each day.
-                      {telegramConfigured === true && " Backup is also sent automatically to Telegram."}
+                      Complete recovery backup runs 15 minutes after changes, checks nightly, and runs every Sunday even without changes.
+                      {telegramConfigured === true && " Verified backups are sent automatically to Telegram."}
                     </p>
                     <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-500">
-                      Latest: {backupFiles[0] || "No backup yet"}
+                      Latest verified: {recoveryStatus?.lastVerified?.fileName || "No recovery backup yet"}
                     </p>
+                    {recoveryStatus?.failed && <p className="mt-1 text-xs font-bold text-red-600">Last failure: {recoveryStatus.failed.error} · retry scheduled</p>}
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Button type="button" onClick={createManualBackup}>Create Backup</Button>
-                      <Button type="button" variant="secondary" onClick={downloadBackup}>Download Backup</Button>
-                      {telegramConfigured === true && (
-                        <Button type="button" variant="secondary" onClick={sendToTelegram}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{display:"inline",marginRight:4,verticalAlign:"middle"}}><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
-                          Send to Telegram
-                        </Button>
-                      )}
+                      <Button type="button" onClick={createManualBackup}>Create Recovery Backup</Button>
+                      <Button type="button" variant="secondary" onClick={downloadBackup}>Download Latest</Button>
+                      <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
                       {telegramConfigured === false && (
                         <p className="w-full mt-1 text-xs text-slate-400">To enable Telegram backup, add <code className="bg-slate-100 px-1 rounded">TELEGRAM_BOT_TOKEN</code> and <code className="bg-slate-100 px-1 rounded">TELEGRAM_CHAT_ID</code> to your Render environment variables.</p>
                       )}

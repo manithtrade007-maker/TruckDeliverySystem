@@ -7,10 +7,12 @@ export function cambodiaDateParts(date = new Date()) {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
+    minute: "2-digit",
+    weekday: "short",
     hourCycle: "h23"
   }).formatToParts(date);
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return { year: Number(values.year), month: Number(values.month), day: Number(values.day), hour: Number(values.hour) };
+  return { year: Number(values.year), month: Number(values.month), day: Number(values.day), hour: Number(values.hour), minute: Number(values.minute), weekday: values.weekday };
 }
 
 function shiftMonth(year, month, offset) {

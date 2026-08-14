@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "./components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "./lib/format.js";
-import { getToken, getRole, setToken, setRole, api, downloadFile } from "./lib/api.js";
+import { getToken, getRole, setToken, setRole, api, downloadFile, uploadRecovery } from "./lib/api.js";
 import { LoginPage } from "./components/LoginPage.jsx";
 import { AppCtx } from "./AppContext.js";
 import { ComparePayPage } from "./pages/ComparePayPage.jsx";
@@ -1284,25 +1284,15 @@ function App() {
 
   async function createManualBackup() {
     try {
-      const result = await api("/api/backup/create", { method: "POST" });
-      await loadBackups();
-      flash(`Backup created: ${result.fileName}`);
+      const result = await api("/api/recovery/create", { method: "POST" });
+      flash(result.filename ? `Verified recovery backup created: ${result.filename}` : "A recovery backup is already running.");
     } catch (err) {
       flash(err.message, "error");
     }
   }
 
   function downloadBackup() {
-    downloadFile("/api/backup/download").catch((err) => flash(err.message, "error"));
-  }
-
-  async function sendToTelegram() {
-    try {
-      await api("/api/backup/send-telegram", { method: "POST" });
-      flash("Backup sent to Telegram successfully.");
-    } catch (err) {
-      flash(err.message, "error");
-    }
+    downloadFile("/api/recovery/download").catch((err) => flash(err.message, "error"));
   }
 
   async function checkTelegramStatus() {
@@ -1422,18 +1412,20 @@ function App() {
   }
 
   function restoreBackup() {
-    const ok = window.confirm("Restore from a backup file? This will replace the current system data. A safety backup will be created first.");
+    const ok = window.confirm("Restore from a recovery ZIP or legacy JSON backup? This replaces current system data. A safety recovery backup will be created first.");
     if (!ok) return;
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "application/json,.json";
+    input.accept = "application/zip,.zip,application/json,.json";
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
       try {
-        const text = await file.text();
-        const restoredData = JSON.parse(text);
-        await api("/api/backup/restore", { method: "POST", body: JSON.stringify(restoredData) });
+        if (file.name.toLowerCase().endsWith(".zip")) await uploadRecovery("/api/recovery/restore", file);
+        else {
+          const restoredData = JSON.parse(await file.text());
+          await api("/api/backup/restore", { method: "POST", body: JSON.stringify(restoredData) });
+        }
         await loadData();
         flash("Backup restored.");
       } catch (err) {
@@ -1530,7 +1522,7 @@ function App() {
     normalizeLocationSpacing, notice, openStatement, page, paymentsViewMonth, priceCompareDate, priceCompareDates, priceCompareProvince, priceCompareProvinces, priceCompareRows, priceForm, priceLookupReady,
     pricePeriods, pricePeriodsMonth, recalculateAllPrices, reconEdits, reconMonth, reconciliation, reopenStatement, reportMonth, reportTruckNo, reportYear, resetDeliveryForm,
     restoreBackup, saveDeduction, saveDelivery, saveDriverPrice, savePrice, saveReported, saveSettings, saveStaffPassword, saveStatement, saveTruck, selectedDriverPaymentSection,
-    selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, sendToTelegram, setActiveField, setActivityPage, setAssignModal, setAssignMonth, setBackupFiles, setBulkLocationFilter,
+    selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setActivityPage, setAssignModal, setAssignMonth, setBackupFiles, setBulkLocationFilter,
     setBulkPriceForm, setData, setDeductionEdits, setDeleteModal, setDeliveryForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setEmptyPriceResult, setEntryActionTruckType, setEntryTruckType, setExpandStatementEdit,
     setFilters, setLoggedIn, setNewUserForm, setNotice, setPage, setPaymentsViewMonth, setPriceCompareDate, setPriceCompareProvince, setPriceForm, setPricePeriodsMonth, setReconEdits,
     setReconMonth, setReportMonth, setReportTruckNo, setReportYear, setSelectedStatementId, setSettingsForm, setSetupLocationSearch, setSetupSection, setShowAdvancedTools, setShowStatementWorkspace, setStaffUsers,
