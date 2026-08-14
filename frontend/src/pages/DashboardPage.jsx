@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
@@ -5,6 +6,10 @@ import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/
 
 export function DashboardPage() {
   const { activeTruckCount, activityPage, availableYears, dashOutstanding, data, flash, isAdmin, monthlyTotals, page, reportMonth, reportYear, setActivityPage, setPage, setReportMonth, setReportTruckNo, setReportYear, statementCounts, statementSummaries, telegramConfigured, truckPerformance, yearSummary } = useApp();
+  const [automation, setAutomation] = useState(null);
+  const loadAutomation = () => api("/api/monthly-automation/status").then(setAutomation).catch(() => setAutomation(null));
+  useEffect(() => { if (isAdmin) loadAutomation(); }, [isAdmin]);
+  const automationMonth = (value) => value ? new Date(`${value}-01T00:00:00`).toLocaleString("default", { month: "long", year: "numeric" }) : "—";
   return (
         <main className="mx-auto grid max-w-[1500px] gap-5 p-4 pb-20 lg:pb-4">
           {/* Header */}
@@ -32,7 +37,7 @@ export function DashboardPage() {
                   </button>
                   {telegramConfigured && (
                     <button type="button"
-                      onClick={() => api(`/api/export/monthly-bundle-telegram?month=${encodeURIComponent(reportMonth)}`, { method: "POST" }).then(() => flash("Monthly bundle sent to Telegram.")).catch((err) => flash(err.message, "error"))}
+                      onClick={() => api(`/api/export/monthly-bundle-telegram?month=${encodeURIComponent(reportMonth)}`, { method: "POST" }).then(() => { flash("Monthly bundle sent to Telegram."); loadAutomation(); }).catch((err) => flash(err.message, "error"))}
                       className="flex items-center gap-2 rounded-xl border border-sky-300 bg-sky-500 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-sky-600 transition">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
                       Send to Telegram
@@ -42,6 +47,15 @@ export function DashboardPage() {
               )}
             </div>
           </div>
+
+          {isAdmin && automation && (
+            <div className="grid gap-3 rounded-2xl border border-sky-200 bg-sky-50/70 px-4 py-3 text-sm shadow-sm sm:grid-cols-4">
+              <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Automatic Telegram</div><div className="mt-0.5 font-black text-slate-800">{automation.configured ? "Active" : "Not configured"}</div></div>
+              <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Next Bundle</div><div className="mt-0.5 font-black text-slate-800">{automationMonth(automation.pendingMonth || automation.next?.bundleMonth)}</div></div>
+              <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Schedule</div><div className="mt-0.5 font-black text-slate-800">5th · 9:00 AM Cambodia</div></div>
+              <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Last Sent</div><div className="mt-0.5 font-black text-slate-800">{automation.last ? `${automationMonth(automation.last.month)} · ${automation.last.method}` : "Not sent yet"}</div>{automation.current?.status === "failed" && <div className="mt-1 text-xs font-bold text-red-600">Retry scheduled</div>}</div>
+            </div>
+          )}
 
           {/* KPI cards */}
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

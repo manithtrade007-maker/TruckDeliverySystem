@@ -14,6 +14,7 @@ import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, 
 import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
 import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
 import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
+import { nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth } from "./lib/monthly-automation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -305,7 +306,8 @@ const defaultData = {
   ],
   statements: [],
   deliveries: [],
-  activity: []
+  activity: [],
+  monthlyBundleSends: []
 };
 
 function baselinePrices() {
@@ -353,6 +355,7 @@ function normalizeDataShape(data) {
   data.truckDeductions ||= [];
   data.driverReportedPayments ||= [];
   data.paymentMonths ||= [];
+  data.monthlyBundleSends ||= [];
   data.prices = data.prices.map((price) => ({
     ...price,
     effectiveDate: price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`
@@ -499,6 +502,18 @@ function createSchema(database) {
       amount REAL NOT NULL DEFAULT 0,
       PRIMARY KEY (truckNo, month)
     );
+    CREATE TABLE IF NOT EXISTS monthly_bundle_sends (
+      month TEXT PRIMARY KEY,
+      status TEXT NOT NULL,
+      method TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      fileName TEXT,
+      fileCount INTEGER NOT NULL DEFAULT 0,
+      sentAt TEXT,
+      nextAttemptAt TEXT,
+      error TEXT,
+      updatedAt TEXT NOT NULL
+    );
   `);
 }
 
@@ -507,7 +522,7 @@ function writeDataToDb(data) {
   const normalized = normalizeDataShape(structuredClone(data));
   database.exec("BEGIN");
   try {
-    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions; DELETE FROM driver_reported_payments; DELETE FROM payment_months;");
+    database.exec("DELETE FROM settings; DELETE FROM trucks; DELETE FROM prices; DELETE FROM statements; DELETE FROM deliveries; DELETE FROM activity; DELETE FROM truck_deductions; DELETE FROM driver_reported_payments; DELETE FROM payment_months; DELETE FROM monthly_bundle_sends;");
     const insertSetting = database.prepare("INSERT INTO settings (key, value) VALUES (?, ?)");
     for (const [key, value] of Object.entries(normalized.settings)) insertSetting.run(key, JSON.stringify(value));
 
@@ -549,6 +564,15 @@ function writeDataToDb(data) {
 
     const insertPaymentMonth = database.prepare("INSERT INTO payment_months (month, received) VALUES (?, ?)");
     for (const pm of (normalized.paymentMonths || [])) insertPaymentMonth.run(pm.month, pm.received ? 1 : 0);
+
+    const insertMonthlySend = database.prepare(`
+      INSERT INTO monthly_bundle_sends (month, status, method, attempts, fileName, fileCount, sentAt, nextAttemptAt, error, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const item of normalized.monthlyBundleSends) {
+      insertMonthlySend.run(item.month, item.status, item.method || "automatic", Number(item.attempts || 0), item.fileName || null,
+        Number(item.fileCount || 0), item.sentAt || null, item.nextAttemptAt || null, item.error || null, item.updatedAt || new Date().toISOString());
+    }
     database.exec("COMMIT");
   } catch (error) {
     database.exec("ROLLBACK");
@@ -576,6 +600,7 @@ async function ensureDataStore() {
   try { database.exec("ALTER TABLE statements ADD COLUMN drivePdfUrl TEXT"); } catch (_) {}
   try { database.exec("ALTER TABLE statements ADD COLUMN drivePdfOriginalName TEXT"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
+  try { database.exec("CREATE TABLE IF NOT EXISTS monthly_bundle_sends (month TEXT PRIMARY KEY, status TEXT NOT NULL, method TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, fileName TEXT, fileCount INTEGER NOT NULL DEFAULT 0, sentAt TEXT, nextAttemptAt TEXT, error TEXT, updatedAt TEXT NOT NULL)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, passwordHash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'staff', createdAt TEXT NOT NULL)"); } catch (_) {}
   const hasRows = database.prepare(`
     SELECT
@@ -606,7 +631,8 @@ export async function readData() {
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
     truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
     driverReportedPayments: database.prepare("SELECT truckNo, month, amount FROM driver_reported_payments").all(),
-    paymentMonths: database.prepare("SELECT month, received FROM payment_months").all().map((r) => ({ ...r, received: Boolean(r.received) }))
+    paymentMonths: database.prepare("SELECT month, received FROM payment_months").all().map((r) => ({ ...r, received: Boolean(r.received) })),
+    monthlyBundleSends: database.prepare("SELECT month, status, method, attempts, fileName, fileCount, sentAt, nextAttemptAt, error, updatedAt FROM monthly_bundle_sends ORDER BY month DESC").all()
   });
 }
 
@@ -715,6 +741,69 @@ async function createMonthlyBundle(data, month) {
   });
 }
 
+let monthlyAutomationRunning = false;
+
+async function markMonthlyBundleSent(month, bundle, method) {
+  await updateData((data) => {
+    data.monthlyBundleSends ||= [];
+    const now = new Date().toISOString();
+    const existing = data.monthlyBundleSends.find((item) => item.month === month);
+    const record = {
+      month, status: "sent", method, attempts: Math.max(1, Number(existing?.attempts || 0)),
+      fileName: bundle.filename, fileCount: bundle.files.length, sentAt: now,
+      nextAttemptAt: null, error: null, updatedAt: now
+    };
+    if (existing) Object.assign(existing, record);
+    else data.monthlyBundleSends.push(record);
+    addActivity(data, `${month} monthly archive sent to Telegram (${bundle.files.length} files, ${method}).`, "telegram");
+  }, { skipDailyBackup: true });
+}
+
+async function runMonthlyBundleAutomation(now = new Date()) {
+  if (monthlyAutomationRunning || !getTelegramConfig()) return { sent: false };
+  const month = scheduledBundleMonth(now);
+  if (!month) return { sent: false };
+  monthlyAutomationRunning = true;
+  try {
+    let claimed = false;
+    await updateData((data) => {
+      data.monthlyBundleSends ||= [];
+      const existing = data.monthlyBundleSends.find((item) => item.month === month);
+      if (existing?.status === "sent") return;
+      const nowIso = now.toISOString();
+      if (existing?.nextAttemptAt && existing.nextAttemptAt > nowIso) return;
+      if (existing?.status === "sending" && Date.parse(existing.updatedAt || 0) > now.getTime() - 2 * 60 * 60 * 1000) return;
+      const record = { month, status: "sending", method: "automatic", attempts: Number(existing?.attempts || 0) + 1,
+        fileName: existing?.fileName || null, fileCount: Number(existing?.fileCount || 0), sentAt: null,
+        nextAttemptAt: null, error: null, updatedAt: nowIso };
+      if (existing) Object.assign(existing, record);
+      else data.monthlyBundleSends.push(record);
+      claimed = true;
+    }, { skipDailyBackup: true });
+    if (!claimed) return { sent: false, month };
+
+    const data = await readData();
+    const bundle = await createMonthlyBundle(data, month);
+    await sendFileToTelegram(bundle.buffer, bundle.filename, `${bundle.caption}\nAutomatic delivery: 5th of the month`);
+    await markMonthlyBundleSent(month, bundle, "automatic");
+    return { sent: true, month };
+  } catch (error) {
+    await updateData((data) => {
+      const record = data.monthlyBundleSends?.find((item) => item.month === month);
+      if (!record) return;
+      record.status = "failed";
+      record.error = String(error.message || error).slice(0, 500);
+      record.updatedAt = new Date().toISOString();
+      record.nextAttemptAt = new Date(Date.now() + retryDelayMs(record.attempts)).toISOString();
+      addActivity(data, `${month} automatic monthly archive failed: ${record.error}`, "error");
+    }, { skipDailyBackup: true });
+    console.error(`Monthly Telegram automation failed for ${month}:`, error);
+    return { sent: false, month, error: error.message || String(error) };
+  } finally {
+    monthlyAutomationRunning = false;
+  }
+}
+
 function validateRestoreData(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Backup file is not valid.");
   if (!data.settings || typeof data.settings !== "object") throw new Error("Backup is missing settings.");
@@ -734,10 +823,10 @@ async function saveData(data) {
   await saveQueue;
 }
 
-async function updateData(mutator) {
+async function updateData(mutator, options = {}) {
   const operation = mutationQueue.then(async () => {
     const data = await readData();
-    await ensureDailyBackup(data);
+    if (!options.skipDailyBackup) await ensureDailyBackup(data);
     const result = await mutator(data);
     await saveData(data);
     return result;
@@ -1013,12 +1102,29 @@ async function api(req, res, url, role = "admin") {
     return sendJson(res, 200, { configured: Boolean(getTelegramConfig()) });
   }
 
+  if (req.method === "GET" && url.pathname === "/api/monthly-automation/status") {
+    requireAdmin();
+    const sends = [...(data.monthlyBundleSends || [])].sort((a, b) => b.month.localeCompare(a.month));
+    const dueMonth = scheduledBundleMonth(new Date());
+    const dueRecord = dueMonth ? sends.find((item) => item.month === dueMonth) : null;
+    return sendJson(res, 200, {
+      configured: Boolean(getTelegramConfig()),
+      schedule: "5th day at 9:00 AM",
+      timeZone: "Asia/Phnom_Penh",
+      next: nextMonthlyBundleSchedule(new Date()),
+      pendingMonth: dueMonth && dueRecord?.status !== "sent" ? dueMonth : null,
+      last: sends.find((item) => item.status === "sent") || null,
+      current: dueRecord || null
+    });
+  }
+
   if (req.method === "POST" && url.pathname === "/api/export/monthly-bundle-telegram") {
     requireAdmin();
     if (!getTelegramConfig()) return sendJson(res, 400, { error: "Telegram is not configured." });
     const month = normalizeText(query.month) || currentLocalDate().slice(0, 7);
     const bundle = await createMonthlyBundle(data, month);
     await sendFileToTelegram(bundle.buffer, bundle.filename, bundle.caption);
+    await markMonthlyBundleSent(month, bundle, "manual");
     return sendJson(res, 200, { ok: true, filename: bundle.filename, fileCount: bundle.files.length });
   }
 
@@ -2116,5 +2222,9 @@ if (isMainModule) {
     console.log(`Truck Delivery System running at http://${host}:${port}`);
     console.log(`Data directory: ${dataDir}`);
     if (!isAuthEnabled()) console.log("Warning: APP_USERNAME and APP_PASSWORD are not set. Login is disabled (local only).");
+    const startupCheck = setTimeout(() => runMonthlyBundleAutomation().catch((error) => console.error("Monthly automation startup check failed:", error)), 15000);
+    startupCheck.unref();
+    const monthlyCheck = setInterval(() => runMonthlyBundleAutomation().catch((error) => console.error("Monthly automation check failed:", error)), 60 * 60 * 1000);
+    monthlyCheck.unref();
   });
 }
