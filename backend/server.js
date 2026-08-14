@@ -13,6 +13,7 @@ import { sendJson, sendText, readBody, parseQuery } from "./lib/http.js";
 import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, appUsername, appPassword } from "./lib/auth.js";
 import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
 import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
+import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -695,6 +696,25 @@ async function sendFileToTelegram(fileBuffer, filename, caption, mimeType = "app
   return { ok: true };
 }
 
+async function createMonthlyBundle(data, month) {
+  const sigPath = path.join(__dirname, "assets", "signature.jpg");
+  let signatureImage = null;
+  if (existsSync(sigPath)) {
+    const buffer = await readFile(sigPath);
+    const info = readJpegInfo(buffer);
+    if (info) signatureImage = { buffer, width: info.width, height: info.height, components: info.components };
+  }
+  return buildMonthlyBundle({
+    data,
+    month,
+    signatureImage,
+    readUploadedStatementPdf: async (statement) => {
+      const filePath = statementPdfPath(statement.id);
+      return existsSync(filePath) ? readFile(filePath) : null;
+    }
+  });
+}
+
 function validateRestoreData(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Backup file is not valid.");
   if (!data.settings || typeof data.settings !== "object") throw new Error("Backup is missing settings.");
@@ -997,88 +1017,9 @@ async function api(req, res, url, role = "admin") {
     requireAdmin();
     if (!getTelegramConfig()) return sendJson(res, 400, { error: "Telegram is not configured." });
     const month = normalizeText(query.month) || currentLocalDate().slice(0, 7);
-    const monthStart = `${month}-01`;
-    const [y2, m2] = month.split("-").map(Number);
-    const monthEnd = `${month}-${String(new Date(y2, m2, 0).getDate()).padStart(2, "0")}`;
-    const monthStmts2 = data.statements.filter((s) => s.month === month);
-    const monthDeliveries2 = data.deliveries.filter((d) => d.deliveryDate >= monthStart && d.deliveryDate <= monthEnd);
-    const safeMonth2 = numericMonthFilePart(month);
-    const label2 = monthLabel(month);
-    const companyName2 = data.settings.companyName || "N&M LOGISTIC";
-
-    // Re-use the same generation logic (summary Excel + PDFs + per-statement files)
-    const wb2 = new ExcelJS.Workbook();
-    wb2.creator = companyName2;
-    const totalRevenue2 = monthDeliveries2.reduce((s, d) => s + toNumber(d.companyTotalAmount), 0);
-    const totalDriver2 = monthDeliveries2.reduce((s, d) => s + toNumber(d.truckSalaryAmount), 0);
-    const totalQty2 = monthDeliveries2.reduce((s, d) => s + toNumber(d.qtyTon), 0);
-    const margin2 = totalRevenue2 - totalDriver2;
-    const outstanding2 = monthStmts2.filter((s) => !data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received));
-    const activeTrucks2 = new Set(monthDeliveries2.map((d) => d.truckNo)).size;
-    const thinBorder2 = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
-    const dash2 = wb2.addWorksheet("Dashboard");
-    dash2.columns = [{ key: "a", width: 30 }, { key: "b", width: 20 }, { key: "c", width: 30 }, { key: "d", width: 20 }];
-    dash2.mergeCells("A1:D1");
-    const h1 = dash2.getCell("A1"); h1.value = companyName2; h1.font = { name: "Arial", size: 14, bold: true }; h1.alignment = { horizontal: "center" };
-    dash2.getRow(1).height = 28;
-    dash2.mergeCells("A2:D2");
-    const h2 = dash2.getCell("A2"); h2.value = `Monthly Summary — ${label2}`; h2.font = { name: "Arial", size: 10, bold: true }; h2.alignment = { horizontal: "center" };
-    [["Total Revenue", `$ ${money(totalRevenue2)}`, "Driver Salary", `$ ${money(totalDriver2)}`],
-     ["Gross Margin", `$ ${money(margin2)}`, "Total Tonnage", `${totalQty2.toFixed(3)} T`],
-     ["Statements", String(monthStmts2.length), "Deliveries", String(monthDeliveries2.length)],
-     ["Active Trucks", String(activeTrucks2), "Outstanding", String(outstanding2.length)]].forEach((row, i) => {
-      const r = i + 4; dash2.getRow(r).height = 22;
-      [1, 3].forEach((col, j) => {
-        const lc = dash2.getCell(r, col); lc.value = row[j * 2]; lc.font = { name: "Arial", size: 10, bold: true }; lc.border = thinBorder2;
-        const vc = dash2.getCell(r, col + 1); vc.value = row[j * 2 + 1]; vc.font = { name: "Arial", size: 10 }; vc.border = thinBorder2;
-      });
-    });
-    const xlsBuf2 = Buffer.from(await wb2.xlsx.writeBuffer());
-
-    const sigPath2 = path.join(__dirname, "assets", "signature.jpg");
-    let sigBuf2 = null;
-    if (existsSync(sigPath2)) {
-      const raw2 = await readFile(sigPath2);
-      const info2 = readJpegInfo(raw2);
-      if (info2) sigBuf2 = { buffer: raw2, width: info2.width, height: info2.height, components: info2.components };
-    }
-
-    const stFiles2 = [];
-    for (const stmt of monthStmts2) {
-      const stRows2 = data.deliveries.filter((d) => d.statementId === stmt.id);
-      if (stRows2.length === 0) continue;
-      const stName2 = `st-${stmt.statementNumber}-${safeMonth2}`;
-      stFiles2.push({ name: `statements/${stName2}.xlsx`, data: await accountingWorkbook(data, stRows2, sigBuf2?.buffer) });
-      stFiles2.push({ name: `statements/${stName2}.pdf`, data: statementPdf(data, stRows2, sigBuf2) });
-    }
-
-    const sortedDl2 = [...monthDeliveries2].sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate));
-    const dlPdf2 = tablePdf({
-      title: `${label2} — Deliveries`, subtitle: `${companyName2} | ${monthDeliveries2.length} rows`,
-      columns: [
-        { key: "no", label: "No", width: 26, align: "center" }, { key: "date", label: "Date", width: 60 },
-        { key: "inv", label: "Invoice", width: 74 }, { key: "truck", label: "Truck", width: 55 },
-        { key: "to", label: "To Location", width: 120 }, { key: "qty", label: "QTY(T)", width: 68, align: "right" },
-        { key: "cTot", label: "Co. Total", width: 70, align: "right", bold: true }, { key: "dTot", label: "Dr. Total", width: 70, align: "right" },
-      ],
-      rows: sortedDl2.map((d, i) => ({ no: i + 1, date: formatDotDate(d.deliveryDate), inv: d.invoiceNo, truck: d.truckNo, to: d.toLocation, qty: `${Number(d.qtyTon || 0).toFixed(3)}T`, cTot: `$ ${money(d.companyTotalAmount)}`, dTot: `$ ${money(d.truckSalaryAmount)}` })),
-      totals: { qty: `${totalQty2.toFixed(3)}T`, cTot: `$ ${money(totalRevenue2)}`, dTot: `$ ${money(totalDriver2)}` }, totalsLabel: "Total",
-    });
-
-    const zipBuf2 = buildZip([
-      { name: `nm-logistic-${safeMonth2}.xlsx`, data: xlsBuf2 },
-      { name: `nm-logistic-${safeMonth2}-deliveries.pdf`, data: dlPdf2 },
-      ...stFiles2,
-    ]);
-
-    const zipFilename2 = `nm-logistic-summary-${safeMonth2}.zip`;
-    const caption2 = [
-      `N&M Logistic — Monthly Bundle`,
-      `Month: ${label2}`,
-      `Statements: ${monthStmts2.length} | Deliveries: ${monthDeliveries2.length} | Revenue: $ ${money(totalRevenue2)}`,
-    ].join("\n");
-    await sendFileToTelegram(zipBuf2, zipFilename2, caption2);
-    return sendJson(res, 200, { ok: true });
+    const bundle = await createMonthlyBundle(data, month);
+    await sendFileToTelegram(bundle.buffer, bundle.filename, bundle.caption);
+    return sendJson(res, 200, { ok: true, filename: bundle.filename, fileCount: bundle.files.length });
   }
 
   if (req.method === "GET" && url.pathname === "/api/backup/list") {
@@ -1915,276 +1856,14 @@ async function api(req, res, url, role = "admin") {
 
   if (req.method === "GET" && url.pathname === "/api/export/monthly-bundle") {
     const month = normalizeText(query.month) || currentLocalDate().slice(0, 7);
-    const monthStart = `${month}-01`;
-    const [y, m] = month.split("-").map(Number);
-    const monthEnd = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
-    const monthStmts = data.statements.filter((s) => s.month === month);
-    const monthDeliveries = data.deliveries.filter((d) => d.deliveryDate >= monthStart && d.deliveryDate <= monthEnd);
-    const label = monthLabel(month);
-    const companyName = data.settings.companyName || "N&M LOGISTIC";
-    const safeMonth = numericMonthFilePart(month);
-
-    // ── Excel workbook ──────────────────────────────────────────────────────
-    const wb = new ExcelJS.Workbook();
-    wb.creator = companyName;
-    wb.created = new Date();
-
-    const thinBorder = {
-      top: { style: "thin", color: { argb: "FF333333" } },
-      left: { style: "thin", color: { argb: "FF333333" } },
-      bottom: { style: "thin", color: { argb: "FF333333" } },
-      right: { style: "thin", color: { argb: "FF333333" } }
-    };
-    const baseFont = { name: "Arial", size: 10 };
-    const boldFont = { name: "Arial", size: 10, bold: true };
-    const titleFont = { name: "Arial", size: 14, bold: true };
-    const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } };
-    const headerFont = { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } };
-    const subFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } };
-
-    // Sheet 1: Dashboard
-    const dash = wb.addWorksheet("Dashboard");
-    dash.columns = [
-      { key: "a", width: 30 }, { key: "b", width: 20 },
-      { key: "c", width: 30 }, { key: "d", width: 20 }
-    ];
-    const totalRevenue = monthDeliveries.reduce((s, d) => s + toNumber(d.companyTotalAmount), 0);
-    const totalDriver = monthDeliveries.reduce((s, d) => s + toNumber(d.truckSalaryAmount), 0);
-    const totalQty = monthDeliveries.reduce((s, d) => s + toNumber(d.qtyTon), 0);
-    const margin = totalRevenue - totalDriver;
-    const outstanding = monthStmts.filter((s) => !data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received));
-    const outstandingAmt = outstanding.reduce((s, st) => {
-      const rows = monthDeliveries.filter((d) => d.statementId === st.id);
-      return s + rows.reduce((rs, d) => rs + toNumber(d.companyTotalAmount), 0);
-    }, 0);
-    const activeTrucks = new Set(monthDeliveries.map((d) => d.truckNo)).size;
-
-    const setCell = (ws, row, col, value, options = {}) => {
-      const cell = ws.getCell(row, col);
-      cell.value = value;
-      if (options.font) cell.font = options.font;
-      if (options.fill) cell.fill = options.fill;
-      if (options.alignment) cell.alignment = options.alignment;
-      if (options.border) cell.border = options.border;
-      return cell;
-    };
-
-    dash.mergeCells("A1:D1");
-    setCell(dash, 1, 1, companyName, { font: titleFont, alignment: { horizontal: "center", vertical: "middle" } });
-    dash.getRow(1).height = 28;
-    dash.mergeCells("A2:D2");
-    setCell(dash, 2, 1, `Monthly Summary Report — ${label}`, { font: boldFont, alignment: { horizontal: "center", vertical: "middle" } });
-    dash.getRow(2).height = 20;
-
-    const kpis = [
-      ["Total Revenue", `$ ${money(totalRevenue)}`, "Total Driver Salary", `$ ${money(totalDriver)}`],
-      ["Gross Margin", `$ ${money(margin)}`, "Total Tonnage", `${totalQty.toFixed(3)} T`],
-      ["Total Statements", String(monthStmts.length), "Total Deliveries", String(monthDeliveries.length)],
-      ["Active Trucks", String(activeTrucks), "Outstanding Payments", `${outstanding.length} stmt / $ ${money(outstandingAmt)}`],
-    ];
-    dash.getRow(3).height = 8;
-    kpis.forEach((row, i) => {
-      const r = i + 4;
-      dash.getRow(r).height = 22;
-      [1, 3].forEach((col, j) => {
-        setCell(dash, r, col, row[j * 2], { font: boldFont, fill: subFill, border: thinBorder, alignment: { vertical: "middle" } });
-        setCell(dash, r, col + 1, row[j * 2 + 1], { font: baseFont, border: thinBorder, alignment: { vertical: "middle" } });
-      });
-    });
-
-    // Sheet 2: Statements
-    const stSheet = wb.addWorksheet("Statements");
-    stSheet.columns = [
-      { key: "no", width: 6 }, { key: "stNo", width: 14 }, { key: "date", width: 14 },
-      { key: "type", width: 16 }, { key: "status", width: 14 }, { key: "payMonth", width: 14 },
-      { key: "paid", width: 12 }, { key: "amount", width: 16 }
-    ];
-    const stHeaders = ["No", "Stmt No", "Date", "Truck Type", "Status", "Payment Month", "Paid", "Total Amount"];
-    stSheet.getRow(1).values = stHeaders;
-    stSheet.getRow(1).height = 20;
-    for (let c = 1; c <= stHeaders.length; c++) {
-      const cell = stSheet.getCell(1, c);
-      cell.font = headerFont; cell.fill = headerFill;
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.border = thinBorder;
-    }
-    monthStmts.forEach((s, i) => {
-      const r = i + 2;
-      stSheet.getRow(r).height = 18;
-      const totalAmt = monthDeliveries.filter((d) => d.statementId === s.id).reduce((sum, d) => sum + toNumber(d.companyTotalAmount), 0);
-      const isPaid = data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received);
-      const vals = [i + 1, s.statementNumber, formatDotDate(s.statementDate), truckTypeLabel(s.truckType), s.status || "", s.paymentMonth || "", isPaid ? "Yes" : "No", `$ ${money(totalAmt)}`];
-      vals.forEach((v, ci) => {
-        const cell = stSheet.getCell(r, ci + 1);
-        cell.value = v; cell.font = baseFont; cell.border = thinBorder;
-        cell.alignment = { horizontal: ci === 0 ? "center" : "left", vertical: "middle" };
-        if (i % 2 === 1) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
-      });
-    });
-
-    // Sheet 3: Deliveries
-    const dlSheet = wb.addWorksheet("Deliveries");
-    dlSheet.columns = [
-      { key: "no", width: 5 }, { key: "date", width: 13 }, { key: "inv", width: 13 },
-      { key: "truck", width: 10 }, { key: "type", width: 12 }, { key: "from", width: 14 },
-      { key: "to", width: 22 },
-      { key: "qty", width: 12, style: { numFmt: '0.00000"T"' } },
-      { key: "cUp", width: 11, style: { numFmt: '"$"0.000' } },
-      { key: "cTot", width: 13, style: { numFmt: '"$"0.00' } },
-      { key: "dUp", width: 11, style: { numFmt: '"$"0.000' } },
-      { key: "dTot", width: 13, style: { numFmt: '"$"0.00' } }
-    ];
-    const dlHeaders = ["No", "Date", "Invoice No", "Truck", "Type", "From", "To", "QTY(T)", "Co. Price", "Co. Total", "Dr. Price", "Dr. Total"];
-    dlSheet.getRow(1).values = dlHeaders;
-    dlSheet.getRow(1).height = 20;
-    for (let c = 1; c <= dlHeaders.length; c++) {
-      const cell = dlSheet.getCell(1, c);
-      cell.font = headerFont; cell.fill = headerFill;
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.border = thinBorder;
-    }
-    const sortedDeliveries = [...monthDeliveries].sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate));
-    sortedDeliveries.forEach((d, i) => {
-      const r = i + 2;
-      dlSheet.getRow(r).height = 18;
-      const vals = [i + 1, formatDotDate(d.deliveryDate), d.invoiceNo, d.truckNo, truckTypeLabel(d.truckType), d.fromLocation, d.toLocation,
-        Number(d.qtyTon || 0), Number(d.companyUnitPrice || 0), Number(d.companyTotalAmount || 0),
-        Number(d.truckSalaryUnitPrice || 0), Number(d.truckSalaryAmount || 0)];
-      vals.forEach((v, ci) => {
-        const cell = dlSheet.getCell(r, ci + 1);
-        cell.value = v; cell.font = baseFont; cell.border = thinBorder;
-        cell.alignment = { horizontal: ci === 0 || ci === 7 || ci === 8 || ci === 9 || ci === 10 || ci === 11 ? "right" : "left", vertical: "middle" };
-        if (i % 2 === 1) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
-      });
-    });
-
-    const xlsBuffer = Buffer.from(await wb.xlsx.writeBuffer());
-
-    // ── PDF ─────────────────────────────────────────────────────────────────
-    const W = PDF_PAGE_WIDTH;
-    const H = PDF_PAGE_HEIGHT;
-    const M = 30;
-    const TW = W - M * 2;
-
-    // Page 1: Summary dashboard
-    const summaryCommands = [];
-    summaryCommands.push(drawRect(M, H - 60, TW, 50, [0.06, 0.09, 0.16]));
-    summaryCommands.push(drawText(companyName, M + 8, H - 26, { size: 16, bold: true, color: [1, 1, 1], width: TW - 16 }));
-    summaryCommands.push(drawText(`Monthly Summary Report — ${label}`, M + 8, H - 44, { size: 9, color: [0.7, 0.75, 0.85], width: TW - 16 }));
-
-    const kpiDefs = [
-      { label: "Total Revenue", value: `$ ${money(totalRevenue)}`, fill: [0.94, 0.99, 0.97] },
-      { label: "Total Driver Salary", value: `$ ${money(totalDriver)}`, fill: [1, 0.97, 0.93] },
-      { label: "Gross Margin", value: `$ ${money(margin)}`, fill: margin >= 0 ? [0.94, 0.99, 0.97] : [1, 0.94, 0.94] },
-      { label: "Total Tonnage", value: `${totalQty.toFixed(3)} T`, fill: [0.97, 0.97, 1] },
-      { label: "Statements", value: String(monthStmts.length), fill: [0.97, 0.98, 0.99] },
-      { label: "Deliveries", value: String(monthDeliveries.length), fill: [0.97, 0.98, 0.99] },
-      { label: "Active Trucks", value: String(activeTrucks), fill: [0.97, 0.98, 0.99] },
-      { label: "Outstanding", value: `${outstanding.length} / $ ${money(outstandingAmt)}`, fill: outstanding.length > 0 ? [1, 0.94, 0.94] : [0.94, 0.99, 0.97] },
-    ];
-    const cardW = (TW - 10) / 4;
-    const cardH = 60;
-    kpiDefs.forEach((kpi, i) => {
-      const col = i % 4;
-      const row = Math.floor(i / 4);
-      const cx = M + col * (cardW + 3.3);
-      const cy = H - 90 - row * (cardH + 8) - cardH;
-      summaryCommands.push(drawRect(cx, cy, cardW, cardH, kpi.fill, [0.85, 0.88, 0.92]));
-      summaryCommands.push(drawText(kpi.label, cx + 6, cy + cardH - 14, { size: 7, bold: true, color: [0.39, 0.46, 0.56], width: cardW - 12 }));
-      summaryCommands.push(drawText(kpi.value, cx + 6, cy + 14, { size: 13, bold: true, width: cardW - 12 }));
-    });
-    const pdfPages = [{ commands: summaryCommands, width: W, height: H }];
-
-    // Statements table pages
-    const stPdf = tablePdf({
-      title: `${label} — Statements`,
-      subtitle: `${companyName} | ${monthStmts.length} statements`,
-      columns: [
-        { key: "no", label: "No", width: 30, align: "center" },
-        { key: "stNo", label: "Stmt No", width: 60, align: "center" },
-        { key: "date", label: "Date", width: 80 },
-        { key: "type", label: "Type", width: 80 },
-        { key: "status", label: "Status", width: 70 },
-        { key: "payMonth", label: "Pay Month", width: 80 },
-        { key: "paid", label: "Paid", width: 50, align: "center" },
-        { key: "amount", label: "Total Amount", width: 95, align: "right", bold: true },
-      ],
-      rows: monthStmts.map((s, i) => {
-        const totalAmt = monthDeliveries.filter((d) => d.statementId === s.id).reduce((sum, d) => sum + toNumber(d.companyTotalAmount), 0);
-        const isPaid = data.paymentMonths.find((pm) => pm.month === s.paymentMonth && pm.received);
-        return { no: i + 1, stNo: s.statementNumber, date: formatDotDate(s.statementDate), type: truckTypeLabel(s.truckType), status: s.status || "", payMonth: s.paymentMonth || "-", paid: isPaid ? "Yes" : "No", amount: `$ ${money(totalAmt)}` };
-      }),
-      totals: { amount: `$ ${money(monthStmts.reduce((sum, s) => sum + monthDeliveries.filter((d) => d.statementId === s.id).reduce((rs, d) => rs + toNumber(d.companyTotalAmount), 0), 0))}` },
-      totalsLabel: "Total",
-    });
-
-    // Deliveries table pages
-    const dlPdf = tablePdf({
-      title: `${label} — Deliveries`,
-      subtitle: `${companyName} | ${monthDeliveries.length} delivery rows`,
-      columns: [
-        { key: "no", label: "No", width: 26, align: "center" },
-        { key: "date", label: "Date", width: 60 },
-        { key: "inv", label: "Invoice", width: 74 },
-        { key: "truck", label: "Truck", width: 55 },
-        { key: "type", label: "Type", width: 55 },
-        { key: "to", label: "To Location", width: 120 },
-        { key: "qty", label: "QTY(T)", width: 68, align: "right" },
-        { key: "cUp", label: "Co. Price", width: 60, align: "right" },
-        { key: "cTot", label: "Co. Total", width: 66, align: "right", bold: true },
-        { key: "dUp", label: "Dr. Price", width: 60, align: "right" },
-        { key: "dTot", label: "Dr. Total", width: 66, align: "right" },
-      ],
-      rows: sortedDeliveries.map((d, i) => ({
-        no: i + 1, date: formatDotDate(d.deliveryDate), inv: d.invoiceNo,
-        truck: d.truckNo, type: truckTypeLabel(d.truckType), to: d.toLocation,
-        qty: `${Number(d.qtyTon || 0).toFixed(3)}T`,
-        cUp: `$ ${unitMoney(d.companyUnitPrice)}`, cTot: `$ ${money(d.companyTotalAmount)}`,
-        dUp: `$ ${unitMoney(d.truckSalaryUnitPrice)}`, dTot: `$ ${money(d.truckSalaryAmount)}`,
-      })),
-      totals: { qty: `${totalQty.toFixed(3)}T`, cTot: `$ ${money(totalRevenue)}`, dTot: `$ ${money(totalDriver)}` },
-      totalsLabel: "Total",
-    });
-
-    const summaryPdfBuf = buildPdf(pdfPages);
-
-    // ── Signature image (shared across all per-statement exports) ────────────
-    const sigPath = path.join(__dirname, "assets", "signature.jpg");
-    let sigBuffer = null;
-    if (existsSync(sigPath)) {
-      const raw = await readFile(sigPath);
-      const info = readJpegInfo(raw);
-      if (info) sigBuffer = { buffer: raw, width: info.width, height: info.height, components: info.components };
-    }
-
-    // ── Per-statement files ──────────────────────────────────────────────────
-    const stmtFiles = [];
-    for (const stmt of monthStmts) {
-      const stRows = data.deliveries.filter((d) => d.statementId === stmt.id);
-      if (stRows.length === 0) continue;
-      const stName = `st-${stmt.statementNumber}-${safeMonth}`;
-      const [stXls, stPdfBuf] = await Promise.all([
-        accountingWorkbook(data, stRows, sigBuffer?.buffer),
-        Promise.resolve(statementPdf(data, stRows, sigBuffer)),
-      ]);
-      stmtFiles.push({ name: `statements/${stName}.xlsx`, data: stXls });
-      stmtFiles.push({ name: `statements/${stName}.pdf`, data: stPdfBuf });
-    }
-
-    const zipBuf = buildZip([
-      { name: `nm-logistic-${safeMonth}.xlsx`, data: xlsBuffer },
-      { name: `nm-logistic-${safeMonth}-summary.pdf`, data: summaryPdfBuf },
-      { name: `nm-logistic-${safeMonth}-statements.pdf`, data: stPdf },
-      { name: `nm-logistic-${safeMonth}-deliveries.pdf`, data: dlPdf },
-      ...stmtFiles,
-    ]);
-
-    const zipName = `nm-logistic-summary-${safeMonth}.zip`;
+    requireAdmin();
+    const bundle = await createMonthlyBundle(data, month);
     res.writeHead(200, {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="${zipName}"`
+      "Content-Length": bundle.buffer.length,
+      "Content-Disposition": `attachment; filename="${bundle.filename}"`
     });
-    return res.end(zipBuf);
+    return res.end(bundle.buffer);
   }
 
   if (req.method === "GET" && url.pathname === "/api/export/accounting") {
