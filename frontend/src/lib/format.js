@@ -160,6 +160,11 @@ const deliverySort = (a, b) =>
   String(a.deliveryDate || "").localeCompare(String(b.deliveryDate || "")) ||
   String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
 const truckTypeLabel = (truckType) => truckType === "With Crane" ? "Crane" : truckType === "Without Crane" ? "No Crane" : truckType;
+const compareTrucksCraneFirst = (a, b) => {
+  const rank = (value) => value === "With Crane" ? 0 : value === "Without Crane" ? 1 : 2;
+  return rank(a?.truckType) - rank(b?.truckType) ||
+    String(a?.truckNo || "").localeCompare(String(b?.truckNo || ""), undefined, { numeric: true, sensitivity: "base" });
+};
 const formatDate = (value) => {
   const text = String(value || "");
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -242,5 +247,5 @@ function groupPriceHistory(prices) {
 }
 
 export {
-  localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateInput, parseDateInput, formatDateTime, formatCambodiaDateTime, monthName, groupPriceHistory
+  localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, compareTrucksCraneFirst, formatDate, formatDateInput, parseDateInput, formatDateTime, formatCambodiaDateTime, monthName, groupPriceHistory
 };

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "./components/ui.jsx";
-import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "./lib/format.js";
+import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, compareTrucksCraneFirst, formatDate, formatDateTime, monthName, groupPriceHistory } from "./lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile, uploadRecovery } from "./lib/api.js";
 import { LoginPage } from "./components/LoginPage.jsx";
 import { AppCtx } from "./AppContext.js";
@@ -374,7 +374,7 @@ function App() {
     }
     return [...byTruck.values()]
       .map((t) => ({ ...t, systemAmount: roundMoney(t.systemAmount) }))
-      .sort((a, b) => String(a.truckNo).localeCompare(String(b.truckNo)));
+      .sort(compareTrucksCraneFirst);
   }, [data.deliveries, data.trucks, reconMonth]);
 
   // Month-by-month earnings from the driver-payment discrepancies.

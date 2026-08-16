@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useApp } from "../AppContext.js";
 import { PageHead, MonthPicker, Panel } from "../components/ui.jsx";
 import { money, roundMoney, monthName, truckTypeLabel } from "../lib/format.js";
@@ -36,6 +37,7 @@ export function ComparePayPage() {
               const checkedCount = computed.filter((r) => r.diff != null).length;
               const mismatchCount = computed.filter((r) => r.diff != null && Math.abs(r.diff) >= TOL).length;
               const totalOff = roundMoney(computed.reduce((s, r) => s + (r.diff != null ? Math.abs(r.diff) : 0), 0));
+              const truckTypeCounts = computed.reduce((counts, row) => ({ ...counts, [row.truckType]: (counts[row.truckType] || 0) + 1 }), {});
               const fmtDiff = (v) => `${v > 0 ? "+" : v < 0 ? "−" : ""}$ ${money(Math.abs(v))}`;
               return (
                 <>
@@ -67,10 +69,21 @@ export function ComparePayPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {computed.map((r) => {
+                      {computed.map((r, index) => {
                         const match = r.diff != null && Math.abs(r.diff) < TOL;
+                        const startsGroup = index === 0 || computed[index - 1].truckType !== r.truckType;
+                        const isCrane = r.truckType === "With Crane";
                         return (
-                          <tr key={r.truckNo} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
+                          <Fragment key={r.truckNo}>
+                          {startsGroup && (
+                            <tr className={isCrane ? "bg-teal-50" : "bg-sky-50"}>
+                              <td colSpan="5" className={`border-y px-3 py-2 text-xs font-black uppercase tracking-wider ${isCrane ? "border-teal-200 text-teal-800" : "border-sky-200 text-sky-800"}`}>
+                                <span className={`mr-2 inline-block h-2 w-2 rounded-full ${isCrane ? "bg-teal-500" : "bg-sky-500"}`} />
+                                {isCrane ? "Crane Trucks" : "No-Crane Trucks"} · {truckTypeCounts[r.truckType] || 0}
+                              </td>
+                            </tr>
+                          )}
+                          <tr className={`border-b border-slate-100 ${index % 2 === 0 ? "bg-white" : "bg-slate-50"}`}>
                             <td className="px-3 py-3">
                               <div className="font-black text-slate-800">{r.truckNo}</div>
                               <div className="text-xs text-slate-400">{truckTypeLabel(r.truckType)}{r.driverName ? ` · ${r.driverName}` : ""} · {r.trips} trips</div>
@@ -97,6 +110,7 @@ export function ComparePayPage() {
                                 : <span className="text-xs font-black text-red-600">⚠ off</span>}
                             </td>
                           </tr>
+                          </Fragment>
                         );
                       })}
                     </tbody>
