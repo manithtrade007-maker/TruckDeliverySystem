@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useApp } from "../AppContext.js";
-import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
+import { Button, Select, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, formatCambodiaDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
 export function DashboardPage() {
-  const { activeTruckCount, activityPage, availableYears, dashOutstanding, data, flash, isAdmin, monthlyTotals, page, reportMonth, reportYear, setActivityPage, setPage, setReportMonth, setReportTruckNo, setReportYear, statementCounts, statementSummaries, telegramConfigured, truckPerformance, yearSummary } = useApp();
+  const { activeTruckCount, activityPage, availableYears, dashOutstanding, data, flash, isAdmin, monthlyTotals, page, reportMonth, reportYear, setActivityPage, setPage, setReportMonth, setReportTruckNo, setReportYear, statementCounts, statementSummaries, truckPerformance, yearSummary } = useApp();
   const [automation, setAutomation] = useState(null);
   const [recovery, setRecovery] = useState(null);
   const loadAutomation = () => api("/api/monthly-automation/status").then(setAutomation).catch(() => setAutomation(null));
@@ -15,7 +15,7 @@ export function DashboardPage() {
   return (
         <main className="mx-auto grid max-w-[1500px] gap-5 p-4 pb-20 lg:pb-4">
           {/* Header */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-widest text-teal-600">N&M Logistic</p>
               <h2 className="text-3xl font-black tracking-tight text-slate-900">Dashboard</h2>
@@ -23,31 +23,21 @@ export function DashboardPage() {
                 {new Date(reportMonth + "-01").toLocaleString("default", { month: "long", year: "numeric" })} overview
               </p>
             </div>
-            <div className="flex flex-wrap items-end gap-3">
-              <Field label="Report Month">
-                <Input type="month" value={reportMonth} onChange={(event) => { setReportMonth(event.target.value); setReportTruckNo(""); }} />
-              </Field>
-              {isAdmin && (
-                <div className="flex gap-2 mb-0.5">
-                  <button type="button"
-                    onClick={() => downloadFile(`/api/export/monthly-bundle?month=${encodeURIComponent(reportMonth)}`).catch((err) => flash(err.message, "error"))}
-                    className="flex items-center gap-2 rounded-xl border border-teal-300 bg-teal-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-teal-700 transition">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    Monthly Bundle
-                  </button>
-                  {telegramConfigured && (
-                    <button type="button"
-                      onClick={() => api(`/api/export/monthly-bundle-telegram?month=${encodeURIComponent(reportMonth)}`, { method: "POST" }).then(() => { flash("Monthly bundle sent to Telegram."); loadAutomation(); }).catch((err) => flash(err.message, "error"))}
-                      className="flex items-center gap-2 rounded-xl border border-sky-300 bg-sky-500 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-sky-600 transition">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
-                      Send to Telegram
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+            <label className="block w-full sm:w-[270px]">
+              <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Report Month</span>
+              <div className="group flex min-h-14 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 shadow-sm shadow-slate-900/5 transition focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-100 hover:border-slate-300">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+                <input
+                  type="month"
+                  aria-label="Report month"
+                  value={reportMonth}
+                  onChange={(event) => { setReportMonth(event.target.value); setReportTruckNo(""); }}
+                  className="min-w-0 flex-1 bg-transparent py-3 text-base font-black text-slate-900 outline-none"
+                />
+              </div>
+            </label>
           </div>
 
           {isAdmin && (automation || recovery) && (
