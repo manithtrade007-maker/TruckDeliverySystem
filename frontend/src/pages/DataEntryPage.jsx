@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../AppContext.js";
-import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
+import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, MonthPicker, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateInput, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { api, downloadFile, viewPdf } from "../lib/api.js";
 
@@ -646,7 +646,7 @@ export function DataEntryPage() {
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Month"><Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} /></Field>
+                <MonthPicker label="Statement Month" className="sm:w-full" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} />
                 <Field label="Statement No">
                   <Input
                     placeholder="Search statement number"

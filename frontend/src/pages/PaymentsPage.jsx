@@ -1,5 +1,5 @@
 import { useApp } from "../AppContext.js";
-import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
+import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, MonthPicker, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
@@ -61,9 +61,7 @@ export function PaymentsPage() {
               title="Payments"
               meta="Track which statements are sent to the company and what has been received."
               action={(
-                <Field label="Payment Month">
-                  <Input type="month" value={paymentsViewMonth} onChange={(e) => setPaymentsViewMonth(e.target.value)} />
-                </Field>
+                <MonthPicker label="Payment Month" value={paymentsViewMonth} onChange={(e) => setPaymentsViewMonth(e.target.value)} />
               )}
             />
 

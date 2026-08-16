@@ -1,5 +1,5 @@
 import { useApp } from "../AppContext.js";
-import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
+import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, MonthPicker, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
@@ -10,10 +10,9 @@ export function PricesPage() {
           <PageHead title="Price Comparison" meta="Compare company price vs driver price side by side for all locations." />
 
           <Panel>
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-base font-bold">Price Periods Used</h2>
-              <input type="month" value={pricePeriodsMonth} onChange={(e) => setPricePeriodsMonth(e.target.value)}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100" />
+              <MonthPicker label="Price Month" value={pricePeriodsMonth} onChange={(e) => setPricePeriodsMonth(e.target.value)} />
             </div>
             {pricePeriods.length === 0 ? (
               <p className="text-sm text-slate-400 py-2">No deliveries found for this month.</p>

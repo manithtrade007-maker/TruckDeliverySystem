@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useApp } from "../AppContext.js";
-import { Button, Select, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
+import { Button, Select, Panel, KpiCard, MetricCard, MonthPicker, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, formatCambodiaDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
@@ -23,21 +23,7 @@ export function DashboardPage() {
                 {new Date(reportMonth + "-01").toLocaleString("default", { month: "long", year: "numeric" })} overview
               </p>
             </div>
-            <label className="block w-full sm:w-[270px]">
-              <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Report Month</span>
-              <div className="group flex min-h-14 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 shadow-sm shadow-slate-900/5 transition focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-100 hover:border-slate-300">
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                </span>
-                <input
-                  type="month"
-                  aria-label="Report month"
-                  value={reportMonth}
-                  onChange={(event) => { setReportMonth(event.target.value); setReportTruckNo(""); }}
-                  className="min-w-0 flex-1 bg-transparent py-3 text-base font-black text-slate-900 outline-none"
-                />
-              </div>
-            </label>
+            <MonthPicker value={reportMonth} onChange={(event) => { setReportMonth(event.target.value); setReportTruckNo(""); }} />
           </div>
 
           {isAdmin && (automation || recovery) && (

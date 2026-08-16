@@ -1,5 +1,5 @@
 import { useApp } from "../AppContext.js";
-import { PageHead, Field, Input, Panel } from "../components/ui.jsx";
+import { PageHead, MonthPicker, Panel } from "../components/ui.jsx";
 import { money, roundMoney, monthName, truckTypeLabel } from "../lib/format.js";
 
 export function ComparePayPage() {
@@ -10,9 +10,7 @@ export function ComparePayPage() {
             title="Compare Pay"
             meta="Compare the system's driver payment to the driver's own reported total."
             action={(
-              <Field label="Month">
-                <Input type="month" value={reconMonth} onChange={(event) => setReconMonth(event.target.value)} />
-              </Field>
+              <MonthPicker label="Compare Month" value={reconMonth} onChange={(event) => setReconMonth(event.target.value)} />
             )}
           />
           <Panel>

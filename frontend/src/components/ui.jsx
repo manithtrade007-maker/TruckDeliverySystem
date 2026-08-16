@@ -38,6 +38,25 @@ export function Select({ children, className = "", ...props }) {
   );
 }
 
+export function MonthPicker({ label = "Report Month", className = "", inputClassName = "", ...props }) {
+  return (
+    <label className={`block w-full sm:w-[270px] ${className}`}>
+      <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">{label}</span>
+      <div className={`flex min-h-14 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 shadow-sm shadow-slate-900/5 transition focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-100 hover:border-slate-300 ${props.disabled ? "bg-slate-50 opacity-70" : ""}`}>
+        <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </span>
+        <input
+          type="month"
+          aria-label={props["aria-label"] || label}
+          className={`min-w-0 flex-1 bg-transparent py-3 text-base font-black text-slate-900 outline-none disabled:cursor-not-allowed ${inputClassName}`}
+          {...props}
+        />
+      </div>
+    </label>
+  );
+}
+
 export function Field({ label, children }) {
   return (
     <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-slate-500">
