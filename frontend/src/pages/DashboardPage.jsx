@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
-import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
+import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, formatCambodiaDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
 export function DashboardPage() {
@@ -50,22 +50,45 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {isAdmin && automation && (
-            <div className="grid gap-3 rounded-2xl border border-sky-200 bg-sky-50/70 px-4 py-3 text-sm shadow-sm sm:grid-cols-4">
-              <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Automatic Telegram</div><div className="mt-0.5 font-black text-slate-800">{automation.configured ? "Active" : "Not configured"}</div></div>
-              <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Next Bundle</div><div className="mt-0.5 font-black text-slate-800">{automationMonth(automation.pendingMonth || automation.next?.bundleMonth)}</div></div>
-              <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Schedule</div><div className="mt-0.5 font-black text-slate-800">5th · 9:00 AM Cambodia</div></div>
-              <div><div className="text-[10px] font-black uppercase tracking-wide text-sky-600">Last Sent</div><div className="mt-0.5 font-black text-slate-800">{automation.last ? `${automationMonth(automation.last.month)} · ${automation.last.method}` : "Not sent yet"}</div>{automation.current?.status === "failed" && <div className="mt-1 text-xs font-bold text-red-600">Retry scheduled</div>}</div>
-            </div>
-          )}
+          {isAdmin && (automation || recovery) && (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {automation && (
+                <section className="rounded-2xl border border-sky-200 bg-sky-50/70 p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.8 2.2a1.5 1.5 0 0 0-1.5-.25L2.9 8.65a1.5 1.5 0 0 0 .08 2.83l4.4 1.47 1.67 5.2a1.5 1.5 0 0 0 2.55.55l2.45-2.5 4.34 3.18a1.5 1.5 0 0 0 2.37-.9l2.7-14.83a1.5 1.5 0 0 0-.65-1.45Z"/></svg>
+                      </span>
+                      <div><div className="text-[10px] font-black uppercase tracking-wider text-sky-600">Monthly Reports</div><div className="font-black text-slate-900">Telegram Automation</div></div>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${automation.configured ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-500"}`}>{automation.configured ? "Active" : "Not configured"}</span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 border-t border-sky-100 pt-3 text-sm">
+                    <div><div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Next bundle</div><div className="mt-0.5 font-black text-slate-800">{automationMonth(automation.pendingMonth || automation.next?.bundleMonth)}</div><div className="text-xs font-bold text-slate-500">5th · 9:00 AM</div></div>
+                    <div><div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Last sent</div><div className="mt-0.5 font-black text-slate-800">{automation.last ? automationMonth(automation.last.month) : "Not sent yet"}</div><div className="text-xs font-bold text-slate-500">{automation.last?.sentAt ? `${formatCambodiaDateTime(automation.last.sentAt)} Cambodia` : "Cambodia time"}</div></div>
+                  </div>
+                  {automation.current?.status === "failed" && <div className="mt-2 text-xs font-bold text-red-600">Delivery failed · automatic retry scheduled</div>}
+                </section>
+              )}
 
-          {isAdmin && recovery && (
-            <div className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${recovery.protection === "protected" ? "border-emerald-200 bg-emerald-50/70" : recovery.lastVerified ? "border-amber-200 bg-amber-50/70" : "border-red-200 bg-red-50"}`}>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div><span className="font-black text-slate-800">Recovery Backup:</span> <span className="font-bold text-slate-600">{recovery.protection === "protected" ? `${recovery.lastVerified.fileName} · sent to Telegram` : recovery.lastVerified ? `${recovery.lastVerified.fileName} · verified locally` : "waiting for first verified backup"}</span></div>
-                <div className="text-xs font-black uppercase tracking-wide text-slate-500">After changes · Automatic retry</div>
-              </div>
-              {recovery.failed && <div className="mt-1 text-xs font-bold text-red-700">{recovery.failed.status === "delivery_failed" ? "Telegram delivery failed" : "Backup creation failed"} and will retry: {recovery.failed.error}</div>}
+              {recovery && (
+                <section className={`rounded-2xl border p-4 shadow-sm ${recovery.protection === "protected" ? "border-emerald-200 bg-emerald-50/70" : recovery.lastVerified ? "border-amber-200 bg-amber-50/70" : "border-red-200 bg-red-50"}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${recovery.protection === "protected" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                      </span>
+                      <div><div className="text-[10px] font-black uppercase tracking-wider text-emerald-600">System Recovery</div><div className="font-black text-slate-900">Recovery Backup</div></div>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${recovery.protection === "protected" ? "bg-emerald-100 text-emerald-700" : recovery.lastVerified ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>{recovery.protection === "protected" ? "Protected" : recovery.lastVerified ? "Local only" : "Not protected"}</span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 border-t border-emerald-100 pt-3 text-sm">
+                    <div><div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Latest backup</div><div className="mt-0.5 font-black text-slate-800">{recovery.details?.createdAt ? formatCambodiaDateTime(recovery.details.createdAt) : "No backup yet"}</div><div className="text-xs font-bold text-slate-500">Cambodia time · after changes</div></div>
+                    <div><div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Sent to Telegram</div><div className="mt-0.5 font-black text-slate-800">{recovery.lastSent?.sentAt ? formatCambodiaDateTime(recovery.lastSent.sentAt) : "Not sent yet"}</div><div className="text-xs font-bold text-slate-500">Cambodia time · automatic retry</div></div>
+                  </div>
+                  {recovery.failed && <div className="mt-2 text-xs font-bold text-red-700">{recovery.failed.status === "delivery_failed" ? "Telegram delivery failed" : "Backup creation failed"} · automatic retry scheduled</div>}
+                </section>
+              )}
             </div>
           )}
 

@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "../components/ui.jsx";
-import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
+import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, formatCambodiaDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
+
+const recoveryReasonLabel = (reason) => ({
+  manual: "Created manually",
+  "after-change": "Automatic after changes",
+  "before-delete": "Safety backup before deletion",
+  retry: "Automatic retry",
+  "before-restore": "Safety backup before restore"
+}[reason] || "Automatic backup");
 
 export function SetupPage() {
   const { activeCompanyPriceCounts, activeCompanyPriceRows, applyBulkPriceUpdate, bulkExistingDates, bulkPriceForm, bulkPriceRows, companyPriceGroups, createManualBackup, createStaffUser, data, deletePrice, deletePricesByDate, deleteStaffUser, deleteTruck, downloadBackup, driverPriceForm, driverPriceGroups, editPasswordId, editPasswordValue, isAdmin, isEditingTruck, locations, newUserForm, priceCompareDates, priceForm, restoreBackup, saveDriverPrice, savePrice, saveSettings, saveStaffPassword, saveTruck, setBulkLocationFilter, setBulkPriceForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setNewUserForm, setPriceForm, setSettingsForm, setSetupLocationSearch, setSetupSection, setTruckForm, settingsForm, setupLocationSearch, setupSection, staffUsers, truckForm } = useApp();
@@ -96,7 +104,7 @@ export function SetupPage() {
               <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Latest backup</div>
-                  <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.details?.createdAt ? formatDateTime(recoveryStatus.details.createdAt) : "No backup yet"}</div>
+                  <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.details?.createdAt ? formatCambodiaDateTime(recoveryStatus.details.createdAt) : "No backup yet"}</div>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">ZIP size</div>
@@ -107,10 +115,20 @@ export function SetupPage() {
                   <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.details ? `${recoveryStatus.details.counts.statements} statements · ${recoveryStatus.details.counts.deliveries} deliveries` : "—"}</div>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Telegram</div>
-                  <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.lastVerified?.status === "sent" ? "Delivered" : recoveryStatus?.configured ? "Waiting / retrying" : "Not configured"}</div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Last sent to Telegram</div>
+                  <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.lastSent?.sentAt ? `${formatCambodiaDateTime(recoveryStatus.lastSent.sentAt)} Cambodia` : recoveryStatus?.configured ? "Not sent yet" : "Not configured"}</div>
                 </div>
               </div>
+
+              {recoveryStatus?.lastVerified && (
+                <div className="mt-3 grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 text-xs sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div className="min-w-0">
+                    <div className="font-black uppercase tracking-wide text-slate-400">Latest recovery file</div>
+                    <div className="mt-0.5 break-all font-bold text-slate-700">{recoveryStatus.lastVerified.fileName}</div>
+                  </div>
+                  <div className="font-black text-slate-500">{recoveryReasonLabel(recoveryStatus.details?.reason)}</div>
+                </div>
+              )}
 
               {recoveryStatus?.failed && (
                 <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">
