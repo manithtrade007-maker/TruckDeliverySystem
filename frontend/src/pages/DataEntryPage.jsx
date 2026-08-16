@@ -63,6 +63,12 @@ function DeliveryDateInput({ value, onChange, disabled, style, onFocus, onBlur }
   );
 }
 
+function compactMonthName(value) {
+  if (!/^\d{4}-\d{2}$/.test(value || "")) return "Not assigned";
+  const [year, month] = value.split("-");
+  return new Date(Number(year), Number(month) - 1, 1).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
 export function DataEntryPage() {
   const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
   const [driveLinkStatement, setDriveLinkStatement] = useState(null);
@@ -664,7 +670,7 @@ export function DataEntryPage() {
                       <th className="px-3 py-2.5 text-center font-black">Status</th>
                       <th className="hidden sm:table-cell px-3 py-2.5 text-center font-black">Rows</th>
                       <th className="px-3 py-2.5 text-right font-black">Amount</th>
-                      {isAdmin && <th className="hidden md:table-cell px-3 py-2.5 text-center font-black">Pay Month</th>}
+                      {isAdmin && <th className="hidden w-[150px] md:table-cell px-3 py-2.5 text-center font-black">Pay Month</th>}
                       <th className="px-3 py-2.5 text-center font-black">Document Link</th>
                       <th className="px-3 py-2.5 text-right font-black">Actions</th>
                     </tr>
@@ -704,11 +710,18 @@ export function DataEntryPage() {
                             ${money(statement.companyTotalAmount)}
                           </td>
                           {isAdmin && (
-                            <td className="hidden md:table-cell px-3 py-2.5 text-center">
+                            <td className="hidden min-w-[150px] md:table-cell px-3 py-2.5 text-center">
                               <button type="button"
                                 onClick={() => { setAssignModal(statement); setAssignMonth(statement.paymentMonth || currentMonth()); }}
-                                className="w-[150px] whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition text-center">
-                                {statement.paymentMonth ? `Pay: ${monthName(statement.paymentMonth)}` : "Set Pay"}
+                                title={statement.paymentMonth ? `Change payment month from ${monthName(statement.paymentMonth)}` : "Assign a payment month"}
+                                className={`mx-auto inline-flex min-w-[126px] items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left transition ${statement.paymentMonth ? "border-teal-200 bg-teal-50 text-teal-800 hover:border-teal-500 hover:bg-teal-100" : "border-dashed border-slate-300 bg-white text-slate-600 hover:border-teal-500 hover:text-teal-700"}`}>
+                                <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${statement.paymentMonth ? "bg-teal-100" : "bg-slate-100"}`}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-[9px] font-black uppercase tracking-wide opacity-60">{statement.paymentMonth ? "Assigned" : "Pay month"}</span>
+                                  <span className="block whitespace-nowrap text-xs font-black">{compactMonthName(statement.paymentMonth)}</span>
+                                </span>
                               </button>
                             </td>
                           )}
