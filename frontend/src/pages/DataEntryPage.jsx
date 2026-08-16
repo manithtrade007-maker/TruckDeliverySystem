@@ -70,7 +70,7 @@ function compactMonthName(value) {
 }
 
 export function DataEntryPage() {
-  const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
+  const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, data, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
   const [driveLinkStatement, setDriveLinkStatement] = useState(null);
   const [driveLinkForm, setDriveLinkForm] = useState({ url: "", originalName: "" });
   const [verifiedDriveUrl, setVerifiedDriveUrl] = useState("");
@@ -81,6 +81,8 @@ export function DataEntryPage() {
   const [driveFolderUrl, setDriveFolderUrl] = useState("");
   const [driveFolderPreview, setDriveFolderPreview] = useState(null);
   const [savedDriveFolder, setSavedDriveFolder] = useState(null);
+  const monthStatements = (data.statements || []).filter((statement) => statement.month === reportMonth);
+  const linkedDrivePdfCount = monthStatements.filter((statement) => statement.drivePdfUrl).length;
   const [scanningDriveFolder, setScanningDriveFolder] = useState(false);
   const [applyingDriveFolder, setApplyingDriveFolder] = useState(false);
 
@@ -630,27 +632,34 @@ export function DataEntryPage() {
 
           {!selectedViewStatement && !showStatementWorkspace && !selectedStatement && (
             <Panel id="all-statements-panel" className="lg:col-span-2">
-              <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-lg font-black tracking-tight">All Statements</h2>
-                <div className="flex flex-wrap items-center gap-2">
-                  {isAdmin && (
-                    <Button type="button" variant="secondary" onClick={openDriveFolderSync} className="min-h-9 px-3 py-1.5">
-                      <span className="mr-2" aria-hidden="true">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M5.1 15a8 8 0 0 0 13.2 2.9L20 14"/><path d="M18.9 9A8 8 0 0 0 5.7 6.1L4 10"/></svg>
-                      </span>
-                      {savedDriveFolder ? "Scan Again" : "Connect Drive Folder"}
-                    </Button>
-                  )}
-                  {isAdmin && savedDriveFolder && (
-                    <span className="max-w-[220px] truncate text-xs font-bold text-emerald-700" title={savedDriveFolder.name}>
-                      {savedDriveFolder.name}
-                    </span>
-                  )}
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-600">
-                    Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}
-                  </span>
-                </div>
+                <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-black text-slate-600">
+                  Crane {statementCounts.withCrane} | No Crane {statementCounts.withoutCrane} | Total {statementCounts.total}
+                </span>
               </div>
+              {isAdmin && (
+                <div className={`mb-4 flex flex-col gap-3 rounded-2xl border p-3 sm:flex-row sm:items-center ${savedDriveFolder ? "border-emerald-200 bg-emerald-50/70" : "border-slate-200 bg-slate-50"}`}>
+                  <span className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${savedDriveFolder ? "bg-emerald-100 text-emerald-700" : "bg-white text-slate-500"}`}>
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M8 13h8"/><path d="m13 10 3 3-3 3"/></svg>
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-black text-slate-900">Google Drive PDFs</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${savedDriveFolder ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>{savedDriveFolder ? "Connected" : "Not connected"}</span>
+                    </div>
+                    <div className="mt-0.5 truncate text-xs font-bold text-slate-600" title={savedDriveFolder?.name || ""}>
+                      {savedDriveFolder ? `${monthName(reportMonth)} PDF Folder` : `Connect a Google Drive folder for ${monthName(reportMonth)}`}
+                    </div>
+                    {savedDriveFolder && <div className="mt-0.5 text-[11px] font-bold text-emerald-700">{linkedDrivePdfCount} of {monthStatements.length} statement PDFs linked</div>}
+                  </div>
+                  <button type="button" onClick={openDriveFolderSync}
+                    className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-black transition sm:flex-shrink-0 ${savedDriveFolder ? "border-emerald-300 bg-white text-emerald-700 hover:border-emerald-500 hover:bg-emerald-100" : "border-teal-700 bg-teal-700 text-white hover:bg-teal-800"}`}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M5.1 15a8 8 0 0 0 13.2 2.9L20 14"/><path d="M18.9 9A8 8 0 0 0 5.7 6.1L4 10"/></svg>
+                    {savedDriveFolder ? "Sync PDFs" : "Connect Folder"}
+                  </button>
+                </div>
+              )}
               <div className="grid gap-3 md:grid-cols-2">
                 <MonthPicker label="Statement Month" className="sm:w-full" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} />
                 <Field label="Statement No">
