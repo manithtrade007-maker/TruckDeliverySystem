@@ -1285,9 +1285,14 @@ function App() {
   async function createManualBackup() {
     try {
       const result = await api("/api/recovery/create", { method: "POST" });
-      flash(result.filename ? `Verified recovery backup created: ${result.filename}` : "A recovery backup is already running.");
+      if (result.status === "sent") flash(`Protected: verified backup sent to Telegram (${result.filename}).`);
+      else if (result.status === "delivery_failed") flash(`Backup verified locally, but Telegram failed. Automatic retry is scheduled.`, "error");
+      else if (result.filename) flash(`Verified local recovery backup created: ${result.filename}`);
+      else flash("A recovery backup is already running.");
+      return result;
     } catch (err) {
       flash(err.message, "error");
+      throw err;
     }
   }
 

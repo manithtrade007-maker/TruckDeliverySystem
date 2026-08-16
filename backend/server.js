@@ -811,12 +811,18 @@ async function createRecoveryArchive(data, reason) {
 
 let recoveryBackupRunning = false;
 let recoveryChangeTimer = null;
+let recoveryChangeForce = false;
 
-function scheduleRecoveryAfterChange() {
+const verifiedRecoveryStatuses = new Set(["sent", "local_only", "delivery_failed"]);
+
+function scheduleRecoveryAfterChange({ force = false } = {}) {
+  recoveryChangeForce ||= force;
   if (recoveryChangeTimer) clearTimeout(recoveryChangeTimer);
   recoveryChangeTimer = setTimeout(() => {
     recoveryChangeTimer = null;
-    runRecoveryBackup({ reason: "after-change" }).catch((error) => console.error("After-change recovery backup failed:", error));
+    const forceBackup = recoveryChangeForce;
+    recoveryChangeForce = false;
+    runRecoveryBackup({ reason: "after-change", force: forceBackup }).catch((error) => console.error("After-change recovery backup failed:", error));
   }, 15 * 60 * 1000);
   recoveryChangeTimer.unref();
 }
@@ -828,7 +834,7 @@ async function runRecoveryBackup({ reason = "scheduled", force = false } = {}) {
   try {
     const data = await readData();
     const fingerprint = recoveryFingerprint(data);
-    const latestVerified = (data.recoveryBackups || []).find((item) => ["sent", "local_only"].includes(item.status));
+    const latestVerified = (data.recoveryBackups || []).find((item) => verifiedRecoveryStatuses.has(item.status));
     if (!force && latestVerified?.fingerprint === fingerprint) return { created: false, reason: "unchanged" };
     await updateData((current) => {
       current.recoveryBackups ||= [];
@@ -840,17 +846,35 @@ async function runRecoveryBackup({ reason = "scheduled", force = false } = {}) {
     const archive = await createRecoveryArchive(freshData, reason);
     let status = "local_only";
     let sentAt = null;
-    if (getTelegramConfig()) {
-      await sendFileToTelegram(archive.buffer, archive.filename,
-        `N&M Logistic - Verified Recovery Backup\nReason: ${reason}\nCreated: ${archive.manifest.createdAt}\nStatements: ${archive.manifest.counts.statements} | Deliveries: ${archive.manifest.counts.deliveries} | PDFs: ${archive.manifest.counts.statementPdfs}`);
-      status = "sent";
-      sentAt = new Date().toISOString();
-    }
     await updateData((current) => {
       const record = current.recoveryBackups?.find((item) => item.id === id);
       if (!record) return;
       Object.assign(record, { status, fileName: archive.filename, fileSize: archive.buffer.length, sentAt,
         verifiedAt: new Date().toISOString(), nextAttemptAt: null, error: null });
+    }, { skipDailyBackup: true, skipRecoverySchedule: true });
+
+    if (getTelegramConfig()) {
+      try {
+        await sendFileToTelegram(archive.buffer, archive.filename,
+          `N&M Logistic - Verified Recovery Backup\nReason: ${reason}\nCreated: ${archive.manifest.createdAt}\nStatements: ${archive.manifest.counts.statements} | Deliveries: ${archive.manifest.counts.deliveries} | PDFs: ${archive.manifest.counts.statementPdfs}`);
+        status = "sent";
+        sentAt = new Date().toISOString();
+      } catch (error) {
+        status = "delivery_failed";
+        await updateData((current) => {
+          const record = current.recoveryBackups?.find((item) => item.id === id);
+          if (!record) return;
+          Object.assign(record, { status, error: String(error.message || error).slice(0, 500),
+            nextAttemptAt: new Date(Date.now() + retryDelayMs(record.attempts)).toISOString() });
+          addActivity(current, `Recovery backup verified locally, but Telegram delivery failed and will retry: ${record.error}`, "error");
+        }, { skipDailyBackup: true, skipRecoverySchedule: true });
+        return { created: true, status, filename: archive.filename, size: archive.buffer.length, error: error.message || String(error) };
+      }
+    }
+    await updateData((current) => {
+      const record = current.recoveryBackups?.find((item) => item.id === id);
+      if (!record) return;
+      Object.assign(record, { status, sentAt, nextAttemptAt: null, error: null });
       addActivity(current, `Verified recovery backup created: ${archive.filename}${status === "sent" ? " and sent to Telegram" : " (local only)"}.`, "backup");
     }, { skipDailyBackup: true, skipRecoverySchedule: true });
     return { created: true, status, filename: archive.filename, size: archive.buffer.length };
@@ -869,18 +893,47 @@ async function runRecoveryBackup({ reason = "scheduled", force = false } = {}) {
   }
 }
 
+async function retryRecoveryDelivery(record) {
+  if (recoveryBackupRunning) return { created: false, reason: "already_running" };
+  recoveryBackupRunning = true;
+  const attempts = Number(record.attempts || 0) + 1;
+  try {
+    const filePath = path.join(recoveryBackupDir, path.basename(record.fileName || ""));
+    const buffer = await readFile(filePath);
+    const inspected = await inspectRecoveryArchive(buffer);
+    await sendFileToTelegram(buffer, record.fileName,
+      `N&M Logistic - Verified Recovery Backup\nRetry delivery\nCreated: ${inspected.manifest.createdAt}\nStatements: ${inspected.manifest.counts.statements} | Deliveries: ${inspected.manifest.counts.deliveries} | PDFs: ${inspected.manifest.counts.statementPdfs}`);
+    await updateData((current) => {
+      const target = current.recoveryBackups?.find((item) => item.id === record.id);
+      if (!target) return;
+      Object.assign(target, { status: "sent", attempts, sentAt: new Date().toISOString(), nextAttemptAt: null, error: null });
+      addActivity(current, `Recovery backup sent to Telegram after retry: ${record.fileName}.`, "backup");
+    }, { skipDailyBackup: true, skipRecoverySchedule: true });
+    return { created: false, status: "sent", filename: record.fileName };
+  } catch (error) {
+    await updateData((current) => {
+      const target = current.recoveryBackups?.find((item) => item.id === record.id);
+      if (!target) return;
+      Object.assign(target, { status: "delivery_failed", attempts, error: String(error.message || error).slice(0, 500),
+        nextAttemptAt: new Date(Date.now() + retryDelayMs(attempts)).toISOString() });
+    }, { skipDailyBackup: true, skipRecoverySchedule: true });
+    return { created: false, status: "delivery_failed", filename: record.fileName, error: error.message || String(error) };
+  } finally {
+    recoveryBackupRunning = false;
+  }
+}
+
 async function runRecoveryScheduleCheck(now = new Date()) {
   const data = await readData();
-  const failed = (data.recoveryBackups || []).find((item) => item.status === "failed" && (!item.nextAttemptAt || item.nextAttemptAt <= now.toISOString()));
-  if (failed) return runRecoveryBackup({ reason: "retry", force: true });
-  const local = cambodiaDateParts(now);
-  if (local.hour !== 23 || local.minute < 45) return { created: false, reason: "not_due" };
-  const todayKey = `${local.year}-${String(local.month).padStart(2, "0")}-${String(local.day).padStart(2, "0")}`;
-  const alreadyToday = (data.recoveryBackups || []).some((item) => item.createdAt?.slice(0, 10) === todayKey && ["sent", "local_only", "creating"].includes(item.status));
-  if (alreadyToday) return { created: false, reason: "already_today" };
-  const lastWeekly = (data.recoveryBackups || []).find((item) => item.reason?.startsWith("weekly") && ["sent", "local_only"].includes(item.status));
-  const weeklyDue = local.weekday === "Sun" || !lastWeekly || Date.parse(lastWeekly.createdAt) <= now.getTime() - 7 * 24 * 60 * 60 * 1000;
-  return runRecoveryBackup({ reason: local.weekday === "Sun" ? "weekly" : weeklyDue ? "weekly-catchup" : "nightly", force: weeklyDue });
+  const due = (data.recoveryBackups || []).find((item) =>
+    ["failed", "delivery_failed"].includes(item.status) && (!item.nextAttemptAt || item.nextAttemptAt <= now.toISOString()));
+  if (!due) return { created: false, reason: "not_due" };
+  if (due.status === "delivery_failed" && due.fileName && getTelegramConfig()) return retryRecoveryDelivery(due);
+  await updateData((current) => {
+    const target = current.recoveryBackups?.find((item) => item.id === due.id);
+    if (target) target.status = "retrying";
+  }, { skipDailyBackup: true, skipRecoverySchedule: true });
+  return runRecoveryBackup({ reason: "retry", force: true });
 }
 
 let monthlyAutomationRunning = false;
@@ -1237,6 +1290,20 @@ async function api(req, res, url, role = "admin") {
     if (role !== "admin") throw Object.assign(new Error("Admin access required."), { status: 403 });
   }
 
+  const destructivePostPaths = new Set([
+    "/api/prices/delete-nonstandard-format",
+    "/api/prices/delete-by-date"
+  ]);
+  const staffDeletePath = url.pathname.startsWith("/api/statements/") || url.pathname.startsWith("/api/deliveries/");
+  const needsSafetyRecovery = (role === "admin" || staffDeletePath) &&
+    (req.method === "DELETE" || (req.method === "POST" && destructivePostPaths.has(url.pathname)));
+  if (needsSafetyRecovery) {
+    const safety = await runRecoveryBackup({ reason: "before-delete", force: url.pathname.startsWith("/api/users/") });
+    if (safety.reason === "already_running") {
+      throw Object.assign(new Error("A recovery backup is currently running. Please wait a moment and try the deletion again."), { status: 409 });
+    }
+  }
+
   // Users management (admin only)
   if (req.method === "GET" && url.pathname === "/api/users") {
     requireAdmin();
@@ -1255,6 +1322,7 @@ async function api(req, res, url, role = "admin") {
     const id = `user-${Date.now()}`;
     const passwordHash = await hashPassword(password);
     db.prepare("INSERT INTO users (id, username, passwordHash, role, createdAt) VALUES (?, ?, ?, ?, ?)").run(id, username, passwordHash, userRole, new Date().toISOString());
+    scheduleRecoveryAfterChange({ force: true });
     return sendJson(res, 200, { id, username, role: userRole });
   }
   if (req.method === "PUT" && url.pathname.startsWith("/api/users/") && url.pathname.endsWith("/password")) {
@@ -1264,12 +1332,14 @@ async function api(req, res, url, role = "admin") {
     const password = String(body.password || "").trim();
     if (password.length < 6) throw new Error("Password must be at least 6 characters.");
     db.prepare("UPDATE users SET passwordHash = ? WHERE id = ?").run(await hashPassword(password), id);
+    scheduleRecoveryAfterChange({ force: true });
     return sendJson(res, 200, { ok: true });
   }
   if (req.method === "DELETE" && url.pathname.startsWith("/api/users/")) {
     requireAdmin();
     const id = decodeURIComponent(url.pathname.split("/").pop());
     db.prepare("DELETE FROM users WHERE id = ?").run(id);
+    scheduleRecoveryAfterChange({ force: true });
     return sendJson(res, 200, { ok: true });
   }
 
@@ -1290,12 +1360,23 @@ async function api(req, res, url, role = "admin") {
   if (req.method === "GET" && url.pathname === "/api/recovery/status") {
     requireAdmin();
     const runs = data.recoveryBackups || [];
+    const lastVerified = runs.find((item) => verifiedRecoveryStatuses.has(item.status)) || null;
+    const latest = runs[0] || null;
+    let details = null;
+    if (lastVerified?.fileName) {
+      try {
+        const inspected = await inspectRecoveryArchive(await readFile(path.join(recoveryBackupDir, path.basename(lastVerified.fileName))));
+        details = { createdAt: inspected.manifest.createdAt, reason: inspected.manifest.reason, counts: inspected.manifest.counts };
+      } catch (_) {}
+    }
     return sendJson(res, 200, {
       configured: Boolean(getTelegramConfig()),
-      lastVerified: runs.find((item) => ["sent", "local_only"].includes(item.status)) || null,
+      protection: lastVerified?.status === "sent" ? "protected" : lastVerified ? "local_only" : "not_protected",
+      lastVerified,
       lastSent: runs.find((item) => item.status === "sent") || null,
-      failed: runs.find((item) => item.status === "failed") || null,
-      schedule: "15 minutes after changes, nightly check at 11:45 PM, full backup every Sunday",
+      failed: latest && ["failed", "delivery_failed"].includes(latest.status) ? latest : null,
+      details,
+      schedule: "15 minutes after the latest change; automatic retry after failure",
       timeZone: "Asia/Phnom_Penh"
     });
   }
@@ -1313,6 +1394,7 @@ async function api(req, res, url, role = "admin") {
     const fileName = requested || available[0];
     if (!fileName || !available.includes(fileName)) throw Object.assign(new Error("No recovery backup is available."), { status: 404 });
     const buffer = await readFile(path.join(recoveryBackupDir, fileName));
+    await inspectRecoveryArchive(buffer);
     res.writeHead(200, { "Content-Type": "application/zip", "Content-Length": buffer.length, "Content-Disposition": `attachment; filename="${fileName}"` });
     return res.end(buffer);
   }

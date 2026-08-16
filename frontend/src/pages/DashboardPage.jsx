@@ -60,12 +60,12 @@ export function DashboardPage() {
           )}
 
           {isAdmin && recovery && (
-            <div className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${recovery.failed ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50/70"}`}>
+            <div className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${recovery.protection === "protected" ? "border-emerald-200 bg-emerald-50/70" : recovery.lastVerified ? "border-amber-200 bg-amber-50/70" : "border-red-200 bg-red-50"}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div><span className="font-black text-slate-800">Recovery Backup:</span> <span className="font-bold text-slate-600">{recovery.lastVerified ? `${recovery.lastVerified.fileName} · verified` : "waiting for first verified backup"}</span></div>
-                <div className="text-xs font-black uppercase tracking-wide text-slate-500">After changes · Nightly · Every Sunday</div>
+                <div><span className="font-black text-slate-800">Recovery Backup:</span> <span className="font-bold text-slate-600">{recovery.protection === "protected" ? `${recovery.lastVerified.fileName} · sent to Telegram` : recovery.lastVerified ? `${recovery.lastVerified.fileName} · verified locally` : "waiting for first verified backup"}</span></div>
+                <div className="text-xs font-black uppercase tracking-wide text-slate-500">After changes · Automatic retry</div>
               </div>
-              {recovery.failed && <div className="mt-1 text-xs font-bold text-red-700">Last attempt failed and will retry: {recovery.failed.error}</div>}
+              {recovery.failed && <div className="mt-1 text-xs font-bold text-red-700">{recovery.failed.status === "delivery_failed" ? "Telegram delivery failed" : "Backup creation failed"} and will retry: {recovery.failed.error}</div>}
             </div>
           )}
 

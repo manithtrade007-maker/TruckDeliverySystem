@@ -22,3 +22,12 @@ test("recovery archive rejects incomplete ZIP files", async () => {
   const buffer = await zip.generateAsync({ type: "nodebuffer" });
   await assert.rejects(() => inspectRecoveryArchive(buffer), /missing required files/);
 });
+
+test("recovery archive rejects a file changed after checksums were created", async () => {
+  const JSZip = (await import("jszip")).default;
+  const archive = await buildRecoveryArchive({ data, database: sqliteHeader });
+  const zip = await JSZip.loadAsync(archive.buffer);
+  zip.file("data.json", JSON.stringify({ ...data, statements: [{ id: "tampered" }] }));
+  const tampered = await zip.generateAsync({ type: "nodebuffer" });
+  await assert.rejects(() => inspectRecoveryArchive(tampered), /Checksum failed for data.json/);
+});

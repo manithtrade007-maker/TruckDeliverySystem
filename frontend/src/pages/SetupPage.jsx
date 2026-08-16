@@ -5,15 +5,27 @@ import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMone
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
 export function SetupPage() {
-  const { activeCompanyPriceCounts, activeCompanyPriceRows, applyBulkPriceUpdate, bulkExistingDates, bulkPriceForm, bulkPriceRows, companyPriceGroups, createManualBackup, createStaffUser, data, deletePrice, deletePricesByDate, deleteStaffUser, deleteTruck, downloadBackup, driverPriceForm, driverPriceGroups, editPasswordId, editPasswordValue, isAdmin, isEditingTruck, locations, newUserForm, priceCompareDates, priceForm, restoreBackup, saveDriverPrice, savePrice, saveSettings, saveStaffPassword, saveTruck, setBulkLocationFilter, setBulkPriceForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setNewUserForm, setPriceForm, setSettingsForm, setSetupLocationSearch, setSetupSection, setTruckForm, settingsForm, setupLocationSearch, setupSection, staffUsers, telegramConfigured, truckForm } = useApp();
+  const { activeCompanyPriceCounts, activeCompanyPriceRows, applyBulkPriceUpdate, bulkExistingDates, bulkPriceForm, bulkPriceRows, companyPriceGroups, createManualBackup, createStaffUser, data, deletePrice, deletePricesByDate, deleteStaffUser, deleteTruck, downloadBackup, driverPriceForm, driverPriceGroups, editPasswordId, editPasswordValue, isAdmin, isEditingTruck, locations, newUserForm, priceCompareDates, priceForm, restoreBackup, saveDriverPrice, savePrice, saveSettings, saveStaffPassword, saveTruck, setBulkLocationFilter, setBulkPriceForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setNewUserForm, setPriceForm, setSettingsForm, setSetupLocationSearch, setSetupSection, setTruckForm, settingsForm, setupLocationSearch, setupSection, staffUsers, truckForm } = useApp();
   const [recoveryStatus, setRecoveryStatus] = useState(null);
+  const [creatingBackup, setCreatingBackup] = useState(false);
+  const loadRecoveryStatus = () => api("/api/recovery/status").then(setRecoveryStatus).catch(() => setRecoveryStatus(null));
   useEffect(() => {
     if (!isAdmin) return undefined;
-    const load = () => api("/api/recovery/status").then(setRecoveryStatus).catch(() => setRecoveryStatus(null));
-    load();
-    const timer = setInterval(load, 60000);
+    loadRecoveryStatus();
+    const timer = setInterval(loadRecoveryStatus, 60000);
     return () => clearInterval(timer);
   }, [isAdmin]);
+  async function handleCreateBackup() {
+    setCreatingBackup(true);
+    try {
+      await createManualBackup();
+      await loadRecoveryStatus();
+    } catch (_) {
+      // createManualBackup already shows the server error to the user.
+    } finally {
+      setCreatingBackup(false);
+    }
+  }
   return (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
@@ -39,13 +51,14 @@ export function SetupPage() {
 
           {/* Tab strip with icons */}
           <Panel>
-            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 sm:grid-cols-5">
+            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 sm:grid-cols-3 lg:grid-cols-6">
               {[
                 ["trucks", "Truck Master", <><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></>],
                 ["company", "Company Price", <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>],
                 ["driver", "Driver Price", <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="16" y1="11" x2="22" y2="11"/><line x1="19" y1="8" x2="19" y2="14"/></>],
                 ["bulk", "Bulk Update", <><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>],
                 ["users", "Users", <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>],
+                ["backup", "Backup & Recovery", <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>],
               ].map(([key, label, iconPaths]) => (
                 <button
                   key={key}
@@ -61,6 +74,58 @@ export function SetupPage() {
               ))}
             </div>
           </Panel>
+
+          {setupSection === "backup" && isAdmin && (
+            <Panel>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900">Backup & Recovery</h2>
+                  <p className="mt-1 text-sm font-bold text-slate-500">After your last change, the system waits 15 minutes, creates a verified recovery ZIP, and sends it to Telegram.</p>
+                </div>
+                <span className={`rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-wide ${
+                  recoveryStatus?.protection === "protected"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : recoveryStatus?.protection === "local_only"
+                      ? "border-amber-200 bg-amber-50 text-amber-700"
+                      : "border-red-200 bg-red-50 text-red-700"
+                }`}>
+                  {recoveryStatus?.protection === "protected" ? "Protected" : recoveryStatus?.protection === "local_only" ? "Local copy only" : "Not protected yet"}
+                </span>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Latest backup</div>
+                  <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.details?.createdAt ? formatDateTime(recoveryStatus.details.createdAt) : "No backup yet"}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">ZIP size</div>
+                  <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.lastVerified?.fileSize ? `${(recoveryStatus.lastVerified.fileSize / 1024 / 1024).toFixed(2)} MB` : "—"}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">System data</div>
+                  <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.details ? `${recoveryStatus.details.counts.statements} statements · ${recoveryStatus.details.counts.deliveries} deliveries` : "—"}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Telegram</div>
+                  <div className="mt-1 text-sm font-black text-slate-900">{recoveryStatus?.lastVerified?.status === "sent" ? "Delivered" : recoveryStatus?.configured ? "Waiting / retrying" : "Not configured"}</div>
+                </div>
+              </div>
+
+              {recoveryStatus?.failed && (
+                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">
+                  {recoveryStatus.failed.status === "delivery_failed" ? "The ZIP is verified locally, but Telegram delivery failed." : "Backup creation failed."} The system will retry automatically. {recoveryStatus.failed.error}
+                </div>
+              )}
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Button type="button" disabled={creatingBackup} onClick={handleCreateBackup}>{creatingBackup ? "Creating & verifying…" : "Create Backup Now"}</Button>
+                <Button type="button" variant="secondary" disabled={!recoveryStatus?.lastVerified} onClick={downloadBackup}>Download Latest ZIP</Button>
+                <Button type="button" variant="danger" onClick={restoreBackup}>Restore From ZIP</Button>
+              </div>
+              <p className="mt-4 text-xs font-bold text-slate-500">Creating or downloading a backup does not change your data. Restoring replaces current data, so use Restore only after data loss or damage.</p>
+            </Panel>
+          )}
 
           {setupSection === "trucks" && (
             <Panel>
@@ -651,7 +716,7 @@ export function SetupPage() {
               </Panel>
 
               {isAdmin && (
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-4">
                   <Panel>
                     <h2 className="mb-3 text-lg font-bold">Settings</h2>
                     <form className="grid gap-3" onSubmit={saveSettings}>
@@ -664,39 +729,6 @@ export function SetupPage() {
                     </form>
                   </Panel>
 
-                  <Panel>
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <h2 className="text-lg font-bold">Data Backup</h2>
-                      {telegramConfigured === true && (
-                        <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-black text-emerald-700">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
-                          Telegram Active
-                        </span>
-                      )}
-                      {telegramConfigured === false && (
-                        <span className="flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-2.5 py-1 text-xs font-black text-slate-500">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
-                          Telegram Not Set Up
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm font-bold text-slate-500">
-                      Complete recovery backup runs 15 minutes after changes, checks nightly, and runs every Sunday even without changes.
-                      {telegramConfigured === true && " Verified backups are sent automatically to Telegram."}
-                    </p>
-                    <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-500">
-                      Latest verified: {recoveryStatus?.lastVerified?.fileName || "No recovery backup yet"}
-                    </p>
-                    {recoveryStatus?.failed && <p className="mt-1 text-xs font-bold text-red-600">Last failure: {recoveryStatus.failed.error} · retry scheduled</p>}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Button type="button" onClick={createManualBackup}>Create Recovery Backup</Button>
-                      <Button type="button" variant="secondary" onClick={downloadBackup}>Download Latest</Button>
-                      <Button type="button" variant="danger" onClick={restoreBackup}>Restore Backup</Button>
-                      {telegramConfigured === false && (
-                        <p className="w-full mt-1 text-xs text-slate-400">To enable Telegram backup, add <code className="bg-slate-100 px-1 rounded">TELEGRAM_BOT_TOKEN</code> and <code className="bg-slate-100 px-1 rounded">TELEGRAM_CHAT_ID</code> to your Render environment variables.</p>
-                      )}
-                    </div>
-                  </Panel>
                 </div>
               )}
             </>

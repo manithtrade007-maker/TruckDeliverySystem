@@ -101,15 +101,14 @@ Before entering official business data online:
 
 A recovery ZIP contains `data.json`, a consistent SQLite snapshot (including staff users), uploaded statement PDFs, a manifest, and SHA-256 checksums. The system verifies every archive before marking it successful.
 
-Automatic behavior uses Cambodia time:
+Automatic behavior:
 
 - 15 minutes after the last data change: create a backup if business data changed.
-- 11:45 PM nightly: check for changes not yet backed up.
-- Sunday night: create a full backup even when nothing changed.
+- Before a deletion: create a safety backup when the current state has not already been backed up.
 - Failed Telegram deliveries retry automatically.
 - The newest 30 recovery ZIPs remain on the persistent disk.
 
-Admins can create, download, and restore a recovery ZIP from Setup. Legacy JSON restore remains supported.
+Admins can create, download, and restore a recovery ZIP from Setup > Backup & Recovery. The download endpoint verifies the ZIP again before sending it to the browser. Legacy JSON restore remains supported.
 
 If the application or active database cannot start, stop the server and restore offline:
 
