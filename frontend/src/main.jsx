@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import "@fontsource-variable/inter";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "./components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, compareTrucksCraneFirst, formatDate, formatDateTime, monthName, groupPriceHistory } from "./lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile, uploadRecovery } from "./lib/api.js";
@@ -19,6 +20,9 @@ function App() {
   const [userRole, setUserRole] = useState(getRole);
   const isAdmin = userRole === "admin";
   const [page, setPage] = useState("dashboard");
+  const desktopNavRef = useRef(null);
+  const desktopNavItemRefs = useRef({});
+  const [navIndicator, setNavIndicator] = useState(null);
   const [data, setData] = useState({ settings: {}, trucks: [], prices: [], statements: [], deliveries: [] });
   const [selectedStatementId, setSelectedStatementId] = useState("");
   const [viewStatementId, setViewStatementId] = useState("");
@@ -1507,6 +1511,28 @@ function App() {
     ...(isAdmin ? [["payments", "Payments"], ["prices", "Prices"], ["reconciliation", "Compare Pay"], ["setup", "Setup"]] : []),
   ];
 
+  useLayoutEffect(() => {
+    const nav = desktopNavRef.current;
+    const activeItem = desktopNavItemRefs.current[page];
+    if (!nav || !activeItem) return undefined;
+
+    const positionIndicator = () => {
+      if (activeItem.offsetWidth === 0) return;
+      setNavIndicator({ left: activeItem.offsetLeft, width: activeItem.offsetWidth });
+    };
+
+    positionIndicator();
+    const observer = new ResizeObserver(positionIndicator);
+    observer.observe(nav);
+    observer.observe(activeItem);
+    window.addEventListener("resize", positionIndicator);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", positionIndicator);
+    };
+  }, [page, isAdmin]);
+
   async function logout() {
     try { await api("/api/auth/logout", { method: "POST" }); } catch {}
     setToken("");
@@ -1548,16 +1574,25 @@ function App() {
               <p className="text-xs font-black uppercase tracking-wide text-slate-500">{data.settings.companyName || "N&M LOGISTIC"}</p>
             </div>
           </div>
-          <nav className="hidden lg:flex w-full gap-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-1 lg:w-auto">
+          <nav ref={desktopNavRef} aria-label="Primary navigation" className="relative hidden w-full gap-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-1 lg:flex lg:w-auto">
+            {navIndicator && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-1 top-1 left-0 rounded-xl bg-teal-700 shadow-sm shadow-teal-950/20 transition-[transform,width] duration-300 ease-out motion-reduce:transition-none"
+                style={{ width: navIndicator.width, transform: `translateX(${navIndicator.left}px)` }}
+              />
+            )}
             {navItems.map(([key, label]) => (
               <button
                 key={key}
+                ref={(element) => { desktopNavItemRefs.current[key] = element; }}
                 type="button"
                 onClick={() => setPage(key)}
-                className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-black transition ${
+                aria-current={page === key ? "page" : undefined}
+                className={`relative z-10 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-bold tracking-[-0.01em] transition-[color,background-color,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 motion-reduce:transform-none motion-reduce:transition-none ${
                   page === key
-                    ? "bg-teal-700 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-white hover:text-slate-950"
+                    ? "text-white"
+                    : "text-slate-600 hover:-translate-y-px hover:bg-white/80 hover:text-slate-950"
                 }`}
               >
                 {label}
@@ -1750,7 +1785,7 @@ function App() {
       )}
 
       {/* Bottom navigation — mobile only */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-sm pb-safe">
+      <nav aria-label="Mobile navigation" className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-sm pb-safe">
         <div className="flex items-center justify-around mx-auto px-1 h-16">
           {navItems.map(([key, label]) => {
             const isActive = page === key;
@@ -1759,8 +1794,9 @@ function App() {
                 key={key}
                 type="button"
                 onClick={() => setPage(key)}
-                className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 px-1 rounded-xl transition min-w-0 ${
-                  isActive ? "text-teal-700" : "text-slate-400 active:text-slate-700"
+                aria-current={isActive ? "page" : undefined}
+                className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 font-bold transition-[color,background-color,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 motion-reduce:transform-none motion-reduce:transition-none ${
+                  isActive ? "bg-teal-50 text-teal-700" : "text-slate-400 active:scale-95 active:text-slate-700"
                 }`}
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round">
@@ -1771,7 +1807,7 @@ function App() {
                   {key === "prices" && <><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></>}
                   {key === "setup" && <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>}
                 </svg>
-                <span className="text-[10px] font-black leading-none truncate">{label}</span>
+                <span className="truncate text-[10px] font-bold leading-none tracking-[-0.01em]">{label}</span>
               </button>
             );
           })}
