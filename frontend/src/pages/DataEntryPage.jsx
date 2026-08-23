@@ -293,8 +293,8 @@ export function DataEntryPage() {
                     <div className="text-base font-black">{truckType === "With Crane" ? "Crane Entry" : "No Crane Entry"}</div>
                     <div className="mt-0.5 text-xs font-bold opacity-75">
                       {truckType === "With Crane"
-                        ? `6 trucks | ${statementCounts.withCrane} statements`
-                        : `3 trucks | ${statementCounts.withoutCrane} statements`}
+                        ? `${data.trucks.filter((truck) => truck.active !== false && truck.truckType === "With Crane").length} trucks | ${statementCounts.withCrane} statements`
+                        : `${data.trucks.filter((truck) => truck.active !== false && truck.truckType === "Without Crane").length} trucks | ${statementCounts.withoutCrane} statements`}
                     </div>
                   </button>
                 ))}
