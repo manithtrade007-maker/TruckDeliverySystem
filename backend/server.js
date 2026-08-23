@@ -13,7 +13,7 @@ import {
 } from "./lib/exports.js";
 import { sendJson, sendText, readBody, parseQuery } from "./lib/http.js";
 import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, appUsername, appPassword } from "./lib/auth.js";
-import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
+import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery, validateQtyTon } from "./lib/calc.js";
 import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
 import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
 import { cambodiaDateParts, nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth, scheduledCashBalanceMonth } from "./lib/monthly-automation.js";
@@ -1272,7 +1272,8 @@ function enrichDelivery(data, input) {
   const invoiceNo = normalizeText(input.invoiceNo);
   const truckNo = normalizeCode(input.truckNo);
   const toLocation = normalizeText(input.toLocation);
-  const qtyTon = toNumber(input.qtyTon);
+  const qtyValidation = validateQtyTon(input.qtyTon);
+  const qtyTon = qtyValidation.qtyTon;
   const fromLocation = normalizeText(input.fromLocation || data.settings.defaultFromLocation);
   const priceFromLocation = normalizeText(data.settings.defaultFromLocation) || fromLocation;
   const statement = data.statements.find((item) => item.id === statementId);
@@ -1295,7 +1296,7 @@ function enrichDelivery(data, input) {
     throw new Error("Delivery date must be inside the selected statement month.");
   }
   if (!toLocation) throw new Error("To location is required.");
-  if (qtyTon <= 0) throw new Error("QTY(T) must be greater than zero.");
+  if (!qtyValidation.valid) throw new Error(qtyValidation.error);
 
   const duplicate = data.deliveries.some(
     (item) => item.invoiceNo === invoiceNo && item.id !== input.id

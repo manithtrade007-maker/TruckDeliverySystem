@@ -41,6 +41,17 @@ export function toNumber(value) {
   return Number.isFinite(number) ? number : 0;
 }
 
+export function validateQtyTon(value) {
+  const raw = normalizeText(value);
+  if (!/^\d+(?:\.\d{1,5})?$/.test(raw)) {
+    return { valid: false, error: "QTY(T) must be a number with up to 5 decimal places." };
+  }
+  const qtyTon = Number(raw);
+  if (qtyTon <= 0) return { valid: false, error: "QTY(T) must be greater than zero." };
+  if (qtyTon > 30) return { valid: false, error: "QTY(T) cannot exceed 30T. Did you forget the decimal point?" };
+  return { valid: true, qtyTon };
+}
+
 export function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 }

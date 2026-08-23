@@ -693,12 +693,21 @@ function App() {
   const truckTypeMismatch = Boolean(selectedTruck && selectedStatement && selectedTruck.truckType !== selectedStatement.truckType);
   const priceLookupReady = Boolean(deliveryForm.deliveryDate && selectedTruck && deliveryForm.toLocation);
   const missingPrice = priceLookupReady && !selectedPrice;
+  const qtyTonText = String(deliveryForm.qtyTon ?? "").trim();
+  const qtyTonNumber = Number(qtyTonText);
+  const qtyTonFormatValid = /^\d+(?:\.\d{1,5})?$/.test(qtyTonText);
+  const qtyTonValid = qtyTonFormatValid && Number.isFinite(qtyTonNumber) && qtyTonNumber > 0 && qtyTonNumber <= 30;
+  const qtyTonError = !qtyTonText ? "" : !qtyTonFormatValid
+    ? "QTY(T) must be a number with up to 5 decimal places."
+    : qtyTonNumber <= 0 ? "QTY(T) must be greater than zero."
+    : qtyTonNumber > 30 ? "QTY(T) cannot exceed 30T. Did you forget the decimal point?"
+    : "";
   const deliveryFormReady = Boolean(
     deliveryForm.deliveryDate &&
     deliveryForm.invoiceNo.length === 10 &&
     selectedTruck &&
     deliveryForm.toLocation &&
-    Number(deliveryForm.qtyTon || 0) > 0
+    qtyTonValid
   );
   const canFinishStatement = Boolean(selectedStatement && isDraft && statementRows.length > 0);
   const canSaveDelivery =
@@ -977,6 +986,7 @@ function App() {
       if (truckMissing) throw new Error("Truck number does not exist or is inactive.");
       if (truckTypeMismatch) throw new Error(`Truck ${deliveryForm.truckNo} is not allowed in this ${truckTypeLabel(selectedStatement.truckType)} statement.`);
       if (missingPrice) throw new Error(`No active price found for ${deliveryForm.toLocation} on ${formatDate(deliveryForm.deliveryDate)}.`);
+      if (!qtyTonValid) throw new Error(qtyTonError || "QTY(T) must be between 0 and 30T.");
       await api("/api/deliveries", {
         method: "POST",
         body: JSON.stringify({ ...deliveryForm, statementId: selectedStatementId })
@@ -1551,7 +1561,7 @@ function App() {
     fixLocationNames, flash, fromLocations, getDeduction, getNextStatementNumber, goToEmptyPrice, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, isEditingTruck, loadBackups,
     loadData, loadStaffUsers, locations, loggedIn, logout, matchesSetupLocationSearch, missingPrice, monthlyRows, monthlyTotals, navItems, newStatement, newUserForm,
     normalizeLocationSpacing, notice, openStatement, page, paymentsViewMonth, priceCompareDate, priceCompareDates, priceCompareProvince, priceCompareProvinces, priceCompareRows, priceForm, priceLookupReady,
-    pricePeriods, pricePeriodsMonth, recalculateAllPrices, reconEdits, reconMonth, reconciliation, reopenStatement, reportMonth, reportTruckNo, reportYear, resetDeliveryForm,
+    pricePeriods, pricePeriodsMonth, qtyTonError, qtyTonValid, recalculateAllPrices, reconEdits, reconMonth, reconciliation, reopenStatement, reportMonth, reportTruckNo, reportYear, resetDeliveryForm,
     restoreBackup, saveDeduction, saveDelivery, saveDriverPrice, savePrice, saveReported, saveSettings, saveStaffPassword, saveStatement, saveTruck, selectedDriverPaymentSection,
     selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setActivityPage, setAssignModal, setAssignMonth, setBackupFiles, setBulkLocationFilter,
     setBulkPriceForm, setData, setDeductionEdits, setDeleteModal, setDeliveryForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setEmptyPriceResult, setEntryActionTruckType, setEntryTruckType, setExpandStatementEdit,

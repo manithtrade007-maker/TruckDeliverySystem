@@ -70,7 +70,7 @@ function compactMonthName(value) {
 }
 
 export function DataEntryPage() {
-  const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, data, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
+  const { activeField, backToStatementList, canEditRows, canFinishStatement, canSaveDelivery, clearHighlights, createEntryStatement, data, deleteDelivery, deleteStatement, deliveryForm, deliveryFormRef, duplicateInvoice, duplicateInvoiceStatement, editDelivery, entryActionTruckType, entryTruckType, expandStatementEdit, exportStatementFile, filteredStatements, filters, finishStatement, flash, getNextStatementNumber, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, loadData, locations, missingPrice, openStatement, qtyTonError, qtyTonValid, reopenStatement, reportMonth, resetDeliveryForm, saveDelivery, saveStatement, selectedPrice, selectedStatement, selectedStatementId, selectedTruck, selectedViewStatement, setActiveField, setAssignModal, setAssignMonth, setDeliveryForm, setEntryActionTruckType, setExpandStatementEdit, setFilters, setReportMonth, setStatementForm, showStatementWorkspace, startEntryAction, statementCounts, statementForm, statementRows, totals, truckInputRef, truckMissing, truckOptions, truckTypeMismatch, viewStatement, viewStatementRows, viewTotals } = useApp();
   const [driveLinkStatement, setDriveLinkStatement] = useState(null);
   const [driveLinkForm, setDriveLinkForm] = useState({ url: "", originalName: "" });
   const [verifiedDriveUrl, setVerifiedDriveUrl] = useState("");
@@ -1000,8 +1000,9 @@ export function DataEntryPage() {
                     </Field>
                   )}
                   <Field label="QTY(T)">
-                    <Input type="number" step="any" min="0" required disabled={!canEditRows} style={activeField === "qtyTon" ? { backgroundColor: "#fef08a" } : {}} onFocus={() => setActiveField("qtyTon")} onBlur={() => setActiveField("")} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} />
-                    {selectedPrice && Number(deliveryForm.qtyTon) > 0 && (
+                    <Input type="number" step="0.00001" min="0.00001" max="30" required disabled={!canEditRows} style={qtyTonError ? { borderColor: "#ef4444", backgroundColor: "#fef2f2" } : activeField === "qtyTon" ? { backgroundColor: "#fef08a" } : {}} onFocus={() => setActiveField("qtyTon")} onBlur={() => setActiveField("")} value={deliveryForm.qtyTon} onChange={(e) => setDeliveryForm({ ...deliveryForm, qtyTon: e.target.value })} />
+                    {qtyTonError && <div className="mt-1 text-[11px] font-black text-red-600">{qtyTonError}</div>}
+                    {selectedPrice && qtyTonValid && (
                       <div className="mt-1 text-[11px] font-black text-teal-700">
                         {Number(deliveryForm.qtyTon).toFixed(3)}T × ${unitMoney(selectedPrice.companyUnitPrice)} = <span className="text-teal-900">${money(Number(deliveryForm.qtyTon) * Number(selectedPrice.companyUnitPrice))}</span>
                       </div>

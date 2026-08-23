@@ -9,6 +9,7 @@ import {
   locationMatchKey,
   fromLocationMatchKey,
   findEffectivePrice,
+  validateQtyTon,
 } from "../lib/calc.js";
 
 test("roundMoney snaps floating-point crumbs to clean cents", () => {
@@ -21,6 +22,15 @@ test("roundMoney snaps floating-point crumbs to clean cents", () => {
 test("roundMoney handles negatives and numeric strings", () => {
   assert.equal(roundMoney(-10.355), -10.35);
   assert.equal(roundMoney("15.005"), 15.01);
+});
+
+test("QTY(T) accepts up to five decimals and never exceeds 30T", () => {
+  for (const value of ["15.8513", "12.8908", "0.500", "18.08520", "30.00000"]) {
+    assert.equal(validateQtyTon(value).valid, true, value);
+  }
+  assert.match(validateQtyTon("158513").error, /cannot exceed 30T/i);
+  assert.match(validateQtyTon("30.000001").error, /up to 5 decimal places/i);
+  assert.equal(validateQtyTon("0").valid, false);
 });
 
 test("toNumber parses currency-formatted strings", () => {
