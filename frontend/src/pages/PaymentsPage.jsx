@@ -34,6 +34,15 @@ export function PaymentsPage() {
           .sort((a, b) => (a.month || "").localeCompare(b.month || "") || Number(a.statementNumber) - Number(b.statementNumber));
 
         const sumAmount = (list) => list.reduce((sum, s) => sum + Number(s.companyTotalAmount || 0), 0);
+        // This intentionally follows the Dashboard's calendar-month driver-payment view.
+        // It is a cash-flow comparison: company money due this month versus drivers to pay this month.
+        const activeTruckNos = new Set((data.trucks || []).map((truck) => truck.truckNo));
+        const driverPaymentThisMonth = (data.deliveries || [])
+          .filter((row) => row.deliveryDate?.slice(0, 7) === paymentsViewMonth)
+          .filter((row) => activeTruckNos.has(row.truckNo))
+          .reduce((sum, row) => sum + Number(row.truckSalaryAmount || 0), 0);
+        const companyHaveToPay = sumAmount(assignedToMonth);
+        const monthlyBalance = companyHaveToPay - driverPaymentThisMonth;
 
         const StatementRow = ({ s, index, showPaymentMonth }) => (
           <tr key={s.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50 text-sm">
@@ -171,6 +180,23 @@ export function PaymentsPage() {
                     </table>
                   </div>
                 )}
+                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Monthly Cash Balance</p>
+                  <p className="mt-1 text-xs font-bold text-slate-500">Company payment due on the 5th minus driver payment for {monthName(paymentsViewMonth)}.</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Company to pay</div>
+                      <div className="font-black tabular-nums text-teal-700">$ {money(companyHaveToPay)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Driver payment</div>
+                      <div className="font-black tabular-nums text-amber-600">$ {money(driverPaymentThisMonth)}</div>
+                    </div>
+                  </div>
+                  <div className={`mt-3 rounded-lg px-3 py-2 text-sm font-black ${monthlyBalance > 0 ? "bg-emerald-100 text-emerald-800" : monthlyBalance < 0 ? "bg-red-100 text-red-700" : "bg-slate-200 text-slate-700"}`}>
+                    {monthlyBalance > 0 ? "You Get" : monthlyBalance < 0 ? "You Need to Add" : "Balanced"}: $ {money(Math.abs(monthlyBalance))}
+                  </div>
+                </div>
               </Panel>
 
               {/* File 3 — Outstanding */}
