@@ -26,6 +26,13 @@ export function scheduledBundleMonth(date = new Date()) {
   return shiftMonth(local.year, local.month, -1);
 }
 
+// On the third day of a new month, alert for the completed previous month.
+export function scheduledCashBalanceMonth(date = new Date()) {
+  const local = cambodiaDateParts(date);
+  if (local.day < 3 || (local.day === 3 && local.hour < 9)) return null;
+  return shiftMonth(local.year, local.month, -1);
+}
+
 export function nextMonthlyBundleSchedule(date = new Date()) {
   const local = cambodiaDateParts(date);
   const thisMonthPending = local.day < 5 || (local.day === 5 && local.hour < 9);

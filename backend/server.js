@@ -16,7 +16,7 @@ import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, 
 import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery } from "./lib/calc.js";
 import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
 import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
-import { cambodiaDateParts, nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth } from "./lib/monthly-automation.js";
+import { cambodiaDateParts, nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth, scheduledCashBalanceMonth } from "./lib/monthly-automation.js";
 import { buildRecoveryArchive, inspectRecoveryArchive } from "./lib/recovery-backup.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -362,6 +362,7 @@ function normalizeDataShape(data) {
   data.paymentMonths ||= [];
   data.monthlyBundleSends ||= [];
   data.recoveryBackups ||= [];
+  data.settings.cashBalanceAlerts ||= [];
   data.prices = data.prices.map((price) => ({
     ...price,
     effectiveDate: price.effectiveDate || `${price.effectiveMonth || "2026-01"}-01`
@@ -753,6 +754,21 @@ async function sendFileToTelegram(fileBuffer, filename, caption, mimeType = "app
   return { ok: true };
 }
 
+async function sendTelegramMessage(text) {
+  const cfg = getTelegramConfig();
+  if (!cfg) throw new Error("Telegram is not configured.");
+  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: cfg.chatId, text })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.description || `Telegram API error ${res.status}`);
+  }
+  return { ok: true };
+}
+
 async function createMonthlyBundle(data, month) {
   const sigPath = path.join(__dirname, "assets", "signature.jpg");
   let signatureImage = null;
@@ -937,6 +953,81 @@ async function runRecoveryScheduleCheck(now = new Date()) {
 }
 
 let monthlyAutomationRunning = false;
+let cashBalanceAlertRunning = false;
+
+function monthlyCashBalance(data, month) {
+  const companyHaveToPay = (data.statements || [])
+    .filter((statement) => statement.paymentMonth === month)
+    .reduce((sum, statement) => sum + Number(statement.companyTotalAmount || 0), 0);
+  const activeTruckNos = new Set((data.trucks || []).map((truck) => truck.truckNo));
+  const driverPayment = (data.deliveries || [])
+    .filter((delivery) => delivery.deliveryDate?.slice(0, 7) === month)
+    .filter((delivery) => activeTruckNos.has(delivery.truckNo))
+    .reduce((sum, delivery) => sum + Number(delivery.truckSalaryAmount || 0), 0);
+  return { companyHaveToPay, driverPayment, balance: companyHaveToPay - driverPayment };
+}
+
+async function runCashBalanceAlertAutomation(now = new Date()) {
+  if (cashBalanceAlertRunning || !getTelegramConfig()) return { sent: false };
+  const month = scheduledCashBalanceMonth(now);
+  if (!month) return { sent: false };
+  cashBalanceAlertRunning = true;
+  try {
+    let claimed = false;
+    await updateData((data) => {
+      data.settings.cashBalanceAlerts ||= [];
+      const existing = data.settings.cashBalanceAlerts.find((item) => item.month === month);
+      if (existing?.status === "sent") return;
+      const nowIso = now.toISOString();
+      if (existing?.nextAttemptAt && existing.nextAttemptAt > nowIso) return;
+      if (existing?.status === "sending" && Date.parse(existing.updatedAt || 0) > now.getTime() - 2 * 60 * 60 * 1000) return;
+      const record = { month, status: "sending", attempts: Number(existing?.attempts || 0) + 1, sentAt: null, nextAttemptAt: null, error: null, updatedAt: nowIso };
+      if (existing) Object.assign(existing, record);
+      else data.settings.cashBalanceAlerts.push(record);
+      claimed = true;
+    }, { skipDailyBackup: true });
+    if (!claimed) return { sent: false, month };
+
+    const data = await readData();
+    const { companyHaveToPay, driverPayment, balance } = monthlyCashBalance(data, month);
+    const [year, numberMonth] = month.split("-");
+    const result = balance > 0 ? `You Get: $${money(balance)}` : balance < 0 ? `You Need to Add: $${money(Math.abs(balance))}` : "Balanced: $0.00";
+    const message = [
+      `📊 ${monthLabel(month)} Cash Balance`,
+      "",
+      `Company Have to Pay on 05/${numberMonth}/${year.slice(2)}: $${money(companyHaveToPay)}`,
+      `Driver Payment: $${money(driverPayment)}`,
+      "",
+      balance > 0 ? `✅ ${result}` : balance < 0 ? `⚠️ ${result}` : `✅ ${result}`
+    ].join("\n");
+    await sendTelegramMessage(message);
+    await updateData((current) => {
+      const record = current.settings.cashBalanceAlerts?.find((item) => item.month === month);
+      if (!record) return;
+      record.status = "sent";
+      record.sentAt = new Date().toISOString();
+      record.nextAttemptAt = null;
+      record.error = null;
+      record.updatedAt = record.sentAt;
+      addActivity(current, `${month} cash balance alert sent to Telegram.`, "telegram");
+    }, { skipDailyBackup: true });
+    return { sent: true, month };
+  } catch (error) {
+    await updateData((data) => {
+      const record = data.settings.cashBalanceAlerts?.find((item) => item.month === month);
+      if (!record) return;
+      record.status = "failed";
+      record.error = String(error.message || error).slice(0, 500);
+      record.updatedAt = new Date().toISOString();
+      record.nextAttemptAt = new Date(Date.now() + retryDelayMs(record.attempts)).toISOString();
+      addActivity(data, `${month} cash balance Telegram alert failed: ${record.error}`, "error");
+    }, { skipDailyBackup: true });
+    console.error(`Cash balance Telegram alert failed for ${month}:`, error);
+    return { sent: false, month, error: error.message || String(error) };
+  } finally {
+    cashBalanceAlertRunning = false;
+  }
+}
 
 async function markMonthlyBundleSent(month, bundle, method) {
   await updateData((data) => {
@@ -2554,6 +2645,10 @@ if (isMainModule) {
     startupCheck.unref();
     const monthlyCheck = setInterval(() => runMonthlyBundleAutomation().catch((error) => console.error("Monthly automation check failed:", error)), 60 * 60 * 1000);
     monthlyCheck.unref();
+    const cashBalanceStartupCheck = setTimeout(() => runCashBalanceAlertAutomation().catch((error) => console.error("Cash balance alert startup check failed:", error)), 15000);
+    cashBalanceStartupCheck.unref();
+    const cashBalanceCheck = setInterval(() => runCashBalanceAlertAutomation().catch((error) => console.error("Cash balance alert check failed:", error)), 60 * 60 * 1000);
+    cashBalanceCheck.unref();
     scheduleRecoveryAfterChange();
     const recoveryCheck = setInterval(() => runRecoveryScheduleCheck().catch((error) => console.error("Recovery schedule check failed:", error)), 5 * 60 * 1000);
     recoveryCheck.unref();

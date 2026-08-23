@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth } from "../lib/monthly-automation.js";
+import { nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth, scheduledCashBalanceMonth } from "../lib/monthly-automation.js";
 
 test("monthly bundle becomes due at 9 AM Cambodia time on the fifth", () => {
   assert.equal(scheduledBundleMonth(new Date("2026-06-05T01:59:59Z")), null);
@@ -13,6 +13,12 @@ test("monthly bundle catch-up remains due after the fifth", () => {
 
 test("January schedule correctly targets December of the previous year", () => {
   assert.equal(scheduledBundleMonth(new Date("2027-01-05T02:00:00Z")), "2026-12");
+});
+
+test("cash balance alert targets the completed previous month on the third at 9 AM Cambodia time", () => {
+  assert.equal(scheduledCashBalanceMonth(new Date("2026-09-03T01:59:59Z")), null);
+  assert.equal(scheduledCashBalanceMonth(new Date("2026-09-03T02:00:00Z")), "2026-08");
+  assert.equal(scheduledCashBalanceMonth(new Date("2027-01-03T02:00:00Z")), "2026-12");
 });
 
 test("next schedule reports the next unscheduled calendar slot", () => {
