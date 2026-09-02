@@ -35,8 +35,8 @@ const rows = [
   }
 ];
 
-async function loadSalarySheet(loanDeduction, garageFee) {
-  const buffer = await salaryWorkbook(data, rows, { truckNo: "3G-0397", month: "2026-07" }, loanDeduction, garageFee);
+async function loadSalarySheet(loanDeduction, garageFee, month = "2026-07") {
+  const buffer = await salaryWorkbook(data, rows, { truckNo: "3G-0397", month }, loanDeduction, garageFee);
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
   return workbook.getWorksheet("Driver Payment");
@@ -59,9 +59,21 @@ test("driver payment Excel totals and Net Pay use formulas", async () => {
 
 test("driver payment Excel keeps zero-value deduction rows editable", async () => {
   const sheet = await loadSalarySheet(0, 0);
-  assert.equal(sheet.getCell("A8").value, "Loan Deduction");
+  assert.equal(sheet.getCell("A8").value, "កាត់ប្រាក់កម្ចី");
   assert.equal(sheet.getCell("H8").value, 0);
-  assert.equal(sheet.getCell("A9").value, "Garage Fee");
+  assert.equal(sheet.getCell("A9").value, "ថ្លៃហ្គារ៉ាស");
   assert.equal(sheet.getCell("H9").value, 0);
   assert.deepEqual(sheet.getCell("H10").value, { formula: "H7-H8-H9", result: 11.94 });
+});
+
+test("driver payment Excel uses Khmer report labels", async () => {
+  const sheet = await loadSalarySheet(0, 0, "2026-08");
+  assert.equal(sheet.getCell("A2").value, "ការផ្ទៀងផ្ទាត់លេខរថយន្ត៖ 3G-0397");
+  assert.equal(sheet.getCell("E2").value, "ខែ៖");
+  assert.equal(sheet.getCell("G2").value, "ខែសីហា 2026");
+  assert.equal(sheet.getCell("A3").value, "អ្នកបើកបរ៖ Driver");
+  assert.equal(sheet.getCell("E3").value, "ប្រភេទរថយន្ត៖");
+  assert.equal(sheet.getCell("G3").value, "ទ្បានស្ទូច");
+  assert.equal(sheet.getCell("A7").value, "សរុប");
+  assert.equal(sheet.getCell("A10").value, "ប្រាក់ត្រូវទូទាត់");
 });

@@ -85,6 +85,27 @@ export function monthLabel(value) {
   return `${monthNames[Number(match[2]) - 1] || match[2]} ${match[1]}`;
 }
 
+function khmerMonthLabel(value) {
+  const text = normalizeText(value);
+  const match = text.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return text || "គ្រប់ខែ";
+  const monthNames = [
+    "មករា",
+    "កុម្ភៈ",
+    "មីនា",
+    "មេសា",
+    "ឧសភា",
+    "មិថុនា",
+    "កក្កដា",
+    "សីហា",
+    "កញ្ញា",
+    "តុលា",
+    "វិច្ឆិកា",
+    "ធ្នូ"
+  ];
+  return `ខែ${monthNames[Number(match[2]) - 1] || match[2]} ${match[1]}`;
+}
+
 function truckTypeFileLabel(truckType) {
   return truckType === "With Crane" ? "car-crane" : "car-no-crane";
 }
@@ -576,9 +597,10 @@ function salaryExport(data, rows, query = {}, loanDeduction = 0, garageFee = 0) 
 export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, garageFee = 0) {
   const truck = data.trucks.find((item) => item.truckNo === query.truckNo) || {};
   const truckNo = query.truckNo || rows[0]?.truckNo || "All Trucks";
-  const truckType = truckTypeLabel(rows[0]?.truckType || truck.truckType || query.truckType || "No Data");
+  const rawTruckType = rows[0]?.truckType || truck.truckType || query.truckType || "No Data";
+  const truckType = rawTruckType === "With Crane" ? "ទ្បានស្ទូច" : truckTypeLabel(rawTruckType);
   const driverName = rows[0]?.driverName || truck.driverName || "-";
-  const reportMonth = monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
+  const reportMonth = khmerMonthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
   const totalDriverAmount = Number(rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0).toFixed(2));
   const netPay = Number((totalDriverAmount - loanDeduction - garageFee).toFixed(2));
 
@@ -650,11 +672,11 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
     font: titleFont,
     alignment: { horizontal: "center", vertical: "middle" }
   });
-  merge("A2:D2", `Driver Verification: ${truckNo}`, { font: boldFont });
-  merge("E2:F2", "Month:", { font: boldFont });
+  merge("A2:D2", `ការផ្ទៀងផ្ទាត់លេខរថយន្ត៖ ${truckNo}`, { font: boldFont });
+  merge("E2:F2", "ខែ៖", { font: boldFont });
   merge("G2:H2", reportMonth, { font: boldFont });
-  merge("A3:D3", `Driver: ${driverName}`, { font: boldFont });
-  merge("E3:F3", "Truck Type:", { font: boldFont });
+  merge("A3:D3", `អ្នកបើកបរ៖ ${driverName}`, { font: boldFont });
+  merge("E3:F3", "ប្រភេទរថយន្ត៖", { font: boldFont });
   merge("G3:H3", truckType, { font: boldFont });
   worksheet.getRow(1).height = 18;
   worksheet.getRow(2).height = 16;
@@ -700,7 +722,7 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
   const totalRowNumber = rows.length + 5;
   worksheet.getRow(totalRowNumber).height = 20;
   worksheet.mergeCells(totalRowNumber, 1, totalRowNumber, 5);
-  worksheet.getCell(totalRowNumber, 1).value = "Total";
+  worksheet.getCell(totalRowNumber, 1).value = "សរុប";
   const lastDataRowNumber = rows.length + 4;
   const totalQty = rows.reduce((sum, row) => sum + toNumber(row.qtyTon), 0);
   worksheet.getCell(totalRowNumber, 6).value = rows.length
@@ -726,7 +748,7 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
 
   worksheet.getRow(loanRowNumber).height = 18;
   worksheet.mergeCells(loanRowNumber, 1, loanRowNumber, 7);
-  worksheet.getCell(loanRowNumber, 1).value = "Loan Deduction";
+  worksheet.getCell(loanRowNumber, 1).value = "កាត់ប្រាក់កម្ចី";
   worksheet.getCell(loanRowNumber, 8).value = loanDeduction;
   worksheet.getCell(loanRowNumber, 8).numFmt = '"$"0.00';
   styleRange(loanRowNumber, loanRowNumber, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
@@ -734,7 +756,7 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
 
   worksheet.getRow(garageRowNumber).height = 18;
   worksheet.mergeCells(garageRowNumber, 1, garageRowNumber, 7);
-  worksheet.getCell(garageRowNumber, 1).value = "Garage Fee";
+  worksheet.getCell(garageRowNumber, 1).value = "ថ្លៃហ្គារ៉ាស";
   worksheet.getCell(garageRowNumber, 8).value = garageFee;
   worksheet.getCell(garageRowNumber, 8).numFmt = '"$"0.00';
   styleRange(garageRowNumber, garageRowNumber, 1, 8, { font: baseFont, alignment: { vertical: "middle" } });
@@ -742,7 +764,7 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
 
   worksheet.getRow(netPayRowNumber).height = 18;
   worksheet.mergeCells(netPayRowNumber, 1, netPayRowNumber, 7);
-  worksheet.getCell(netPayRowNumber, 1).value = "Net Pay";
+  worksheet.getCell(netPayRowNumber, 1).value = "ប្រាក់ត្រូវទូទាត់";
   worksheet.getCell(netPayRowNumber, 8).value = {
     formula: `H${totalRowNumber}-H${loanRowNumber}-H${garageRowNumber}`,
     result: netPay
