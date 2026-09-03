@@ -35,8 +35,13 @@ const rows = [
   }
 ];
 
-async function loadSalarySheet(loanDeduction, garageFee, month = "2026-07") {
-  const buffer = await salaryWorkbook(data, rows, { truckNo: "3G-0397", month }, loanDeduction, garageFee);
+async function loadSalarySheet(loanDeduction, garageFee, month = "2026-07", truckType = "With Crane") {
+  const workbookData = {
+    ...data,
+    trucks: data.trucks.map((truck) => ({ ...truck, truckType }))
+  };
+  const workbookRows = rows.map((row) => ({ ...row, truckType }));
+  const buffer = await salaryWorkbook(workbookData, workbookRows, { truckNo: "3G-0397", month }, loanDeduction, garageFee);
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
   return workbook.getWorksheet("Driver Payment");
@@ -76,4 +81,9 @@ test("driver payment Excel uses Khmer report labels", async () => {
   assert.equal(sheet.getCell("G3").value, "ទ្បានស្ទូច");
   assert.equal(sheet.getCell("A7").value, "សរុប");
   assert.equal(sheet.getCell("A10").value, "ប្រាក់ត្រូវទូទាត់");
+});
+
+test("driver payment Excel displays No Crane in Khmer", async () => {
+  const sheet = await loadSalarySheet(0, 0, "2026-08", "Without Crane");
+  assert.equal(sheet.getCell("G3").value, "ទ្បានលាត");
 });

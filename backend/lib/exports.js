@@ -598,7 +598,11 @@ export async function salaryWorkbook(data, rows, query = {}, loanDeduction = 0, 
   const truck = data.trucks.find((item) => item.truckNo === query.truckNo) || {};
   const truckNo = query.truckNo || rows[0]?.truckNo || "All Trucks";
   const rawTruckType = rows[0]?.truckType || truck.truckType || query.truckType || "No Data";
-  const truckType = rawTruckType === "With Crane" ? "ទ្បានស្ទូច" : truckTypeLabel(rawTruckType);
+  const truckType = rawTruckType === "With Crane"
+    ? "ទ្បានស្ទូច"
+    : rawTruckType === "Without Crane"
+      ? "ទ្បានលាត"
+      : truckTypeLabel(rawTruckType);
   const driverName = rows[0]?.driverName || truck.driverName || "-";
   const reportMonth = khmerMonthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7));
   const totalDriverAmount = Number(rows.reduce((sum, row) => sum + toNumber(row.truckSalaryAmount), 0).toFixed(2));
