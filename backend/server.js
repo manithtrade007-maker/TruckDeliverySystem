@@ -17,7 +17,7 @@ import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchK
 import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
 import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
 import { cambodiaDateParts, nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth, scheduledCashBalanceMonth } from "./lib/monthly-automation.js";
-import { buildRecoveryArchive, inspectRecoveryArchive } from "./lib/recovery-backup.js";
+import { buildRecoveryArchive, inspectRecoveryArchive, recoveryChangeDue } from "./lib/recovery-backup.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -633,6 +633,7 @@ async function ensureDataStore() {
   try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS monthly_bundle_sends (month TEXT PRIMARY KEY, status TEXT NOT NULL, method TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, fileName TEXT, fileCount INTEGER NOT NULL DEFAULT 0, sentAt TEXT, nextAttemptAt TEXT, error TEXT, updatedAt TEXT NOT NULL)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS recovery_backups (id TEXT PRIMARY KEY, status TEXT NOT NULL, reason TEXT NOT NULL, fingerprint TEXT, fileName TEXT, fileSize INTEGER NOT NULL DEFAULT 0, createdAt TEXT NOT NULL, sentAt TEXT, verifiedAt TEXT, attempts INTEGER NOT NULL DEFAULT 0, nextAttemptAt TEXT, error TEXT)"); } catch (_) {}
+  try { database.exec("CREATE TABLE IF NOT EXISTS recovery_state (key TEXT PRIMARY KEY, value TEXT)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, passwordHash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'staff', createdAt TEXT NOT NULL)"); } catch (_) {}
   const hasRows = database.prepare(`
     SELECT
@@ -792,7 +793,8 @@ function recoveryFingerprint(data) {
   const businessData = {
     settings: data.settings, trucks: data.trucks, prices: data.prices, statements: data.statements,
     deliveries: data.deliveries, truckDeductions: data.truckDeductions,
-    driverReportedPayments: data.driverReportedPayments, paymentMonths: data.paymentMonths
+    driverReportedPayments: data.driverReportedPayments, paymentMonths: data.paymentMonths,
+    users: getDb().prepare("SELECT id, username, passwordHash, role FROM users ORDER BY id").all()
   };
   return createHash("sha256").update(JSON.stringify(businessData)).digest("hex");
 }
@@ -826,21 +828,17 @@ async function createRecoveryArchive(data, reason) {
 }
 
 let recoveryBackupRunning = false;
-let recoveryChangeTimer = null;
-let recoveryChangeForce = false;
 
 const verifiedRecoveryStatuses = new Set(["sent", "local_only", "delivery_failed"]);
 
-function scheduleRecoveryAfterChange({ force = false } = {}) {
-  recoveryChangeForce ||= force;
-  if (recoveryChangeTimer) clearTimeout(recoveryChangeTimer);
-  recoveryChangeTimer = setTimeout(() => {
-    recoveryChangeTimer = null;
-    const forceBackup = recoveryChangeForce;
-    recoveryChangeForce = false;
-    runRecoveryBackup({ reason: "after-change", force: forceBackup }).catch((error) => console.error("After-change recovery backup failed:", error));
-  }, 15 * 60 * 1000);
-  recoveryChangeTimer.unref();
+// The last change time is stored in the database so a restart does not drop a pending backup.
+function scheduleRecoveryAfterChange() {
+  getDb().prepare("INSERT INTO recovery_state (key, value) VALUES ('lastChangeAt', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+    .run(new Date().toISOString());
+}
+
+function clearRecoveryChange(lastChangeAt) {
+  getDb().prepare("DELETE FROM recovery_state WHERE key = 'lastChangeAt' AND value = ?").run(lastChangeAt);
 }
 
 async function runRecoveryBackup({ reason = "scheduled", force = false } = {}) {
@@ -943,7 +941,13 @@ async function runRecoveryScheduleCheck(now = new Date()) {
   const data = await readData();
   const due = (data.recoveryBackups || []).find((item) =>
     ["failed", "delivery_failed"].includes(item.status) && (!item.nextAttemptAt || item.nextAttemptAt <= now.toISOString()));
-  if (!due) return { created: false, reason: "not_due" };
+  if (!due) {
+    const lastChangeAt = getDb().prepare("SELECT value FROM recovery_state WHERE key = 'lastChangeAt'").get()?.value;
+    if (!recoveryChangeDue(lastChangeAt, now)) return { created: false, reason: "not_due" };
+    if (recoveryBackupRunning) return { created: false, reason: "already_running" };
+    clearRecoveryChange(lastChangeAt);
+    return runRecoveryBackup({ reason: "after-change" });
+  }
   if (due.status === "delivery_failed" && due.fileName && getTelegramConfig()) return retryRecoveryDelivery(due);
   await updateData((current) => {
     const target = current.recoveryBackups?.find((item) => item.id === due.id);
@@ -1414,7 +1418,7 @@ async function api(req, res, url, role = "admin") {
     const id = `user-${Date.now()}`;
     const passwordHash = await hashPassword(password);
     db.prepare("INSERT INTO users (id, username, passwordHash, role, createdAt) VALUES (?, ?, ?, ?, ?)").run(id, username, passwordHash, userRole, new Date().toISOString());
-    scheduleRecoveryAfterChange({ force: true });
+    scheduleRecoveryAfterChange();
     return sendJson(res, 200, { id, username, role: userRole });
   }
   if (req.method === "PUT" && url.pathname.startsWith("/api/users/") && url.pathname.endsWith("/password")) {
@@ -1424,14 +1428,14 @@ async function api(req, res, url, role = "admin") {
     const password = String(body.password || "").trim();
     if (password.length < 6) throw new Error("Password must be at least 6 characters.");
     db.prepare("UPDATE users SET passwordHash = ? WHERE id = ?").run(await hashPassword(password), id);
-    scheduleRecoveryAfterChange({ force: true });
+    scheduleRecoveryAfterChange();
     return sendJson(res, 200, { ok: true });
   }
   if (req.method === "DELETE" && url.pathname.startsWith("/api/users/")) {
     requireAdmin();
     const id = decodeURIComponent(url.pathname.split("/").pop());
     db.prepare("DELETE FROM users WHERE id = ?").run(id);
-    scheduleRecoveryAfterChange({ force: true });
+    scheduleRecoveryAfterChange();
     return sendJson(res, 200, { ok: true });
   }
 
@@ -1468,7 +1472,7 @@ async function api(req, res, url, role = "admin") {
       lastSent: runs.find((item) => item.status === "sent") || null,
       failed: latest && ["failed", "delivery_failed"].includes(latest.status) ? latest : null,
       details,
-      schedule: "15 minutes after the latest change; automatic retry after failure",
+      schedule: "1 hour after the latest change; automatic retry after failure",
       timeZone: "Asia/Phnom_Penh"
     });
   }
@@ -2650,7 +2654,8 @@ if (isMainModule) {
     cashBalanceStartupCheck.unref();
     const cashBalanceCheck = setInterval(() => runCashBalanceAlertAutomation().catch((error) => console.error("Cash balance alert check failed:", error)), 60 * 60 * 1000);
     cashBalanceCheck.unref();
-    scheduleRecoveryAfterChange();
+    const recoveryStartupCheck = setTimeout(() => runRecoveryScheduleCheck().catch((error) => console.error("Recovery startup check failed:", error)), 60 * 1000);
+    recoveryStartupCheck.unref();
     const recoveryCheck = setInterval(() => runRecoveryScheduleCheck().catch((error) => console.error("Recovery schedule check failed:", error)), 5 * 60 * 1000);
     recoveryCheck.unref();
   });

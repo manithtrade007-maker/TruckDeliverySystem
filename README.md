@@ -103,7 +103,7 @@ A recovery ZIP contains `data.json`, a consistent SQLite snapshot (including sta
 
 Automatic behavior:
 
-- 15 minutes after the last data change: create a backup if business data changed.
+- 1 hour after the last data change: create a backup if business data changed.
 - Before a deletion: create a safety backup when the current state has not already been backed up.
 - Failed Telegram deliveries retry automatically.
 - The newest 30 recovery ZIPs remain on the persistent disk.

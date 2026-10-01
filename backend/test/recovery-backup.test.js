@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildRecoveryArchive, inspectRecoveryArchive } from "../lib/recovery-backup.js";
+import { buildRecoveryArchive, inspectRecoveryArchive, recoveryChangeDue } from "../lib/recovery-backup.js";
 
 const data = { settings: { companyName: "Test" }, trucks: [{ truckNo: "T1" }], prices: [], statements: [], deliveries: [] };
 const sqliteHeader = Buffer.concat([Buffer.from("SQLite format 3\0"), Buffer.alloc(100)]);
@@ -30,4 +30,11 @@ test("recovery archive rejects a file changed after checksums were created", asy
   zip.file("data.json", JSON.stringify({ ...data, statements: [{ id: "tampered" }] }));
   const tampered = await zip.generateAsync({ type: "nodebuffer" });
   await assert.rejects(() => inspectRecoveryArchive(tampered), /Checksum failed for data.json/);
+});
+
+test("automatic recovery backup waits one hour after the last change", () => {
+  const lastChangeAt = "2026-08-14T10:00:00.000Z";
+  assert.equal(recoveryChangeDue(null, new Date("2026-08-14T12:00:00.000Z")), false);
+  assert.equal(recoveryChangeDue(lastChangeAt, new Date("2026-08-14T10:59:59.000Z")), false);
+  assert.equal(recoveryChangeDue(lastChangeAt, new Date("2026-08-14T11:00:00.000Z")), true);
 });

@@ -2,6 +2,13 @@ import { createHash } from "node:crypto";
 import JSZip from "jszip";
 
 export const RECOVERY_FORMAT_VERSION = 1;
+export const RECOVERY_QUIET_MS = 60 * 60 * 1000;
+
+// An automatic backup is due once there have been no new changes for RECOVERY_QUIET_MS.
+export function recoveryChangeDue(lastChangeAt, now = new Date()) {
+  const changedAt = Date.parse(lastChangeAt || "");
+  return Number.isFinite(changedAt) && now.getTime() - changedAt >= RECOVERY_QUIET_MS;
+}
 
 function sha256(buffer) {
   return createHash("sha256").update(buffer).digest("hex");

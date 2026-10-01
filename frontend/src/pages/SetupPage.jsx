@@ -88,7 +88,7 @@ export function SetupPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-black text-slate-900">Backup & Recovery</h2>
-                  <p className="mt-1 text-sm font-bold text-slate-500">After your last change, the system waits 15 minutes, creates a verified recovery ZIP, and sends it to Telegram.</p>
+                  <p className="mt-1 text-sm font-bold text-slate-500">After your last change, the system waits 1 hour, creates a verified recovery ZIP, and sends it to Telegram.</p>
                 </div>
                 <span className={`rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-wide ${
                   recoveryStatus?.protection === "protected"
