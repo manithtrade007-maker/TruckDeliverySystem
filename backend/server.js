@@ -958,11 +958,17 @@ async function runRecoveryScheduleCheck(now = new Date()) {
 
 let monthlyAutomationRunning = false;
 let cashBalanceAlertRunning = false;
+const CASH_BALANCE_ALERT_VERSION = 2;
 
 function monthlyCashBalance(data, month) {
-  const companyHaveToPay = (data.statements || [])
+  // Statements don't store a total; derive it from their deliveries (or the manual amount).
+  const companyHaveToPay = roundMoney((data.statements || [])
     .filter((statement) => statement.paymentMonth === month)
-    .reduce((sum, statement) => sum + Number(statement.companyTotalAmount || 0), 0);
+    .reduce((sum, statement) => sum + (statement.isManual
+      ? toNumber(statement.manualAmount)
+      : (data.deliveries || [])
+        .filter((delivery) => delivery.statementId === statement.id)
+        .reduce((rowSum, delivery) => rowSum + toNumber(delivery.companyTotalAmount), 0)), 0));
   const activeTruckNos = new Set((data.trucks || []).map((truck) => truck.truckNo));
   const driverPayment = (data.deliveries || [])
     .filter((delivery) => delivery.deliveryDate?.slice(0, 7) === month)
@@ -981,7 +987,8 @@ async function runCashBalanceAlertAutomation(now = new Date()) {
     await updateData((data) => {
       data.settings.cashBalanceAlerts ||= [];
       const existing = data.settings.cashBalanceAlerts.find((item) => item.month === month);
-      if (existing?.status === "sent") return;
+      // Alerts sent before CASH_BALANCE_ALERT_VERSION used a $0 company total; resend those once.
+      if (existing?.status === "sent" && Number(existing.version || 0) >= CASH_BALANCE_ALERT_VERSION) return;
       const nowIso = now.toISOString();
       if (existing?.nextAttemptAt && existing.nextAttemptAt > nowIso) return;
       if (existing?.status === "sending" && Date.parse(existing.updatedAt || 0) > now.getTime() - 2 * 60 * 60 * 1000) return;
@@ -1009,6 +1016,7 @@ async function runCashBalanceAlertAutomation(now = new Date()) {
       const record = current.settings.cashBalanceAlerts?.find((item) => item.month === month);
       if (!record) return;
       record.status = "sent";
+      record.version = CASH_BALANCE_ALERT_VERSION;
       record.sentAt = new Date().toISOString();
       record.nextAttemptAt = null;
       record.error = null;
