@@ -5,6 +5,7 @@ import {
   statementPdf, tablePdf, truckTypeLabel, unitMoney
 } from "./exports.js";
 import { effectiveDateOf, fromLocationMatchKey, locationBaseKey, toNumber } from "./calc.js";
+import { resolveGarageFee } from "./garage-fees.js";
 
 function validMonth(value) {
   const month = String(value || "").trim();
@@ -155,13 +156,13 @@ export async function buildMonthlyBundle({ data, month: inputMonth, signatureIma
     const rows = deliveries.filter((delivery) => delivery.truckNo === truck.truckNo);
     const deduction = data.truckDeductions?.find((item) => item.truckNo === truck.truckNo && item.month === month) || {};
     const query = { month, truckNo: truck.truckNo, truckType: truck.truckType };
-    files.push({ name: `03-Driver-Reports/${truck.truckNo}-${safeMonth}.xlsx`, data: await salaryWorkbook(data, rows, query, toNumber(deduction.loanDeduction), toNumber(deduction.garageFee)) });
-    files.push({ name: `03-Driver-Reports/${truck.truckNo}-${safeMonth}.pdf`, data: salaryPdf(data, rows, query, toNumber(deduction.loanDeduction), toNumber(deduction.garageFee)) });
+    files.push({ name: `03-Driver-Reports/${truck.truckNo}-${safeMonth}.xlsx`, data: await salaryWorkbook(data, rows, query, toNumber(deduction.loanDeduction), resolveGarageFee(truck.truckNo, month, deduction.garageFee)) });
+    files.push({ name: `03-Driver-Reports/${truck.truckNo}-${safeMonth}.pdf`, data: salaryPdf(data, rows, query, toNumber(deduction.loanDeduction), resolveGarageFee(truck.truckNo, month, deduction.garageFee)) });
   }
 
   const driverSummaryRows = performance.map((truck) => {
     const deduction = data.truckDeductions?.find((item) => item.truckNo === truck.truckNo && item.month === month) || {};
-    const deductions = toNumber(deduction.loanDeduction) + toNumber(deduction.garageFee);
+    const deductions = toNumber(deduction.loanDeduction) + resolveGarageFee(truck.truckNo, month, deduction.garageFee);
     return { truck: truck.truckNo, driver: truck.driverName || "-", type: truckTypeLabel(truck.truckType), trips: truck.trips,
       qty: truck.qtyTon, gross: truck.driverAmount, deductions, net: truck.driverAmount - deductions };
   });

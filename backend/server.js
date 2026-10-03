@@ -16,6 +16,7 @@ import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, 
 import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery, validateQtyTon } from "./lib/calc.js";
 import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
 import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
+import { resolveGarageFee } from "./lib/garage-fees.js";
 import { cambodiaDateParts, nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth, scheduledCashBalanceMonth } from "./lib/monthly-automation.js";
 import { buildRecoveryArchive, inspectRecoveryArchive, recoveryChangeDue } from "./lib/recovery-backup.js";
 
@@ -2455,7 +2456,7 @@ async function api(req, res, url, role = "admin") {
     await updateData((data) => {
       data.truckDeductions ||= [];
       const index = data.truckDeductions.findIndex((d) => d.truckNo === truckNo && d.month === month);
-      const record = { truckNo, month, loanDeduction: toNumber(loanDeduction), garageFee: toNumber(garageFee) };
+      const record = { truckNo, month, loanDeduction: toNumber(loanDeduction), garageFee: resolveGarageFee(truckNo, month, garageFee) };
       if (index >= 0) data.truckDeductions[index] = record;
       else data.truckDeductions.push(record);
     });
@@ -2488,7 +2489,7 @@ async function api(req, res, url, role = "admin") {
     }
     const format = normalizeText(query.format || "xls");
     const loanDeduction = toNumber(query.loanDeduction);
-    const garageFee = toNumber(query.garageFee);
+    const garageFee = query.truckNo ? resolveGarageFee(query.truckNo, query.month, query.garageFee) : toNumber(query.garageFee);
     const truckTypeName = query.truckNo || query.truckType || rows[0]?.truckType || "all";
     const fileName = `driver-payment-${slug(truckTypeName)}-${slug(monthLabel(query.month || rows[0]?.deliveryDate?.slice(0, 7)))}`;
     if (format === "pdf") {

@@ -4,6 +4,7 @@ import "@fontsource-variable/inter";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } from "./components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, compareTrucksCraneFirst, formatDate, formatDateTime, monthName, groupPriceHistory } from "./lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile, uploadRecovery } from "./lib/api.js";
+import { fixedGarageFee } from "../../backend/lib/garage-fees.js";
 import { LoginPage } from "./components/LoginPage.jsx";
 import { AppCtx } from "./AppContext.js";
 import { ComparePayPage } from "./pages/ComparePayPage.jsx";
@@ -1045,7 +1046,7 @@ function App() {
           truckNo,
           month: reportMonth,
           loanDeduction: Number(edits.loanDeduction) || 0,
-          garageFee: Number(edits.garageFee) || 0
+          garageFee: Number(getDeduction(truckNo).garageFee) || 0
         })
       });
       await loadData();
@@ -1074,9 +1075,11 @@ function App() {
 
   function getDeduction(truckNo) {
     const edits = deductionEdits[truckNo] || {};
+    const fixedFee = fixedGarageFee(truckNo, reportMonth);
     return {
       loanDeduction: edits.loanDeduction ?? "0",
-      garageFee: edits.garageFee ?? "0"
+      garageFee: fixedFee != null ? String(fixedFee) : edits.garageFee ?? "0",
+      garageFeeFixed: fixedFee != null
     };
   }
 

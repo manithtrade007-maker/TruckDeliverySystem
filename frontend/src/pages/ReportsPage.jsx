@@ -158,8 +158,10 @@ export function ReportsPage() {
                               type="number"
                               min="0"
                               step="0.01"
-                              className="w-24 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-right text-sm font-black tabular-nums text-slate-800 outline-none focus:border-teal-500 focus:bg-white focus:ring-2 focus:ring-teal-100"
+                              className="w-24 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-right text-sm font-black tabular-nums text-slate-800 outline-none focus:border-teal-500 focus:bg-white focus:ring-2 focus:ring-teal-100 read-only:cursor-not-allowed read-only:bg-slate-100 read-only:text-slate-500"
                               value={d.garageFee}
+                              readOnly={d.garageFeeFixed}
+                              title={d.garageFeeFixed ? "Fixed monthly garage fee" : undefined}
                               onChange={(e) => setDeductionEdits((prev) => ({ ...prev, [truck.truckNo]: { ...prev[truck.truckNo], garageFee: e.target.value } }))}
                               onBlur={() => saveDeduction(truck.truckNo)}
                             />
