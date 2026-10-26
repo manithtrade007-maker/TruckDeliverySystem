@@ -4,9 +4,10 @@ export function destinationKey(value) {
   return String(value || "").normalize("NFC").trim().replace(/\s+/gu, " ").toLocaleLowerCase();
 }
 
-export function locationReport(deliveries, month) {
+export function locationReport(deliveries, month, truckType = "") {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month || "")) throw new Error("Choose a valid report month.");
-  const rows = deliveries.filter(row => row.deliveryDate?.slice(0, 7) === month);
+  if (!["", "With Crane", "Without Crane"].includes(truckType)) throw new Error("Choose a valid truck type.");
+  const rows = deliveries.filter(row => row.deliveryDate?.slice(0, 7) === month && (!truckType || row.truckType === truckType));
   const locations = new Map();
   const trucks = new Map();
   let tons = 0;
@@ -33,5 +34,5 @@ export function locationReport(deliveries, month) {
     trucks: new Set(group.rows.map(row => String(row.truckNo || "").trim()).filter(Boolean)).size,
     locations: new Set(group.rows.map(row => destinationKey(row.toLocation)).filter(Boolean)).size });
   const sort = map => [...map.values()].map(summarize).sort((a, b) => b.trips - a.trips || a.name.localeCompare(b.name));
-  return { month, rows, locations: sort(locations), trucks: sort(trucks), trips: rows.length, tons, missingLocations, missingTrucks };
+  return { month, truckType, rows, locations: sort(locations), trucks: sort(trucks), trips: rows.length, tons, missingLocations, missingTrucks };
 }

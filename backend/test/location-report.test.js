@@ -45,3 +45,30 @@ test("Excel contains matching summaries and numeric delivery quantities", async 
   assert.equal(workbook.getWorksheet("Deliveries").rowCount, 5);
   assert.equal(workbook.getWorksheet("Deliveries").getCell("E2").value, 1.12345);
 });
+
+test("Crane and No Crane filters separate shared destinations and their drill-down rows", async () => {
+  const deliveries = [
+    { ...rows[0], truckType: "With Crane" },
+    { ...rows[1], truckType: "With Crane" },
+    { ...rows[2], truckType: "Without Crane" },
+    { ...rows[3], truckType: "Without Crane" },
+    { ...rows[4], truckType: "With Crane" },
+  ];
+  const crane = locationReport(deliveries, "2026-10", "With Crane");
+  const noCrane = locationReport(deliveries, "2026-10", "Without Crane");
+  assert.equal(crane.trips, 2);
+  assert.equal(crane.locations.length, 1);
+  assert.equal(crane.trucks.length, 1);
+  assert.equal(crane.locations[0].trucks, 1);
+  assert.ok(crane.locations[0].rows.every(row => row.truckType === "With Crane"));
+  assert.equal(noCrane.trips, 2);
+  assert.equal(noCrane.locations.length, 2);
+  assert.equal(noCrane.tons, 7);
+  assert.equal(locationReport(deliveries, "2026-10").trips, 4);
+  assert.throws(() => locationReport(deliveries, "2026-10", "invalid"), /valid truck type/);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(await locationReportWorkbook(deliveries, "2026-10", "Without Crane"));
+  assert.equal(workbook.getWorksheet("Summary").getCell("B3").value, "No Crane");
+  assert.equal(workbook.getWorksheet("Deliveries").rowCount, 3);
+  assert.equal(workbook.getWorksheet("By Location").rowCount, 3);
+});

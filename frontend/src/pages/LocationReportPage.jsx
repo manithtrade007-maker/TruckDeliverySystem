@@ -15,22 +15,26 @@ const tons = value => value.toLocaleString(undefined, { maximumFractionDigits: 5
 
 export function LocationReportPage() {
   const { data, reportMonth, setReportMonth, isAdmin, flash } = useApp();
+  const [truckType, setTruckType] = useState("");
   const [view, setView] = useState("locations");
   const [selected, setSelected] = useState(null);
   const [exporting, setExporting] = useState(false);
   const validMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(reportMonth);
-  const report = useMemo(() => validMonth ? locationReport(data.deliveries, reportMonth) : null, [data.deliveries, reportMonth, validMonth]);
+  const report = useMemo(() => validMonth ? locationReport(data.deliveries, reportMonth, truckType) : null, [data.deliveries, reportMonth, validMonth, truckType]);
   const groups = report?.[view] || [];
   const detail = groups.find(group => group.key === selected);
   const breakdown = useMemo(() => detail ? locationReport(detail.rows, reportMonth)[view === "locations" ? "trucks" : "locations"] : [], [detail, reportMonth, view]);
   async function exportExcel() {
     setExporting(true);
-    try { await downloadFile(`/api/export/locations?month=${encodeURIComponent(reportMonth)}`); }
+    try { await downloadFile(`/api/export/locations?month=${encodeURIComponent(reportMonth)}&truckType=${encodeURIComponent(truckType)}`); }
     catch (error) { flash(error.message, "error"); }
     finally { setExporting(false); }
   }
   return <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
     <PageHead title="Location Report" meta="To Locations visited by delivery month. Each delivery record counts as one trip." action={<MonthPicker value={reportMonth} onChange={event => { setReportMonth(event.target.value); setSelected(null); }} />} />
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Truck type">
+      {[["", "All Trucks"], ["With Crane", "Crane"], ["Without Crane", "No Crane"]].map(([value, label]) => <Button key={value} variant={truckType === value ? "primary" : "secondary"} aria-pressed={truckType === value} onClick={() => { setTruckType(value); setSelected(null); }}>{label}</Button>)}
+    </div>
     {!report ? <Panel>Choose a month to see destination activity.</Panel> : <>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard label="Different To Locations" value={report.locations.length} />
@@ -47,7 +51,7 @@ export function LocationReportPage() {
           </div>
           {isAdmin && <Button variant="secondary" disabled={exporting || !report.trips} onClick={exportExcel}>{exporting ? "Exporting…" : "Export Month to Excel"}</Button>}
         </div>
-        {!report.trips ? <p className="py-10 text-center text-slate-500">No deliveries recorded for this month.</p> : <>
+        {!report.trips ? <p className="py-10 text-center text-slate-500">No deliveries recorded for this month and truck type.</p> : <>
           <p className="mb-3 text-sm text-slate-500">Select a {view === "locations" ? "destination" : "truck"} to see its trips and delivery dates.</p>
           <ReportTable headings={[view === "locations" ? "To Location" : "Truck", view === "locations" ? "Different trucks" : "Different To Locations", "Trips", "Tons"]}>
             {groups.map(group => <tr key={group.key} className={selected === group.key ? "bg-teal-50" : "even:bg-slate-50"}>
