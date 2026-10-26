@@ -733,7 +733,7 @@ async function sendBackupToTelegram(data, label = "Manual Backup") {
   form.append("chat_id", cfg.chatId);
   form.append("caption", caption);
   form.append("document", new Blob([content], { type: "application/json" }), filename);
-  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form });
+  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form, signal: AbortSignal.timeout(60_000) });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.description || `Telegram API error ${res.status}`);
@@ -748,7 +748,7 @@ async function sendFileToTelegram(fileBuffer, filename, caption, mimeType = "app
   form.append("chat_id", cfg.chatId);
   form.append("caption", caption);
   form.append("document", new Blob([fileBuffer], { type: mimeType }), filename);
-  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form });
+  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form, signal: AbortSignal.timeout(60_000) });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.description || `Telegram API error ${res.status}`);
@@ -819,6 +819,7 @@ async function createRecoveryArchive(data, reason) {
     statementPdfs.push({ name, data: await readFile(path.join(statementPdfDir, name)) });
   }
   const archive = await buildRecoveryArchive({ data, database: await createDatabaseSnapshot(), statementPdfs, reason });
+  archive.filename = archive.filename.replace(/\.zip$/, `-${crypto.randomUUID()}.zip`);
   const verified = await inspectRecoveryArchive(archive.buffer);
   await usersFromDatabaseBuffer(verified.database);
   await mkdir(recoveryBackupDir, { recursive: true });
@@ -829,6 +830,8 @@ async function createRecoveryArchive(data, reason) {
 }
 
 let recoveryBackupRunning = false;
+let recoveryBackupQueue = Promise.resolve();
+const recoveryDeliveriesRunning = new Set();
 
 const verifiedRecoveryStatuses = new Set(["sent", "local_only", "delivery_failed"]);
 
@@ -842,8 +845,13 @@ function clearRecoveryChange(lastChangeAt) {
   getDb().prepare("DELETE FROM recovery_state WHERE key = 'lastChangeAt' AND value = ?").run(lastChangeAt);
 }
 
-async function runRecoveryBackup({ reason = "scheduled", force = false } = {}) {
-  if (recoveryBackupRunning) return { created: false, reason: "already_running" };
+function runRecoveryBackup(options = {}) {
+  const operation = recoveryBackupQueue.then(() => createVerifiedRecoveryBackup(options));
+  recoveryBackupQueue = operation.catch(() => {});
+  return operation;
+}
+
+async function createVerifiedRecoveryBackup({ reason = "scheduled", force = false } = {}) {
   recoveryBackupRunning = true;
   const id = crypto.randomUUID();
   try {
@@ -859,40 +867,22 @@ async function runRecoveryBackup({ reason = "scheduled", force = false } = {}) {
 
     const freshData = await readData();
     const archive = await createRecoveryArchive(freshData, reason);
-    let status = "local_only";
-    let sentAt = null;
+    const pendingDelivery = Boolean(getTelegramConfig());
+    let record;
     await updateData((current) => {
-      const record = current.recoveryBackups?.find((item) => item.id === id);
+      record = current.recoveryBackups?.find((item) => item.id === id);
       if (!record) return;
-      Object.assign(record, { status, fileName: archive.filename, fileSize: archive.buffer.length, sentAt,
-        verifiedAt: new Date().toISOString(), nextAttemptAt: null, error: null });
+      Object.assign(record, { status: "local_only", fileName: archive.filename, fileSize: archive.buffer.length,
+        sentAt: null, verifiedAt: new Date().toISOString(),
+        nextAttemptAt: pendingDelivery ? new Date().toISOString() : null, error: null });
+      addActivity(current, `Verified recovery backup created: ${archive.filename} (local).`, "backup");
     }, { skipDailyBackup: true, skipRecoverySchedule: true });
-
-    if (getTelegramConfig()) {
-      try {
-        await sendFileToTelegram(archive.buffer, archive.filename,
-          `N&M Logistic - Verified Recovery Backup\nReason: ${reason}\nCreated: ${archive.manifest.createdAt}\nStatements: ${archive.manifest.counts.statements} | Deliveries: ${archive.manifest.counts.deliveries} | PDFs: ${archive.manifest.counts.statementPdfs}`);
-        status = "sent";
-        sentAt = new Date().toISOString();
-      } catch (error) {
-        status = "delivery_failed";
-        await updateData((current) => {
-          const record = current.recoveryBackups?.find((item) => item.id === id);
-          if (!record) return;
-          Object.assign(record, { status, error: String(error.message || error).slice(0, 500),
-            nextAttemptAt: new Date(Date.now() + retryDelayMs(record.attempts)).toISOString() });
-          addActivity(current, `Recovery backup verified locally, but Telegram delivery failed and will retry: ${record.error}`, "error");
-        }, { skipDailyBackup: true, skipRecoverySchedule: true });
-        return { created: true, status, filename: archive.filename, size: archive.buffer.length, error: error.message || String(error) };
-      }
+    // Local verification protects deletion; network delivery must not hold that lock.
+    if (pendingDelivery && record) {
+      void retryRecoveryDelivery(record).catch((error) => console.error("Recovery delivery failed:", error));
     }
-    await updateData((current) => {
-      const record = current.recoveryBackups?.find((item) => item.id === id);
-      if (!record) return;
-      Object.assign(record, { status, sentAt, nextAttemptAt: null, error: null });
-      addActivity(current, `Verified recovery backup created: ${archive.filename}${status === "sent" ? " and sent to Telegram" : " (local only)"}.`, "backup");
-    }, { skipDailyBackup: true, skipRecoverySchedule: true });
-    return { created: true, status, filename: archive.filename, size: archive.buffer.length };
+    return { created: true, status: "local_only", filename: archive.filename, size: archive.buffer.length };
+
   } catch (error) {
     await updateData((current) => {
       const record = current.recoveryBackups?.find((item) => item.id === id);
@@ -909,8 +899,8 @@ async function runRecoveryBackup({ reason = "scheduled", force = false } = {}) {
 }
 
 async function retryRecoveryDelivery(record) {
-  if (recoveryBackupRunning) return { created: false, reason: "already_running" };
-  recoveryBackupRunning = true;
+  if (recoveryDeliveriesRunning.has(record.id)) return { created: false, reason: "already_running" };
+  recoveryDeliveriesRunning.add(record.id);
   const attempts = Number(record.attempts || 0) + 1;
   try {
     const filePath = path.join(recoveryBackupDir, path.basename(record.fileName || ""));
@@ -934,14 +924,15 @@ async function retryRecoveryDelivery(record) {
     }, { skipDailyBackup: true, skipRecoverySchedule: true });
     return { created: false, status: "delivery_failed", filename: record.fileName, error: error.message || String(error) };
   } finally {
-    recoveryBackupRunning = false;
+    recoveryDeliveriesRunning.delete(record.id);
   }
 }
 
 async function runRecoveryScheduleCheck(now = new Date()) {
   const data = await readData();
   const due = (data.recoveryBackups || []).find((item) =>
-    ["failed", "delivery_failed"].includes(item.status) && (!item.nextAttemptAt || item.nextAttemptAt <= now.toISOString()));
+    (["failed", "delivery_failed"].includes(item.status) || (item.status === "local_only" && item.nextAttemptAt)) &&
+    !recoveryDeliveriesRunning.has(item.id) && (!item.nextAttemptAt || item.nextAttemptAt <= now.toISOString()));
   if (!due) {
     const lastChangeAt = getDb().prepare("SELECT value FROM recovery_state WHERE key = 'lastChangeAt'").get()?.value;
     if (!recoveryChangeDue(lastChangeAt, now)) return { created: false, reason: "not_due" };
@@ -949,7 +940,7 @@ async function runRecoveryScheduleCheck(now = new Date()) {
     clearRecoveryChange(lastChangeAt);
     return runRecoveryBackup({ reason: "after-change" });
   }
-  if (due.status === "delivery_failed" && due.fileName && getTelegramConfig()) return retryRecoveryDelivery(due);
+  if (["delivery_failed", "local_only"].includes(due.status) && due.fileName && getTelegramConfig()) return retryRecoveryDelivery(due);
   await updateData((current) => {
     const target = current.recoveryBackups?.find((item) => item.id === due.id);
     if (target) target.status = "retrying";
@@ -1403,10 +1394,7 @@ async function api(req, res, url, role = "admin") {
   const needsSafetyRecovery = (role === "admin" || staffDeletePath) &&
     (req.method === "DELETE" || (req.method === "POST" && destructivePostPaths.has(url.pathname)));
   if (needsSafetyRecovery) {
-    const safety = await runRecoveryBackup({ reason: "before-delete", force: url.pathname.startsWith("/api/users/") });
-    if (safety.reason === "already_running") {
-      throw Object.assign(new Error("A recovery backup is currently running. Please wait a moment and try the deletion again."), { status: 409 });
-    }
+    await runRecoveryBackup({ reason: "before-delete", force: url.pathname.startsWith("/api/users/") });
   }
 
   // Users management (admin only)
