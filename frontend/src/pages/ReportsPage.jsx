@@ -1,9 +1,11 @@
+import { useState } from "react";
+import { LocationReportPage } from "./LocationReportPage.jsx";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, MonthPicker, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
-export function ReportsPage() {
+function DriverPaymentPage() {
   const { data, driverPaymentSections, exportSalary, getDeduction, isAdmin, reportMonth, saveDeduction, selectedDriverPaymentSection, setDeductionEdits, setReportMonth, setReportTruckNo } = useApp();
   return (
         <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
@@ -190,4 +192,15 @@ export function ReportsPage() {
           )}
         </main>
   );
+}
+
+export function ReportsPage() {
+  const [view, setView] = useState("driver");
+  return <>
+    <nav aria-label="Report sections" className="mx-auto flex max-w-[1500px] gap-2 px-4 pt-4">
+      <Button variant={view === "driver" ? "primary" : "secondary"} aria-pressed={view === "driver"} onClick={() => setView("driver")}>Driver Payment</Button>
+      <Button variant={view === "locations" ? "primary" : "secondary"} aria-pressed={view === "locations"} onClick={() => setView("locations")}>Location Report</Button>
+    </nav>
+    {view === "driver" ? <DriverPaymentPage /> : <LocationReportPage />}
+  </>;
 }
