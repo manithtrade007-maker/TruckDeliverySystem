@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { Button, KpiCard, MonthPicker, PageHead, Panel } from "../components/ui.jsx";
-import { formatDate } from "../lib/format.js";
+import { formatDate, truckTypeLabel } from "../lib/format.js";
 import { downloadFile } from "../lib/api.js";
 import { locationReport } from "../../../backend/lib/location-report.js";
 
@@ -18,18 +18,55 @@ export function LocationReportPage() {
   const [truckType, setTruckType] = useState("");
   const [view, setView] = useState("locations");
   const [selected, setSelected] = useState(null);
+  const detailHeading = useRef(null);
+  const statementsById = useMemo(() => new Map((data.statements || []).map(statement => [statement.id, statement])), [data.statements]);
   const [exporting, setExporting] = useState(false);
   const validMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(reportMonth);
   const report = useMemo(() => validMonth ? locationReport(data.deliveries, reportMonth, truckType) : null, [data.deliveries, reportMonth, validMonth, truckType]);
   const groups = report?.[view] || [];
   const detail = groups.find(group => group.key === selected);
   const breakdown = useMemo(() => detail ? locationReport(detail.rows, reportMonth)[view === "locations" ? "trucks" : "locations"] : [], [detail, reportMonth, view]);
+  useLayoutEffect(() => {
+    if (selected) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      detailHeading.current?.focus({ preventScroll: true });
+    }
+  }, [selected]);
+  function backToReport() {
+    setSelected(null);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
   async function exportExcel() {
     setExporting(true);
     try { await downloadFile(`/api/export/locations?month=${encodeURIComponent(reportMonth)}&truckType=${encodeURIComponent(truckType)}`); }
     catch (error) { flash(error.message, "error"); }
     finally { setExporting(false); }
   }
+  if (detail) return <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
+    <div><Button variant="secondary" onClick={backToReport}>← Back to Location Report</Button></div>
+    <header>
+      <h1 ref={detailHeading} tabIndex={-1} className="text-2xl font-black tracking-tight outline-none">{detail.name}</h1>
+      <p className="mt-2 text-sm text-slate-500">{reportMonth} · {truckType ? truckTypeLabel(truckType) : "All Trucks"} · {view === "locations" ? "To Location details" : "Truck details"}</p>
+    </header>
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+      <KpiCard label={view === "locations" ? "Different trucks" : "Different To Locations"} value={view === "locations" ? detail.trucks : detail.locations} />
+      <KpiCard label="Delivery trips" value={detail.trips} />
+      <KpiCard label="Total tons" value={tons(detail.tons)} />
+    </div>
+      <Panel>
+        <h2 className="mb-4 text-lg font-black">{view === "locations" ? "Trucks visiting this location" : "Locations visited"}</h2>
+        <ReportTable headings={[view === "locations" ? "Truck" : "To Location", "Trips", "Tons"]}>
+          {breakdown.map(group => <tr key={group.key}><td>{group.name}</td><td>{group.trips}</td><td>{tons(group.tons)}</td></tr>)}
+        </ReportTable>
+        <h3 className="mb-3 mt-6 font-bold">Delivery details</h3>
+        <ReportTable headings={["Delivery date", "Statement", "Truck", "To Location", "Invoice", "Tons"]}>
+          {[...detail.rows].sort((a,b) => a.deliveryDate.localeCompare(b.deliveryDate)).map((row, index) => <tr key={row.id || index} className="even:bg-slate-50"><td>{formatDate(row.deliveryDate)}</td><td>{(() => {
+            const statement = statementsById.get(row.statementId);
+            return statement ? <><div className="font-bold">Statement {statement.statementNumber}</div><div className="text-xs text-slate-500">{statement.month} · {truckTypeLabel(statement.truckType || row.truckType)}</div></> : "Statement unavailable";
+          })()}</td><td>{row.truckNo || "Not recorded"}</td><td>{row.toLocation || "Not recorded"}</td><td>{row.invoiceNo}</td><td>{tons(Number(row.qtyTon) || 0)}</td></tr>)}
+        </ReportTable>
+      </Panel>
+  </main>;
   return <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
     <PageHead title="Location Report" meta="To Locations visited by delivery month. Each delivery record counts as one trip." action={<MonthPicker value={reportMonth} onChange={event => { setReportMonth(event.target.value); setSelected(null); }} />} />
     <div className="flex flex-wrap gap-2" role="group" aria-label="Truck type">
@@ -55,23 +92,14 @@ export function LocationReportPage() {
           <p className="mb-3 text-sm text-slate-500">Select a {view === "locations" ? "destination" : "truck"} to see its trips and delivery dates.</p>
           <ReportTable headings={[view === "locations" ? "To Location" : "Truck", view === "locations" ? "Different trucks" : "Different To Locations", "Trips", "Tons"]}>
             {groups.map(group => <tr key={group.key} className={selected === group.key ? "bg-teal-50" : "even:bg-slate-50"}>
-              <td><button type="button" className="min-h-10 text-left font-bold text-teal-800 underline underline-offset-4" aria-expanded={selected === group.key} onClick={() => setSelected(selected === group.key ? null : group.key)}>{group.name}</button></td>
+              <td><button type="button" className="min-h-10 text-left font-bold text-teal-800 underline underline-offset-4" onClick={() => setSelected(group.key)}>{group.name}</button></td>
               <td>{view === "locations" ? group.trucks : group.locations}</td><td>{group.trips}</td><td>{tons(group.tons)}</td>
             </tr>)}
             {!groups.length && <tr><td colSpan={4}>No named {view === "locations" ? "destinations" : "trucks"} in this month’s records.</td></tr>}
           </ReportTable>
         </>}
       </Panel>
-      {detail && <Panel>
-        <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-black">{detail.name} · {detail.trips} trips</h2><Button variant="secondary" onClick={() => setSelected(null)}>Close details</Button></div>
-        <ReportTable headings={[view === "locations" ? "Truck" : "To Location", "Trips", "Tons"]}>
-          {breakdown.map(group => <tr key={group.key}><td>{group.name}</td><td>{group.trips}</td><td>{tons(group.tons)}</td></tr>)}
-        </ReportTable>
-        <h3 className="mb-3 mt-6 font-bold">Delivery details</h3>
-        <ReportTable headings={["Delivery date", "Truck", "To Location", "Invoice", "Tons"]}>
-          {[...detail.rows].sort((a,b) => a.deliveryDate.localeCompare(b.deliveryDate)).map((row, index) => <tr key={row.id || index} className="even:bg-slate-50"><td>{formatDate(row.deliveryDate)}</td><td>{row.truckNo || "Not recorded"}</td><td>{row.toLocation || "Not recorded"}</td><td>{row.invoiceNo}</td><td>{tons(Number(row.qtyTon) || 0)}</td></tr>)}
-        </ReportTable>
-      </Panel>}
+
       <p className="text-xs text-slate-500">Based on all recorded deliveries, including draft statements and historical trucks. Destination names are matched ignoring capitalization and extra spaces.</p>
     </>}
   </main>;
