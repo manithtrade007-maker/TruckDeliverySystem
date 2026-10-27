@@ -35,7 +35,7 @@ export function SetupPage() {
     }
   }
   return (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
+        <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
 
           {/* System overview */}
@@ -148,7 +148,7 @@ export function SetupPage() {
           {setupSection === "trucks" && (
             <Panel>
               <h2 className="mb-3 text-lg font-bold">Truck Master</h2>
-              <form className="grid gap-3 md:grid-cols-5" onSubmit={saveTruck}>
+              <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-5" onSubmit={saveTruck}>
                 <Input placeholder="Truck No" required value={truckForm.truckNo} onChange={(e) => setTruckForm({ ...truckForm, truckNo: e.target.value.toUpperCase() })} />
                 <Select value={truckForm.truckType} onChange={(e) => setTruckForm({ ...truckForm, truckType: e.target.value })}>
                   <option value="With Crane">Crane</option>
@@ -237,7 +237,7 @@ export function SetupPage() {
                 </span>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <Field label="Price Update Type">
                   <Select value={bulkPriceForm.priceType} onChange={(e) => setBulkPriceForm({ ...bulkPriceForm, priceType: e.target.value })}>
                     <option value="both">Company + Driver</option>

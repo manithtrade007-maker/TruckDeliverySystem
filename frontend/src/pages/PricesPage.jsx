@@ -6,7 +6,7 @@ import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/
 export function PricesPage() {
   const { diagnoseEmptyPrices, flash, locations, priceCompareDate, priceCompareDates, priceCompareProvince, priceCompareProvinces, priceCompareRows, pricePeriods, pricePeriodsMonth, setPage, setPriceCompareDate, setPriceCompareProvince, setPricePeriodsMonth } = useApp();
   return (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
+        <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead title="Price Comparison" meta="Compare company price vs driver price side by side for all locations." />
 
           <Panel>

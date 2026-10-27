@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 
 export function Button({ variant = "primary", className = "", ...props }) {
   const base =
-    "inline-flex min-h-10 items-center justify-center rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none";
+    "inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none";
   const variants = {
     primary: "border-teal-700 bg-teal-700 text-white shadow-sm shadow-teal-900/10 hover:bg-teal-800",
     secondary: "border-slate-200 bg-white text-slate-800 shadow-sm hover:border-teal-700 hover:text-teal-800",
@@ -20,7 +20,7 @@ export const Input = forwardRef(function Input({ type, className = "", ...props 
     <input
       ref={ref}
       type={type}
-      className={`min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
+      className={`min-h-11 min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
       {...(type === "date" ? { lang: "en-GB" } : {})}
       {...props}
     />
@@ -30,7 +30,7 @@ export const Input = forwardRef(function Input({ type, className = "", ...props 
 export function Select({ children, className = "", ...props }) {
   return (
     <select
-      className={`min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
+      className={`min-h-11 min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
       {...props}
     >
       {children}
@@ -59,7 +59,7 @@ export function MonthPicker({ label = "Report Month", className = "", inputClass
 
 export function Field({ label, children }) {
   return (
-    <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-slate-500">
+    <label className="grid min-w-0 gap-1.5 text-xs font-black uppercase tracking-wide text-slate-500">
       <span>{label}</span>
       {children}
     </label>
@@ -68,7 +68,7 @@ export function Field({ label, children }) {
 
 export function Panel({ children, className = "", ...props }) {
   return (
-    <section className={`rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-sm shadow-slate-900/5 ${className}`} {...props}>
+    <section className={`app-panel min-w-0 rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-sm shadow-slate-900/5 ${className}`} {...props}>
       {children}
     </section>
   );

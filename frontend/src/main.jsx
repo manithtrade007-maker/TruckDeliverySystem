@@ -1576,8 +1576,8 @@ function App() {
   };
   return (
     <AppCtx.Provider value={ctxValue}>
-    <div className="min-h-screen text-slate-900">
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 shadow-sm shadow-slate-900/5 backdrop-blur">
+    <div className="app-shell min-h-screen text-slate-900">
+      <header className="app-header sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 shadow-sm shadow-slate-900/5 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3">
             <img src="/api/logo" alt="N&M" className="h-11 w-11 rounded-2xl object-cover" onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "grid"; }} />
@@ -1587,7 +1587,7 @@ function App() {
               <p className="text-xs font-black uppercase tracking-wide text-slate-500">{data.settings.companyName || "N&M LOGISTIC"}</p>
             </div>
           </div>
-          <nav ref={desktopNavRef} aria-label="Primary navigation" className="relative hidden w-full gap-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-1 lg:flex lg:w-auto">
+          <nav ref={desktopNavRef} aria-label="Primary navigation" className="desktop-navigation relative hidden w-full gap-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-1 lg:flex lg:w-auto">
             {navIndicator && (
               <span
                 aria-hidden="true"
@@ -1617,8 +1617,8 @@ function App() {
               {isAdmin ? "Admin" : "Staff"}
             </span>
             <button
-              type="button" onClick={logout} title="Sign out"
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition"
+              type="button" onClick={logout} title="Sign out" aria-label="Sign out"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
@@ -1651,7 +1651,7 @@ function App() {
       )}
 
       {emptyPriceResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEmptyPriceResult(null)}>
+        <div className="app-dialog fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEmptyPriceResult(null)}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <h2 className="text-lg font-bold">Missing Prices</h2>
@@ -1736,7 +1736,7 @@ function App() {
         </div>
       )}
       {deleteModal.statement && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:p-4">
+        <div className="app-dialog fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:p-4">
           <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-white shadow-xl">
             <div className="px-6 py-5 border-b border-red-100 bg-red-50 rounded-t-2xl">
               <h3 className="text-base font-black text-red-700">Delete Statement</h3>
@@ -1772,7 +1772,7 @@ function App() {
       )}
 
       {assignModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:p-4">
+        <div className="app-dialog fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:p-4">
           <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-white shadow-xl">
             <div className="px-6 py-5 border-b border-slate-100">
               <h3 className="text-base font-black">Assign Statement to Payment Month</h3>
@@ -1798,7 +1798,7 @@ function App() {
       )}
 
       {/* Bottom navigation — mobile only */}
-      <nav aria-label="Mobile navigation" className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-sm pb-safe">
+      <nav aria-label="Mobile navigation" className="mobile-navigation lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-sm pb-safe">
         <div className="flex items-center justify-around mx-auto px-1 h-16">
           {navItems.map(([key, label]) => {
             const isActive = page === key;
@@ -1818,9 +1818,10 @@ function App() {
                   {key === "reports" && <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>}
                   {key === "payments" && <><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></>}
                   {key === "prices" && <><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></>}
+                  {key === "reconciliation" && <><path d="M3 7h18M3 17h18M7 3 3 7l4 4M17 13l4 4-4 4"/></>}
                   {key === "setup" && <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>}
                 </svg>
-                <span className="truncate text-[10px] font-black leading-none">{label}</span>
+                <span className="max-w-full truncate text-[10px] font-black leading-none">{key === "reconciliation" ? "Compare" : key === "data-entry" ? "Entry" : label}</span>
               </button>
             );
           })}

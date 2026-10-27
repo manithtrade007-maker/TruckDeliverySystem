@@ -42,7 +42,7 @@ export function LocationReportPage() {
     catch (error) { flash(error.message, "error"); }
     finally { setExporting(false); }
   }
-  if (detail) return <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
+  if (detail) return <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
     <div><Button variant="secondary" onClick={backToReport}>← Back to Location Report</Button></div>
     <header>
       <h1 ref={detailHeading} tabIndex={-1} className="text-2xl font-black tracking-tight outline-none">{detail.name}</h1>
@@ -67,7 +67,7 @@ export function LocationReportPage() {
         </ReportTable>
       </Panel>
   </main>;
-  return <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
+  return <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
     <PageHead title="Location Report" meta="To Locations visited by delivery month. Each delivery record counts as one trip." action={<MonthPicker value={reportMonth} onChange={event => { setReportMonth(event.target.value); setSelected(null); }} />} />
     <div className="flex flex-wrap gap-2" role="group" aria-label="Truck type">
       {[["", "All Trucks"], ["With Crane", "Crane"], ["Without Crane", "No Crane"]].map(([value, label]) => <Button key={value} variant={truckType === value ? "primary" : "secondary"} aria-pressed={truckType === value} onClick={() => { setTruckType(value); setSelected(null); }}>{label}</Button>)}

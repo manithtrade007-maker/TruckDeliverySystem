@@ -8,7 +8,7 @@ import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/
 function DriverPaymentPage() {
   const { data, driverPaymentSections, exportSalary, getDeduction, isAdmin, reportMonth, saveDeduction, selectedDriverPaymentSection, setDeductionEdits, setReportMonth, setReportTruckNo } = useApp();
   return (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
+        <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead
             title="Driver Payment"
             meta="Month-end salary, deductions, and net pay by truck."

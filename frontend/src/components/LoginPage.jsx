@@ -29,7 +29,7 @@ export function LoginPage({ onLogin }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 flex items-center justify-center p-4">
+    <div className="login-screen min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg shadow-teal-900/40">
@@ -46,7 +46,7 @@ export function LoginPage({ onLogin }) {
             <div className="grid gap-1.5">
               <label className="text-xs font-black uppercase tracking-wide text-slate-300">Username</label>
               <input
-                type="text" autoComplete="username" autoFocus required
+                type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} required
                 value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })}
                 className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold text-white placeholder-slate-400 outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20"
                 placeholder="Enter username"

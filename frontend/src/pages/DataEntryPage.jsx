@@ -270,7 +270,7 @@ export function DataEntryPage() {
     }
   }
   return (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+        <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           {!selectedViewStatement && !selectedStatement && !showStatementWorkspace && (
           <Panel className="lg:col-span-2">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -304,7 +304,7 @@ export function DataEntryPage() {
           )}
 
           {!selectedViewStatement && entryActionTruckType && (
-            <div className="fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-slate-950/40 sm:p-4 backdrop-blur-sm">
+            <div className="app-dialog fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-slate-950/40 sm:p-4 backdrop-blur-sm">
               <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
                 <div className="mb-4">
                   <h3 className="text-xl font-black tracking-tight">
@@ -325,7 +325,7 @@ export function DataEntryPage() {
           )}
 
           {driveLinkStatement && (
-            <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 backdrop-blur-sm sm:items-center sm:p-4">
+            <div className="app-dialog fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 backdrop-blur-sm sm:items-center sm:p-4">
               <form onSubmit={saveDriveLink} className="w-full max-w-lg rounded-t-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20 sm:rounded-3xl">
                 <h3 className="text-xl font-black tracking-tight">Add PDF Link — Statement {driveLinkStatement.statementNumber}</h3>
                 <p className="mt-1 text-sm font-bold text-slate-500">Paste the link for this statement's individual PDF, check it, then save.</p>
@@ -373,7 +373,7 @@ export function DataEntryPage() {
           )}
 
           {driveFolderOpen && (
-            <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 backdrop-blur-sm sm:items-center sm:p-4">
+            <div className="app-dialog fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 backdrop-blur-sm sm:items-center sm:p-4">
               <form onSubmit={scanDriveFolder} className="flex max-h-[92vh] w-full max-w-3xl flex-col rounded-t-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20 sm:rounded-3xl">
                 <div>
                   <h3 className="text-xl font-black tracking-tight">Sync Google Drive Folder</h3>
@@ -817,7 +817,7 @@ export function DataEntryPage() {
           {showStatementWorkspace && !selectedStatement && (
             <Panel id="statement-form-panel" className="lg:col-span-2">
               <h2 className="mb-4 text-lg font-black tracking-tight">Create {truckTypeLabel(entryTruckType)} Statement</h2>
-              <form className="grid gap-3 md:grid-cols-4" onSubmit={saveStatement}>
+              <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" onSubmit={saveStatement}>
                 <Field label="Month">
                   <Input type="month" required value={statementForm.month}
                     onChange={async (event) => {
@@ -832,7 +832,7 @@ export function DataEntryPage() {
                 <Field label="Truck Type"><Input value={truckTypeLabel(entryTruckType)} disabled readOnly /></Field>
                 <Field label="Statement No"><Input type="number" min="1" required placeholder="Statement number" value={statementForm.statementNumber} onChange={(e) => setStatementForm({ ...statementForm, statementNumber: e.target.value })} /></Field>
                 <Field label="Statement Date"><Input type="date" required value={statementForm.statementDate} onChange={(e) => setStatementForm({ ...statementForm, statementDate: e.target.value })} /></Field>
-                <div className="flex flex-wrap items-end gap-2 md:col-span-4">
+                <div className="flex flex-wrap items-end gap-2 md:col-span-2 xl:col-span-4">
                   <Button type="submit">Create Statement</Button>
                   <Button type="button" variant="secondary" onClick={backToStatementList}>Cancel</Button>
                 </div>
@@ -877,7 +877,7 @@ export function DataEntryPage() {
               {expandStatementEdit && (
                 <Panel className="lg:col-span-2">
                   <h2 className="mb-3 text-base font-black tracking-tight text-slate-700">Statement Details</h2>
-                  <form className="grid gap-3 md:grid-cols-4" onSubmit={saveStatement}>
+                  <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" onSubmit={saveStatement}>
                     <Field label="Month">
                       <Input type="month" required value={statementForm.month}
                         onChange={async (event) => {
@@ -892,7 +892,7 @@ export function DataEntryPage() {
                     <Field label="Truck Type"><Input value={truckTypeLabel(entryTruckType)} disabled readOnly /></Field>
                     <Field label="Statement No"><Input type="number" min="1" required value={statementForm.statementNumber} onChange={(e) => setStatementForm({ ...statementForm, statementNumber: e.target.value })} /></Field>
                     <Field label="Statement Date"><Input type="date" required value={statementForm.statementDate} onChange={(e) => setStatementForm({ ...statementForm, statementDate: e.target.value })} /></Field>
-                    <div className="flex flex-wrap gap-2 md:col-span-4">
+                    <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-4">
                       <Button type="submit">Save Changes</Button>
                       <Button type="button" variant="secondary" onClick={() => setExpandStatementEdit(false)}>Close</Button>
                     </div>
@@ -907,7 +907,7 @@ export function DataEntryPage() {
                     Stmt {selectedStatement.statementNumber} · {statementRows.length}/30
                   </span>
                 </div>
-                <form ref={deliveryFormRef} className="grid gap-3 md:grid-cols-4" onSubmit={saveDelivery}>
+                <form ref={deliveryFormRef} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" onSubmit={saveDelivery}>
                   <Field label="Delivery Date">
                     <DeliveryDateInput
                       disabled={!canEditRows}
@@ -1010,7 +1010,7 @@ export function DataEntryPage() {
                   </Field>
                   <Field label="Unit Price"><Input disabled value={selectedPrice ? `$${unitMoney(selectedPrice.companyUnitPrice)}` : ""} readOnly /></Field>
                   {(duplicateInvoice || truckMissing || truckTypeMismatch || missingPrice) && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 md:col-span-4">
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 md:col-span-2 xl:col-span-4">
                       {duplicateInvoice && <div>Invoice already exists in Statement {duplicateInvoiceStatement?.statementNumber ?? "unknown"}. Check before saving.</div>}
                       {truckMissing && <div>Truck number does not exist or is inactive.</div>}
                       {truckTypeMismatch && <div>This truck belongs to {truckTypeLabel(selectedTruck.truckType)}, so it cannot be saved inside a {truckTypeLabel(selectedStatement.truckType)} statement.</div>}

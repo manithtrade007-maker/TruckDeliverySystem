@@ -13,7 +13,7 @@ export function DashboardPage() {
   useEffect(() => { if (isAdmin) { loadAutomation(); loadRecovery(); } }, [isAdmin]);
   const automationMonth = (value) => value ? new Date(`${value}-01T00:00:00`).toLocaleString("default", { month: "long", year: "numeric" }) : "—";
   return (
-        <main className="mx-auto grid max-w-[1500px] gap-5 p-4 pb-20 lg:pb-4">
+        <main className="app-content mx-auto grid max-w-[1500px] gap-5 p-4 pb-20 lg:pb-4">
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

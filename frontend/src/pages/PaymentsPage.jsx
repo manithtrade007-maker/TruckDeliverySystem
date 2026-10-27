@@ -65,7 +65,7 @@ export function PaymentsPage() {
           .sort((a, b) => a.month.localeCompare(b.month));
 
         return (
-          <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
+          <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
             <PageHead
               title="Payments"
               meta="Track which statements are sent to the company and what has been received."

@@ -6,7 +6,7 @@ import { money, roundMoney, monthName, truckTypeLabel } from "../lib/format.js";
 export function ComparePayPage() {
   const { reconMonth, setReconMonth, reconEdits, setReconEdits, reconciliation, earningsHistory, saveReported } = useApp();
   return (
-        <main className="mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
+        <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead
             title="Compare Pay"
             meta="Compare the system's driver payment to the driver's own reported total."
