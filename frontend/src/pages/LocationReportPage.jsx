@@ -13,12 +13,14 @@ function ReportTable({ headings, children }) {
 }
 const tons = value => value.toLocaleString(undefined, { maximumFractionDigits: 5 });
 
-export function LocationReportPage() {
+export function LocationReportPage({ selected, setSelected }) {
   const { data, reportMonth, setReportMonth, isAdmin, flash } = useApp();
   const [truckType, setTruckType] = useState("");
   const [view, setView] = useState("locations");
-  const [selected, setSelected] = useState(null);
   const detailHeading = useRef(null);
+  const previousSelection = useRef(null);
+  const listButtons = useRef(new Map());
+  const listScroll = useRef(0);
   const statementsById = useMemo(() => new Map((data.statements || []).map(statement => [statement.id, statement])), [data.statements]);
   const [exporting, setExporting] = useState(false);
   const validMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(reportMonth);
@@ -30,11 +32,14 @@ export function LocationReportPage() {
     if (selected) {
       window.scrollTo({ top: 0, behavior: "instant" });
       detailHeading.current?.focus({ preventScroll: true });
+    } else if (previousSelection.current) {
+      listButtons.current.get(previousSelection.current)?.focus({ preventScroll: true });
+      window.scrollTo({ top: listScroll.current, behavior: "instant" });
     }
+    previousSelection.current = selected;
   }, [selected]);
   function backToReport() {
     setSelected(null);
-    window.scrollTo({ top: 0, behavior: "instant" });
   }
   async function exportExcel() {
     setExporting(true);
@@ -43,10 +48,12 @@ export function LocationReportPage() {
     finally { setExporting(false); }
   }
   if (detail) return <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
-    <div><Button variant="secondary" onClick={backToReport}>← Back to Location Report</Button></div>
-    <header>
+    <header className="flex flex-wrap items-start justify-between gap-3">
+      <div>
       <h1 ref={detailHeading} tabIndex={-1} className="text-2xl font-black tracking-tight outline-none">{detail.name}</h1>
       <p className="mt-2 text-sm text-slate-500">{reportMonth} · {truckType ? truckTypeLabel(truckType) : "All Trucks"} · {view === "locations" ? "To Location details" : "Truck details"}</p>
+      </div>
+      <Button type="button" variant="quiet" onClick={backToReport}>← Back to {view === "locations" ? "locations" : "trucks"}</Button>
     </header>
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
       <KpiCard label={view === "locations" ? "Different trucks" : "Different To Locations"} value={view === "locations" ? detail.trucks : detail.locations} />
@@ -92,7 +99,7 @@ export function LocationReportPage() {
           <p className="mb-3 text-sm text-slate-500">Select a {view === "locations" ? "destination" : "truck"} to see its trips and delivery dates.</p>
           <ReportTable headings={[view === "locations" ? "To Location" : "Truck", view === "locations" ? "Different trucks" : "Different To Locations", "Trips", "Tons"]}>
             {groups.map(group => <tr key={group.key} className={selected === group.key ? "bg-teal-50" : "even:bg-slate-50"}>
-              <td><button type="button" className="min-h-10 text-left font-bold text-teal-800 underline underline-offset-4" onClick={() => setSelected(group.key)}>{group.name}</button></td>
+              <td><button ref={node => { if (node) listButtons.current.set(group.key, node); else listButtons.current.delete(group.key); }} type="button" className="min-h-10 text-left font-bold text-teal-800 underline underline-offset-4" onClick={() => { listScroll.current = window.scrollY; setSelected(group.key); }}>{group.name}</button></td>
               <td>{view === "locations" ? group.trucks : group.locations}</td><td>{group.trips}</td><td>{tons(group.tons)}</td>
             </tr>)}
             {!groups.length && <tr><td colSpan={4}>No named {view === "locations" ? "destinations" : "trucks"} in this month’s records.</td></tr>}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { LocationReportPage } from "./LocationReportPage.jsx";
+import { InvoiceSearchPage } from "./InvoiceSearchPage.jsx";
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, MonthPicker, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
@@ -196,11 +197,13 @@ function DriverPaymentPage() {
 
 export function ReportsPage() {
   const [view, setView] = useState("driver");
+  const [selectedLocation, setSelectedLocation] = useState(null);
   return <>
-    <nav aria-label="Report sections" className="mx-auto flex max-w-[1500px] gap-2 px-4 pt-4">
+    <nav aria-label="Report sections" className="mx-auto flex max-w-[1500px] flex-wrap gap-2 px-4 pt-4">
       <Button variant={view === "driver" ? "primary" : "secondary"} aria-pressed={view === "driver"} onClick={() => setView("driver")}>Driver Payment</Button>
-      <Button variant={view === "locations" ? "primary" : "secondary"} aria-pressed={view === "locations"} onClick={() => setView("locations")}>Location Report</Button>
+      <Button variant={view === "locations" ? "primary" : "secondary"} aria-pressed={view === "locations"} onClick={() => { setSelectedLocation(null); setView("locations"); }}>Location Report</Button>
+      <Button variant={view === "invoices" ? "primary" : "secondary"} aria-pressed={view === "invoices"} onClick={() => setView("invoices")}>Invoice Search</Button>
     </nav>
-    {view === "driver" ? <DriverPaymentPage /> : <LocationReportPage />}
+    {view === "driver" ? <DriverPaymentPage /> : view === "locations" ? <LocationReportPage selected={selectedLocation} setSelected={setSelectedLocation} /> : <InvoiceSearchPage />}
   </>;
 }
