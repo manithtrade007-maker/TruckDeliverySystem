@@ -749,7 +749,9 @@ async function sendFileToTelegram(fileBuffer, filename, caption, mimeType = "app
   form.append("chat_id", cfg.chatId);
   form.append("caption", caption);
   form.append("document", new Blob([fileBuffer], { type: mimeType }), filename);
-  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form, signal: AbortSignal.timeout(60_000) });
+  // Recovery and monthly archives can be large; allow slower deployments to
+  // finish uploading before the retry handler treats the send as failed.
+  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form, signal: AbortSignal.timeout(5 * 60_000) });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.description || `Telegram API error ${res.status}`);
