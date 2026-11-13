@@ -875,7 +875,8 @@ async function createVerifiedRecoveryBackup({ reason = "scheduled", force = fals
       if (!record) return;
       Object.assign(record, { status: "local_only", fileName: archive.filename, fileSize: archive.buffer.length,
         sentAt: null, verifiedAt: new Date().toISOString(),
-        nextAttemptAt: pendingDelivery ? new Date().toISOString() : null, error: null });
+        // Keep it out of the scheduler until the initial send finishes.
+        nextAttemptAt: null, error: null });
       addActivity(current, `Verified recovery backup created: ${archive.filename} (local).`, "backup");
     }, { skipDailyBackup: true, skipRecoverySchedule: true });
     // Local verification protects deletion; network delivery must not hold that lock.
@@ -904,6 +905,10 @@ async function retryRecoveryDelivery(record) {
   recoveryDeliveriesRunning.add(record.id);
   const attempts = Number(record.attempts || 0) + 1;
   try {
+    await updateData((current) => {
+      const target = current.recoveryBackups?.find((item) => item.id === record.id);
+      if (target) Object.assign(target, { attempts, nextAttemptAt: null });
+    }, { skipDailyBackup: true, skipRecoverySchedule: true });
     const filePath = path.join(recoveryBackupDir, path.basename(record.fileName || ""));
     const buffer = await readFile(filePath);
     const inspected = await inspectRecoveryArchive(buffer);

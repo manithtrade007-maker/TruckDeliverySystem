@@ -62,7 +62,7 @@ export function DashboardPage() {
                     <div><div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Latest backup</div><div className="mt-0.5 font-black text-slate-800">{recovery.details?.createdAt ? formatCambodiaDateTime(recovery.details.createdAt) : "No backup yet"}</div><div className="text-xs font-bold text-slate-500">Cambodia time · after changes</div></div>
                     <div><div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Sent to Telegram</div><div className="mt-0.5 font-black text-slate-800">{recovery.lastSent?.sentAt ? formatCambodiaDateTime(recovery.lastSent.sentAt) : "Not sent yet"}</div><div className="text-xs font-bold text-slate-500">Cambodia time · automatic retry</div></div>
                   </div>
-                  {recovery.failed && <div className="mt-2 text-xs font-bold text-red-700">{recovery.failed.status === "delivery_failed" ? "Telegram delivery failed" : "Backup creation failed"} · automatic retry scheduled</div>}
+                  {recovery.failed && <div className="mt-2 break-words text-xs font-bold text-red-700">{recovery.failed.status === "delivery_failed" ? "Telegram delivery failed" : "Backup creation failed"} · automatic retry scheduled{recovery.failed.error ? ` · ${recovery.failed.error}` : ""}</div>}
                 </section>
               )}
             </div>
