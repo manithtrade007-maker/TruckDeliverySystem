@@ -751,7 +751,7 @@ async function sendFileToTelegram(fileBuffer, filename, caption, mimeType = "app
   form.append("document", new Blob([fileBuffer], { type: mimeType }), filename);
   // Recovery and monthly archives can be large; allow slower deployments to
   // finish uploading before the retry handler treats the send as failed.
-  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form, signal: AbortSignal.timeout(5 * 60_000) });
+  const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendDocument`, { method: "POST", body: form, signal: AbortSignal.timeout(15 * 60_000) });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.description || `Telegram API error ${res.status}`);
@@ -836,6 +836,12 @@ let recoveryBackupRunning = false;
 let recoveryBackupQueue = Promise.resolve();
 const recoveryDeliveriesRunning = new Set();
 
+function recoveryRetryDelayMs(attempts) {
+  if (attempts <= 2) return 5 * 60 * 1000;
+  if (attempts === 3) return 15 * 60 * 1000;
+  return 60 * 60 * 1000;
+}
+
 const verifiedRecoveryStatuses = new Set(["sent", "local_only", "delivery_failed"]);
 
 // The last change time is stored in the database so a restart does not drop a pending backup.
@@ -893,7 +899,7 @@ async function createVerifiedRecoveryBackup({ reason = "scheduled", force = fals
       if (!record) return;
       record.status = "failed";
       record.error = String(error.message || error).slice(0, 500);
-      record.nextAttemptAt = new Date(Date.now() + retryDelayMs(record.attempts)).toISOString();
+      record.nextAttemptAt = new Date(Date.now() + recoveryRetryDelayMs(record.attempts)).toISOString();
       addActivity(current, `Recovery backup failed: ${record.error}`, "error");
     }, { skipDailyBackup: true, skipRecoverySchedule: true });
     throw error;
@@ -928,7 +934,7 @@ async function retryRecoveryDelivery(record) {
       const target = current.recoveryBackups?.find((item) => item.id === record.id);
       if (!target) return;
       Object.assign(target, { status: "delivery_failed", attempts, error: String(error.message || error).slice(0, 500),
-        nextAttemptAt: new Date(Date.now() + retryDelayMs(attempts)).toISOString() });
+        nextAttemptAt: new Date(Date.now() + recoveryRetryDelayMs(attempts)).toISOString() });
     }, { skipDailyBackup: true, skipRecoverySchedule: true });
     return { created: false, status: "delivery_failed", filename: record.fileName, error: error.message || String(error) };
   } finally {
@@ -1486,6 +1492,17 @@ async function api(req, res, url, role = "admin") {
     requireAdmin();
     const result = await runRecoveryBackup({ reason: "manual", force: true });
     return sendJson(res, 200, result);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/recovery/retry-telegram") {
+    requireAdmin();
+    if (!getTelegramConfig()) throw Object.assign(new Error("Telegram is not configured."), { status: 400 });
+    const current = await readData();
+    const record = (current.recoveryBackups || []).find((item) =>
+      ["delivery_failed", "local_only"].includes(item.status) && item.fileName);
+    if (!record) throw Object.assign(new Error("No verified local recovery ZIP is waiting for Telegram delivery."), { status: 404 });
+    const result = await retryRecoveryDelivery(record);
+    return sendJson(res, result.status === "sent" ? 200 : 502, result);
   }
 
   if (req.method === "GET" && url.pathname === "/api/recovery/download") {

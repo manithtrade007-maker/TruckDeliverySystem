@@ -16,6 +16,8 @@ export function SetupPage() {
   const { activeCompanyPriceCounts, activeCompanyPriceRows, applyBulkPriceUpdate, bulkExistingDates, bulkPriceForm, bulkPriceRows, companyPriceGroups, createManualBackup, createStaffUser, data, deletePrice, deletePricesByDate, deleteStaffUser, deleteTruck, downloadBackup, driverPriceForm, driverPriceGroups, editPasswordId, editPasswordValue, isAdmin, isEditingTruck, locations, newUserForm, priceCompareDates, priceForm, restoreBackup, saveDriverPrice, savePrice, saveSettings, saveStaffPassword, saveTruck, setBulkLocationFilter, setBulkPriceForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setNewUserForm, setPriceForm, setSettingsForm, setSetupLocationSearch, setSetupSection, setTruckForm, settingsForm, setupLocationSearch, setupSection, staffUsers, truckForm } = useApp();
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [creatingBackup, setCreatingBackup] = useState(false);
+  const [retryingTelegram, setRetryingTelegram] = useState(false);
+  const [retryTelegramError, setRetryTelegramError] = useState("");
   const loadRecoveryStatus = () => api("/api/recovery/status").then(setRecoveryStatus).catch(() => setRecoveryStatus(null));
   useEffect(() => {
     if (!isAdmin) return undefined;
@@ -32,6 +34,19 @@ export function SetupPage() {
       // createManualBackup already shows the server error to the user.
     } finally {
       setCreatingBackup(false);
+    }
+  }
+  async function handleRetryTelegram() {
+    setRetryingTelegram(true);
+    setRetryTelegramError("");
+    try {
+      await api("/api/recovery/retry-telegram", { method: "POST" });
+      await loadRecoveryStatus();
+    } catch (error) {
+      setRetryTelegramError(error.message || "Telegram delivery failed.");
+      await loadRecoveryStatus();
+    } finally {
+      setRetryingTelegram(false);
     }
   }
   return (
@@ -132,12 +147,18 @@ export function SetupPage() {
 
               {recoveryStatus?.failed && (
                 <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">
-                  {recoveryStatus.failed.status === "delivery_failed" ? "The ZIP is verified locally, but Telegram delivery failed." : "Backup creation failed."} The system will retry automatically. {recoveryStatus.failed.error}
+                  {recoveryStatus.failed.status === "delivery_failed" ? "The ZIP is verified locally, but Telegram delivery failed." : "Backup creation failed."} {recoveryStatus.failed.nextAttemptAt ? `Automatic retry: ${formatCambodiaDateTime(recoveryStatus.failed.nextAttemptAt)} Cambodia. ` : "Automatic retry is scheduled. "}{recoveryStatus.failed.error}
                 </div>
               )}
+              {retryTelegramError && <div className="mt-3 text-sm font-bold text-red-700">Retry failed: {retryTelegramError}</div>}
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button type="button" disabled={creatingBackup} onClick={handleCreateBackup}>{creatingBackup ? "Creating & verifying…" : "Create Backup Now"}</Button>
+                {recoveryStatus?.lastVerified && recoveryStatus.lastVerified.status !== "sent" && recoveryStatus.configured && (
+                  <Button type="button" variant="secondary" disabled={retryingTelegram} onClick={handleRetryTelegram}>
+                    {retryingTelegram ? "Sending to Telegram…" : "Retry Telegram Now"}
+                  </Button>
+                )}
                 <Button type="button" variant="secondary" disabled={!recoveryStatus?.lastVerified} onClick={downloadBackup}>Download Latest ZIP</Button>
                 <Button type="button" variant="danger" onClick={restoreBackup}>Restore From ZIP</Button>
               </div>
