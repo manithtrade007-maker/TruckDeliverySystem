@@ -7,7 +7,7 @@ import { downloadFile } from "../lib/api.js";
 import { locationReport } from "../../../backend/lib/location-report.js";
 
 const tons = value => value.toLocaleString(undefined, { maximumFractionDigits: 5 });
-const field = "min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm";
+const field = "min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-10 text-sm";
 const monthName = month => new Date(`${month}-01T12:00:00`).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 function ReportTable({ headings, children }) {
   return <div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[600px] text-left text-sm">

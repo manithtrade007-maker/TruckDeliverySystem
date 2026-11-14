@@ -29,6 +29,35 @@ select {
   font: inherit;
 }
 
+select,
+.app-select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 2.75rem !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 1rem;
+  cursor: pointer;
+}
+
+select:hover,
+.app-select:hover {
+  border-color: #94a3b8;
+}
+
+select:focus-visible,
+.app-select:focus-visible {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 4px rgb(20 184 166 / 0.16);
+}
+
+select:disabled,
+.app-select:disabled {
+  cursor: not-allowed;
+}
+
 ::-webkit-scrollbar {
   height: 10px;
   width: 10px;

@@ -30,7 +30,7 @@ export const Input = forwardRef(function Input({ type, className = "", ...props 
 export function Select({ children, className = "", ...props }) {
   return (
     <select
-      className={`min-h-11 min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
+      className={`app-select min-h-11 min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-3 pr-11 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none ${className}`}
       {...props}
     >
       {children}

@@ -703,7 +703,7 @@ export function SetupPage() {
                     <Field label="Username"><Input value={newUserForm.username} onChange={(e) => setNewUserForm({ ...newUserForm, username: e.target.value })} required placeholder="e.g. sokheng" /></Field>
                     <Field label="Password"><Input type="password" value={newUserForm.password} onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })} required placeholder="Min 6 characters" /></Field>
                     <Field label="Role">
-                      <select value={newUserForm.role} onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                      <select value={newUserForm.role} onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm font-bold outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                         <option value="staff">Staff</option>
                         <option value="admin">Admin</option>
                       </select>

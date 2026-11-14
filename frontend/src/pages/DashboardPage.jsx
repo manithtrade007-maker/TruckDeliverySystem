@@ -274,7 +274,7 @@ export function DashboardPage() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black uppercase tracking-wider text-slate-500">Year</span>
                 <select value={reportYear} onChange={(e) => setReportYear(Number(e.target.value))}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow-sm focus:border-teal-500 focus:outline-none">
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 pr-10 text-sm font-bold text-slate-800 shadow-sm focus:border-teal-500 focus:outline-none">
                   {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
