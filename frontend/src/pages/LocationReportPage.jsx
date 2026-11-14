@@ -3,7 +3,7 @@ import { useApp } from "../AppContext.js";
 import { Button, KpiCard, MonthPicker, PageHead, Panel } from "../components/ui.jsx";
 import { formatDate, truckTypeLabel } from "../lib/format.js";
 import { downloadFile } from "../lib/api.js";
-import { locationReport } from "../../../backend/lib/location-report.js";
+import { destinationKey, locationReport } from "../../../backend/lib/location-report.js";
 
 function ReportTable({ headings, children }) {
   return <div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[600px] text-left text-sm">
@@ -17,6 +17,7 @@ export function LocationReportPage({ selected, setSelected }) {
   const { data, reportMonth, setReportMonth, isAdmin, flash } = useApp();
   const [truckType, setTruckType] = useState("");
   const [view, setView] = useState("locations");
+  const [locationSearch, setLocationSearch] = useState("");
   const detailHeading = useRef(null);
   const previousSelection = useRef(null);
   const listButtons = useRef(new Map());
@@ -26,6 +27,10 @@ export function LocationReportPage({ selected, setSelected }) {
   const validMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(reportMonth);
   const report = useMemo(() => validMonth ? locationReport(data.deliveries, reportMonth, truckType) : null, [data.deliveries, reportMonth, validMonth, truckType]);
   const groups = report?.[view] || [];
+  const searchKey = destinationKey(locationSearch);
+  const visibleGroups = view === "locations" && searchKey
+    ? groups.filter(group => destinationKey(group.name).includes(searchKey))
+    : groups;
   const detail = groups.find(group => group.key === selected);
   const breakdown = useMemo(() => detail ? locationReport(detail.rows, reportMonth)[view === "locations" ? "trucks" : "locations"] : [], [detail, reportMonth, view]);
   useLayoutEffect(() => {
@@ -95,14 +100,23 @@ export function LocationReportPage({ selected, setSelected }) {
           </div>
           {isAdmin && <Button variant="secondary" disabled={exporting || !report.trips} onClick={exportExcel}>{exporting ? "Exporting…" : "Export Month to Excel"}</Button>}
         </div>
+        {view === "locations" && <div className="mb-4">
+          <label htmlFor="location-search" className="mb-2 block text-sm font-bold">Search by location name</label>
+          <div className="flex items-center gap-2">
+            <input id="location-search" type="search" value={locationSearch} onChange={event => setLocationSearch(event.target.value)} placeholder="Type all or part of a location name…" className="min-h-11 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" aria-describedby="location-search-help" />
+            {locationSearch && <Button type="button" variant="secondary" onClick={() => setLocationSearch("")}>Clear</Button>}
+          </div>
+          <p id="location-search-help" className="mt-2 text-sm text-slate-500">Select a matching location to see its trucks, trips, tons, and delivery records. Results use the selected month and truck type.</p>
+          <p role="status" className="mt-1 text-sm text-slate-500">{visibleGroups.length} of {groups.length} locations shown.</p>
+        </div>}
         {!report.trips ? <p className="py-10 text-center text-slate-500">No deliveries recorded for this month and truck type.</p> : <>
           <p className="mb-3 text-sm text-slate-500">Select a {view === "locations" ? "destination" : "truck"} to see its trips and delivery dates.</p>
           <ReportTable headings={[view === "locations" ? "To Location" : "Truck", view === "locations" ? "Different trucks" : "Different To Locations", "Trips", "Tons"]}>
-            {groups.map(group => <tr key={group.key} className={selected === group.key ? "bg-teal-50" : "even:bg-slate-50"}>
+            {visibleGroups.map(group => <tr key={group.key} className={selected === group.key ? "bg-teal-50" : "even:bg-slate-50"}>
               <td><button ref={node => { if (node) listButtons.current.set(group.key, node); else listButtons.current.delete(group.key); }} type="button" className="min-h-10 text-left font-bold text-teal-800 underline underline-offset-4" onClick={() => { listScroll.current = window.scrollY; setSelected(group.key); }}>{group.name}</button></td>
               <td>{view === "locations" ? group.trucks : group.locations}</td><td>{group.trips}</td><td>{tons(group.tons)}</td>
             </tr>)}
-            {!groups.length && <tr><td colSpan={4}>No named {view === "locations" ? "destinations" : "trucks"} in this month’s records.</td></tr>}
+            {!visibleGroups.length && <tr><td colSpan={4}>{view === "locations" && searchKey ? "No locations match your search. Try another name or clear the search." : `No named ${view === "locations" ? "destinations" : "trucks"} in this month’s records.`}</td></tr>}
           </ReportTable>
         </>}
       </Panel>
