@@ -16,7 +16,7 @@ export async function locationReportWorkbook(deliveries, month, truckType = "", 
     headings.forEach((heading, index) => { if (heading === "Tons") ws.getColumn(index + 1).numFmt = "0.00000"; });
   }
   sheet("Summary", ["Metric", "Value"], [["Month", month === "all" ? "All months" : month], ["Truck type", truckType === "With Crane" ? "Crane" : truckType === "Without Crane" ? "No Crane" : "All Trucks"], ["Different To Locations", report.locations.length], ["Different trucks", report.trucks.length], ["Trips", report.trips], ["Tons", report.tons], ["Trips missing To Location", report.missingLocations], ["Trips missing truck", report.missingTrucks]]);
-  sheet("Filters", ["Filter", "Value"], [["Location search", filters.search || ""], ["Location", filters.location || ""], ["Truck", filters.truck || ""]]);
+  sheet("Filters", ["Filter", "Value"], [["Year", filters.year || "All years"], ["Location search", filters.search || ""], ["Location", filters.location || ""], ["Truck", filters.truck || ""]]);
   sheet("By Month", ["Month", "Different trucks", "Trips", "Tons"], report.months.map(r => [r.name, r.trucks, r.trips, r.tons]));
   sheet("By Location", ["To Location", "Different trucks", "Trips", "Tons"], report.locations.map(r => [r.name, r.trucks, r.trips, r.tons]));
   sheet("By Truck", ["Truck", "Different To Locations", "Trips", "Tons"], report.trucks.map(r => [r.name, r.locations, r.trips, r.tons]));

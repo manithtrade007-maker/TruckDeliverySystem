@@ -2408,7 +2408,7 @@ async function api(req, res, url, role = "admin") {
 
   if (req.method === "GET" && url.pathname === "/api/export/locations") {
     requireAdmin();
-    const buffer = await locationReportWorkbook(data.deliveries, query.month, query.truckType || "", { search: query.search, location: query.location, truck: query.truck });
+    const buffer = await locationReportWorkbook(data.deliveries, query.month, query.truckType || "", { search: query.search, location: query.location, truck: query.truck, year: query.year });
     res.writeHead(200, {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="location-report-${query.month}-${query.truckType === "With Crane" ? "crane" : query.truckType === "Without Crane" ? "no-crane" : "all"}.xlsx"`

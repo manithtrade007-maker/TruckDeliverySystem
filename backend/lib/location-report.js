@@ -7,12 +7,14 @@ export function destinationKey(value) {
 export function locationReport(deliveries, month, truckType = "", filters = {}) {
   if (month !== "all" && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month || "")) throw new Error("Choose a valid report month.");
   if (!["", "With Crane", "Without Crane"].includes(truckType)) throw new Error("Choose a valid truck type.");
+  if (filters.year && !/^\d{4}$/.test(filters.year)) throw new Error("Choose a valid report year.");
   const search = destinationKey(filters.search);
   const rows = deliveries.filter(row => {
     const rowMonth = String(row.deliveryDate || "").slice(0, 7);
     const location = destinationKey(row.toLocation);
     return /^\d{4}-(0[1-9]|1[0-2])$/.test(rowMonth)
       && (month === "all" || rowMonth === month)
+      && (!filters.year || rowMonth.slice(0, 4) === filters.year)
       && (!truckType || row.truckType === truckType)
       && (!search || location.includes(search))
       && (!filters.location || location === destinationKey(filters.location))

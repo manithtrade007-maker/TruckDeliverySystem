@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ActivityOverview } from "../components/ActivityOverview.jsx";
 import { useApp } from "../AppContext.js";
 import { Button } from "../components/ui.jsx";
 import { formatDate, truckTypeLabel } from "../lib/format.js";
@@ -51,14 +52,19 @@ export function LocationReportPage({ selected, setSelected }) {
   const [view, setView] = useState("locations");
   const [locationSearch, setLocationSearch] = useState("");
   const [period, setPeriod] = useState("month");
+  const [reportYear, setReportYear] = useState(reportMonth.slice(0, 4));
+  const [chartYear, setChartYear] = useState(reportMonth.slice(0, 4));
   const [exporting, setExporting] = useState(false);
   const detailHeading = useRef(null);
   const previousSelection = useRef(null);
   const listButtons = useRef(new Map());
   const listScroll = useRef(0);
-  const month = period === "all" ? "all" : reportMonth;
+  const month = period !== "month" ? "all" : reportMonth;
   const validMonth = month === "all" || /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
-  const report = useMemo(() => validMonth ? locationReport(data.deliveries, month, truckType, { search: locationSearch }) : null, [data.deliveries, month, truckType, locationSearch, validMonth]);
+  const report = useMemo(() => validMonth ? locationReport(data.deliveries, month, truckType, { search: locationSearch, year: period === "year" ? reportYear : "" }) : null, [data.deliveries, month, truckType, locationSearch, validMonth, period, reportYear]);
+  const history = useMemo(() => locationReport(data.deliveries, "all", truckType, { search: locationSearch, ...(selected ? { [view === "locations" ? "location" : "truck"]: selected } : {}) }), [data.deliveries, truckType, locationSearch, selected, view]);
+  const periodLabel = period === "year" ? reportYear : month === "all" ? "All months" : validMonth ? monthName(month) : "Choose a month";
+  const overview = <ActivityOverview rows={history.rows} year={chartYear} setYear={setChartYear} hideShare={Boolean(selected && view === "locations")} onPeriod={(mode, key) => { if (mode === "month") { setReportMonth(key); setPeriod("month"); } else { setReportYear(key); setPeriod("year"); } }} />;
   const groups = report?.[view] || [];
   const detail = groups.find(group => group.key === selected);
   const detailReport = useMemo(() => detail ? locationReport(detail.rows, month) : null, [detail, month]);
@@ -75,7 +81,8 @@ export function LocationReportPage({ selected, setSelected }) {
   }, [selected]);
   async function exportExcel() {
     const query = new URLSearchParams({ month, truckType, search: locationSearch });
-    if (detail) query.set(view === "locations" ? "location" : "truck", detail.key);
+    if (period === "year") query.set("year", reportYear);
+    if (selected) query.set(view === "locations" ? "location" : "truck", selected);
     setExporting(true);
     try { await downloadFile(`/api/export/locations?${query}`); }
     catch (error) { flash(error.message, "error"); }
@@ -83,7 +90,8 @@ export function LocationReportPage({ selected, setSelected }) {
   }
   const exportButton = isAdmin && <Button type="button" variant="secondary" disabled={exporting || !report?.trips} onClick={exportExcel}>{exporting ? "Exporting…" : "Export Excel"}</Button>;
   const periodControls = <>
-    <label className="grid gap-1 text-xs font-bold text-slate-600">Period<select className={field} value={period} onChange={event => setPeriod(event.target.value)}><option value="month">Specific month</option><option value="all">All months</option></select></label>
+    <label className="grid gap-1 text-xs font-bold text-slate-600">Period<select className={field} value={period} onChange={event => setPeriod(event.target.value)}><option value="month">Specific month</option><option value="all">All months</option><option value="year">Specific year</option></select></label>
+    {period === "year" && <label className="grid gap-1 text-xs font-bold text-slate-600">Year<select className={field} value={reportYear} onChange={event => setReportYear(event.target.value)}>{[...new Set([reportYear, ...data.deliveries.map(row => String(row.deliveryDate || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y))])].sort().reverse().map(y => <option key={y}>{y}</option>)}</select></label>}
     {period === "month" && <label className="grid gap-1 text-xs font-bold text-slate-600">Month<input className={field} type="month" value={reportMonth} onChange={event => setReportMonth(event.target.value)} /></label>}
     <label className="grid gap-1 text-xs font-bold text-slate-600">Truck type<select className={field} value={truckType} onChange={event => setTruckType(event.target.value)}><option value="">All trucks</option><option value="With Crane">Crane</option><option value="Without Crane">No Crane</option></select></label>
   </>;
@@ -91,7 +99,7 @@ export function LocationReportPage({ selected, setSelected }) {
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div>{selected && <Button type="button" variant="secondary" className="mb-3" onClick={() => setSelected(null)}>← Back to {view}</Button>}
         <h1 ref={detailHeading} tabIndex={-1} className="text-2xl font-black tracking-tight outline-none">{selected ? detail?.name || selected : "Location Report"}</h1>
-        {selected && <p className="mt-1 text-sm text-slate-500">{month === "all" ? "All months" : validMonth ? monthName(month) : "Choose a month"} · {truckType ? truckTypeLabel(truckType) : "All trucks"}</p>}
+        {selected && <p className="mt-1 text-sm text-slate-500">{periodLabel} · {truckType ? truckTypeLabel(truckType) : "All trucks"}</p>}
       </div>
       {selected && exportButton}
     </header>
@@ -100,6 +108,7 @@ export function LocationReportPage({ selected, setSelected }) {
       {periodControls}
       {!selected && locationSearch && <Button type="button" variant="quiet" onClick={() => setLocationSearch("")}>Clear search</Button>}
     </div>
+    {overview}
     {!report ? <p className="py-8 text-center text-slate-500">Choose a valid month to see deliveries.</p> : selected ? detailReport ? <>
       <Summary report={detailReport} detail={view === "locations"} />
       <div className="flex items-center justify-between"><h2 className="font-bold">Monthly activity</h2><span className="text-sm text-slate-500">{detailReport.months.length} {detailReport.months.length === 1 ? "month" : "months"} · Expand for details</span></div>
@@ -113,7 +122,7 @@ export function LocationReportPage({ selected, setSelected }) {
           </div>
           {exportButton}
         </div>
-        <p role="status" className="text-sm text-slate-500">{groups.length} {view} · {month === "all" ? "All months" : monthName(month)}{locationSearch.trim() ? ` · Location matching “${locationSearch.trim()}”` : ""}</p>
+        <p role="status" className="text-sm text-slate-500">{groups.length} {view} · {periodLabel}{locationSearch.trim() ? ` · Location matching “${locationSearch.trim()}”` : ""}</p>
         <ReportTable headings={[view === "locations" ? "Location" : "Truck", view === "locations" ? "Trucks" : "Locations", "Trips", "Tons"]}>
           {groups.map(group => <tr key={group.key} className="even:bg-slate-50"><td><button ref={node => { if (node) listButtons.current.set(group.key, node); else listButtons.current.delete(group.key); }} type="button" className="min-h-10 text-left font-bold text-teal-800 underline underline-offset-4" onClick={() => { listScroll.current = window.scrollY; setSelected(group.key); }}>{group.name}</button></td><td>{view === "locations" ? group.trucks : group.locations}</td><td>{group.trips}</td><td>{tons(group.tons)}</td></tr>)}
           {!groups.length && <tr><td colSpan={4} className="text-center text-slate-500">No {view} match these filters. Try another name, All months, or a different truck type.</td></tr>}
