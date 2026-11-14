@@ -72,3 +72,36 @@ test("Crane and No Crane filters separate shared destinations and their drill-do
   assert.equal(workbook.getWorksheet("Deliveries").rowCount, 3);
   assert.equal(workbook.getWorksheet("By Location").rowCount, 3);
 });
+
+test("all months filter names, count trucks once, and group newest first", () => {
+  const deliveries = [...rows, { ...rows[0], deliveryDate: "2026-09-01", qtyTon: 5 }, { ...rows[0], deliveryDate: null }];
+  const report = locationReport(deliveries, "all", "", { search: "  PHNOM   penh " });
+  assert.equal(report.trips, 4);
+  assert.equal(report.trucks.length, 2);
+  assert.equal(report.tons, 11.12345);
+  assert.deepEqual(report.months.map(m => m.key), ["2026-10", "2026-09"]);
+  assert.deepEqual(report.months.map(m => m.trips), [3, 1]);
+  assert.equal(locationReport(deliveries, "all", "", { search: "កំពត" }).trips, 1);
+  assert.equal(locationReport(deliveries, "all", "", { search: "missing" }).trips, 0);
+  assert.throws(() => locationReport(deliveries, ""), /valid report month/);
+});
+
+test("Excel and detail filters retain exact location, truck, type and period", async () => {
+  const deliveries = [
+    { ...rows[0], truckType: "With Crane" },
+    { ...rows[0], deliveryDate: "2026-09-01", truckType: "With Crane" },
+    { ...rows[2], truckType: "Without Crane" },
+    { ...rows[0], toLocation: "Phnom Penh (North)", truckType: "With Crane" },
+  ];
+  const filters = { search: "penh", location: " phnom  penh ", truck: "T1" };
+  const report = locationReport(deliveries, "all", "With Crane", filters);
+  assert.equal(report.trips, 2);
+  assert.equal(locationReport(deliveries, "2026-10", "With Crane", filters).trips, 1);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(await locationReportWorkbook(deliveries, "all", "With Crane", filters));
+  assert.equal(workbook.getWorksheet("Summary").getCell("B2").value, "All months");
+  assert.equal(workbook.getWorksheet("Deliveries").rowCount, report.trips + 1);
+  assert.equal(workbook.getWorksheet("By Month").getCell("A2").value, "2026-10");
+  assert.equal(workbook.getWorksheet("By Month").rowCount, 3);
+  assert.equal(workbook.getWorksheet("By Location").rowCount, 2);
+});

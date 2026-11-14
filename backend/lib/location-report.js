@@ -4,10 +4,20 @@ export function destinationKey(value) {
   return String(value || "").normalize("NFC").trim().replace(/\s+/gu, " ").toLocaleLowerCase();
 }
 
-export function locationReport(deliveries, month, truckType = "") {
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month || "")) throw new Error("Choose a valid report month.");
+export function locationReport(deliveries, month, truckType = "", filters = {}) {
+  if (month !== "all" && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month || "")) throw new Error("Choose a valid report month.");
   if (!["", "With Crane", "Without Crane"].includes(truckType)) throw new Error("Choose a valid truck type.");
-  const rows = deliveries.filter(row => row.deliveryDate?.slice(0, 7) === month && (!truckType || row.truckType === truckType));
+  const search = destinationKey(filters.search);
+  const rows = deliveries.filter(row => {
+    const rowMonth = String(row.deliveryDate || "").slice(0, 7);
+    const location = destinationKey(row.toLocation);
+    return /^\d{4}-(0[1-9]|1[0-2])$/.test(rowMonth)
+      && (month === "all" || rowMonth === month)
+      && (!truckType || row.truckType === truckType)
+      && (!search || location.includes(search))
+      && (!filters.location || location === destinationKey(filters.location))
+      && (!filters.truck || String(row.truckNo || "").trim() === filters.truck);
+  });
   const locations = new Map();
   const trucks = new Map();
   let tons = 0;
@@ -34,5 +44,12 @@ export function locationReport(deliveries, month, truckType = "") {
     trucks: new Set(group.rows.map(row => String(row.truckNo || "").trim()).filter(Boolean)).size,
     locations: new Set(group.rows.map(row => destinationKey(row.toLocation)).filter(Boolean)).size });
   const sort = map => [...map.values()].map(summarize).sort((a, b) => b.trips - a.trips || a.name.localeCompare(b.name));
-  return { month, truckType, rows, locations: sort(locations), trucks: sort(trucks), trips: rows.length, tons, missingLocations, missingTrucks };
+  const monthlyRows = new Map();
+  for (const row of rows) {
+    const key = row.deliveryDate.slice(0, 7);
+    if (!monthlyRows.has(key)) monthlyRows.set(key, { key, name: key, rows: [] });
+    monthlyRows.get(key).rows.push(row);
+  }
+  const months = [...monthlyRows.values()].map(summarize).sort((a, b) => b.key.localeCompare(a.key));
+  return { month, truckType, months, rows, locations: sort(locations), trucks: sort(trucks), trips: rows.length, tons, missingLocations, missingTrucks };
 }
