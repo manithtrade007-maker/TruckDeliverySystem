@@ -34,3 +34,17 @@ test("year drill-down and export contain only the chosen year", async () => {
   assert.equal(workbook.getWorksheet("Deliveries").rowCount, 2);
   assert.equal(workbook.getWorksheet("Deliveries").getCell("A2").value, "2025-12-01");
 });
+
+
+test("current month shows daily activity, excludes other months and handles leap years", () => {
+  const chart = activityChartData(rows, "tons", "current", "2026", "2026-02");
+  assert.equal(chart.bars.length, 28);
+  assert.equal(chart.bars[0].value, 4);
+  assert.equal(chart.bars[1].value, 2);
+  assert.equal(chart.bars[2].value, 0);
+  assert.equal(chart.shares[0].value, 6);
+  assert.equal(activityChartData([], "trips", "current", "2024", "2024-02").bars.length, 29);
+  assert.equal(activityChartData([], "trips", "current", "2026", "2026-11").bars.length, 30);
+  assert.equal(activityChartData([], "trips", "current", "2026", "2026-12").bars.length, 31);
+  assert.equal(activityChartData(rows, "trips", "current", "2026", "2026-03").shares.length, 0);
+});

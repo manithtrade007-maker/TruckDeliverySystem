@@ -1,15 +1,22 @@
 import { destinationKey } from "./location-report.js";
 
-export function activityChartData(rows, metric, mode, year) {
+export function activityChartData(rows, metric, mode, year, currentMonth = "") {
   const valueOf = row => metric === "tons" ? (Number(row.qtyTon) || 0) : 1;
   const periods = new Map();
   if (mode === "month") for (let i = 1; i <= 12; i++) periods.set(`${year}-${String(i).padStart(2, "0")}`, 0);
+  if (mode === "current") {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(currentMonth)) throw new Error("Choose a valid current month.");
+    const [y, m] = currentMonth.split("-").map(Number);
+    const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    for (let day = 1; day <= days; day++) periods.set(`${currentMonth}-${String(day).padStart(2, "0")}`, 0);
+  }
   const locations = new Map();
   for (const row of rows) {
     const month = String(row.deliveryDate || "").slice(0, 7);
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) continue;
     if (mode === "month" && month.slice(0, 4) !== year) continue;
-    const key = mode === "month" ? month : month.slice(0, 4);
+    if (mode === "current" && (month !== currentMonth || !periods.has(String(row.deliveryDate).slice(0, 10)))) continue;
+    const key = mode === "current" ? String(row.deliveryDate).slice(0, 10) : mode === "month" ? month : month.slice(0, 4);
     const value = valueOf(row);
     periods.set(key, (periods.get(key) || 0) + value);
     const location = destinationKey(row.toLocation);
