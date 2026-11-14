@@ -54,6 +54,7 @@ export function LocationReportPage({ selected, setSelected }) {
   const [period, setPeriod] = useState("month");
   const [reportYear, setReportYear] = useState(reportMonth.slice(0, 4));
   const [chartYear, setChartYear] = useState(reportMonth.slice(0, 4));
+  const [chartScope, setChartScope] = useState("all");
   const [exporting, setExporting] = useState(false);
   const detailHeading = useRef(null);
   const previousSelection = useRef(null);
@@ -64,9 +65,10 @@ export function LocationReportPage({ selected, setSelected }) {
   const report = useMemo(() => validMonth ? locationReport(data.deliveries, month, truckType, { search: locationSearch, year: period === "year" ? reportYear : "" }) : null, [data.deliveries, month, truckType, locationSearch, validMonth, period, reportYear]);
   const history = useMemo(() => locationReport(data.deliveries, "all", truckType, { search: locationSearch, ...(selected ? { [view === "locations" ? "location" : "truck"]: selected } : {}) }), [data.deliveries, truckType, locationSearch, selected, view]);
   const periodLabel = period === "year" ? reportYear : month === "all" ? "All months" : validMonth ? monthName(month) : "Choose a month";
-  const overview = <ActivityOverview rows={history.rows} year={chartYear} setYear={setChartYear} hideShare={Boolean(selected && view === "locations")} onPeriod={(mode, key) => { if (mode === "month") { setReportMonth(key); setPeriod("month"); } else { setReportYear(key); setPeriod("year"); } }} />;
   const groups = report?.[view] || [];
   const detail = groups.find(group => group.key === selected);
+  const chartRows = chartScope === "report" ? (selected ? detail?.rows || [] : report?.rows || []) : history.rows;
+  const overview = <ActivityOverview rows={chartRows} year={chartYear} setYear={setChartYear} scope={chartScope} setScope={setChartScope} reportPeriod={period} reportMonth={reportMonth} reportYear={reportYear} hideShare={Boolean(selected && view === "locations")} onPeriod={(mode, key) => { if (mode === "month") { setReportMonth(key); setPeriod("month"); } else { setReportYear(key); setPeriod("year"); } }} />;
   const detailReport = useMemo(() => detail ? locationReport(detail.rows, month) : null, [detail, month]);
   const statementsById = useMemo(() => new Map((data.statements || []).map(s => [s.id, s])), [data.statements]);
   useLayoutEffect(() => {
