@@ -21,6 +21,7 @@ function Summary({ report, detail = false }) {
   </dl>;
 }
 function MonthDetails({ month, view, statementsById, initiallyOpen }) {
+  const { viewStatement, setPage } = useApp();
   const breakdown = useMemo(() => locationReport(month.rows, month.key)[view === "locations" ? "trucks" : "locations"], [month, view]);
   return <details open={initiallyOpen || undefined} className="rounded-xl border border-slate-200 bg-white">
     <summary className="cursor-pointer rounded-xl px-4 py-4 text-sm focus-visible:outline-teal-700">
@@ -37,7 +38,7 @@ function MonthDetails({ month, view, statementsById, initiallyOpen }) {
       <ReportTable headings={["Date", "Statement", "Truck", "Location", "Invoice", "Tons"]}>
         {[...month.rows].sort((a, b) => b.deliveryDate.localeCompare(a.deliveryDate)).map((row, index) => {
           const statement = statementsById.get(row.statementId);
-          return <tr key={row.id || index} className="even:bg-slate-50"><td>{formatDate(row.deliveryDate)}</td><td>{statement ? <><div className="font-bold">Statement {statement.statementNumber}</div><div className="text-xs text-slate-500">{statement.month} · {truckTypeLabel(statement.truckType || row.truckType)}</div></> : "Statement unavailable"}</td><td>{row.truckNo || "Not recorded"}</td><td>{row.toLocation || "Not recorded"}</td><td>{row.invoiceNo}</td><td>{tons(Number(row.qtyTon) || 0)}</td></tr>;
+          return <tr key={row.id || index} className="even:bg-slate-50"><td>{formatDate(row.deliveryDate)}</td><td>{statement ? <><button type="button" className="min-h-10 rounded px-1 text-left font-bold text-teal-800 underline underline-offset-4 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-teal-700" onClick={() => { viewStatement(statement); setPage("data-entry"); }}>Statement {statement.statementNumber}</button><div className="text-xs text-slate-500">{statement.month} · {truckTypeLabel(statement.truckType || row.truckType)}</div></> : "Statement unavailable"}</td><td>{row.truckNo || "Not recorded"}</td><td>{row.toLocation || "Not recorded"}</td><td>{row.invoiceNo}</td><td>{tons(Number(row.qtyTon) || 0)}</td></tr>;
         })}
       </ReportTable>
     </div>
@@ -88,7 +89,7 @@ export function LocationReportPage({ selected, setSelected }) {
   </>;
   return <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
     <header className="flex flex-wrap items-center justify-between gap-3">
-      <div>{selected && <button type="button" className="mb-2 text-sm font-bold text-teal-800" onClick={() => setSelected(null)}>← Back to {view}</button>}
+      <div>{selected && <Button type="button" variant="secondary" className="mb-3" onClick={() => setSelected(null)}>← Back to {view}</Button>}
         <h1 ref={detailHeading} tabIndex={-1} className="text-2xl font-black tracking-tight outline-none">{selected ? detail?.name || selected : "Location Report"}</h1>
         {selected && <p className="mt-1 text-sm text-slate-500">{month === "all" ? "All months" : validMonth ? monthName(month) : "Choose a month"} · {truckType ? truckTypeLabel(truckType) : "All trucks"}</p>}
       </div>
