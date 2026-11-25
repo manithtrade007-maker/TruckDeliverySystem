@@ -49,38 +49,37 @@ export function SetupPage() {
       setRetryingTelegram(false);
     }
   }
+  const setupGroups = [
+    { key: "fleet", label: "Fleet", description: "Truck details", sections: [["trucks", "Trucks", "Add trucks and update driver details."]] },
+    { key: "pricing", label: "Pricing", description: "Routes and pay rates", sections: [["company", "Company prices", "Customer prices by route."], ["driver", "Driver prices", "Driver pay by route."], ["bulk", "Bulk price update", "Change several route prices at once."], ["active-prices", "Active prices", "Review current prices by route."]] },
+    { key: "admin", label: "Administration", description: "People and data safety", sections: [["users", "Staff access", "Add staff accounts and passwords."], ...(isAdmin ? [["backup", "Backup & recovery", "Create, download, or restore a backup."]] : [])] },
+  ];
+  const currentSetupGroup = setupGroups.find((group) => group.sections.some(([key]) => key === setupSection)) || setupGroups[0];
   return (
         <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead title="Setup" meta="Choose one area to manage. Your changes save to the system as you make them." />
 
           <Panel>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
-              <div><h2 className="text-sm font-black text-slate-900">Setup sections</h2><p className="mt-0.5 text-xs font-semibold text-slate-500">Select what you want to change.</p></div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 px-1">
+              <div><h2 className="text-sm font-black text-slate-900">What do you need to manage?</h2><p className="mt-0.5 text-xs font-semibold text-slate-500">Start with a category, then choose a task.</p></div>
               <div className="text-xs font-bold text-slate-500">{data.trucks.filter((t) => t.active !== false).length} active trucks <span className="mx-1 text-slate-300">·</span> {staffUsers.length} staff users</div>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {[
-                ["trucks", "Trucks", "Add trucks and update driver details."],
-                ["company", "Company prices", "Manage customer prices by route."],
-                ["driver", "Driver prices", "Manage driver pay by route."],
-                ["bulk", "Bulk price update", "Change several route prices at once."],
-                ["users", "Staff access", "Add staff accounts and passwords."],
-                ...(isAdmin ? [["backup", "Backup & recovery", "Create, download, or restore a backup."]] : []),
-              ].map(([key, label, description]) => (
+            <div className="grid gap-2 sm:grid-cols-3">
+              {setupGroups.map((group) => (
                 <button
-                  key={key}
+                  key={group.key}
                   type="button"
-                  onClick={() => setSetupSection(key)}
-                  className={`flex min-h-[76px] items-start gap-3 rounded-2xl border p-3 text-left transition ${setupSection === key ? "border-teal-600 bg-teal-50 ring-2 ring-teal-100" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"}`}
+                  onClick={() => { if (!group.sections.some(([key]) => key === setupSection)) setSetupSection(group.sections[0][0]); }}
+                  className={`flex min-h-[78px] items-center gap-3 rounded-2xl border p-4 text-left transition ${currentSetupGroup.key === group.key ? "border-teal-600 bg-teal-50 ring-2 ring-teal-100" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"}`}
                 >
-                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${setupSection === key ? "border-teal-600 bg-teal-600 text-white" : "border-slate-300 bg-white text-transparent"}`}><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="m3 8 3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-                  <span><span className={`block text-sm font-black ${setupSection === key ? "text-teal-950" : "text-slate-800"}`}>{label}</span><span className="mt-1 block text-xs font-semibold leading-4 text-slate-500">{description}</span></span>
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${currentSetupGroup.key === group.key ? "bg-teal-700 text-white" : "bg-slate-100 text-slate-500"}`}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{group.key === "fleet" ? <><path d="M3 6h12v11H3z"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></> : group.key === "pricing" ? <><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></> : <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></>}</svg></span>
+                  <span><span className={`block text-sm font-black ${currentSetupGroup.key === group.key ? "text-teal-950" : "text-slate-800"}`}>{group.label}</span><span className="mt-1 block text-xs font-semibold text-slate-500">{group.description}</span></span>
                 </button>
               ))}
             </div>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">You are managing</span>
-              <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-black text-teal-800">{{trucks:"Trucks",company:"Company prices",driver:"Driver prices",bulk:"Bulk price update",users:"Staff access",backup:"Backup & recovery", "active-prices":"Active prices"}[setupSection] || "Setup"}</span>
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+              <span className="mr-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{currentSetupGroup.label} tasks</span>
+              {currentSetupGroup.sections.map(([key, label]) => <button key={key} type="button" onClick={() => setSetupSection(key)} className={`rounded-xl px-3.5 py-2 text-xs font-black transition ${setupSection === key ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"}`}>{label}</button>)}
             </div>
           </Panel>
 
