@@ -304,22 +304,12 @@ export function DataEntryPage() {
           )}
 
           {!selectedViewStatement && entryActionTruckType && (
-            <div className="app-dialog fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-slate-950/40 sm:p-4 backdrop-blur-sm">
-              <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
-                <div className="mb-4">
-                  <h3 className="text-xl font-black tracking-tight">
-                    {entryActionTruckType === "With Crane" ? "Crane Entry" : "No Crane Entry"}
-                  </h3>
-                  <p className="mt-1 text-sm font-bold text-slate-500">Choose what you want to do next.</p>
+            <div className="app-dialog fixed inset-0 z-30 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-md sm:items-center sm:p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setEntryActionTruckType(""); }}>
+              <div role="dialog" aria-modal="true" aria-labelledby="entry-dialog-title" className="w-full max-w-lg overflow-hidden rounded-t-[2rem] border border-white/70 bg-white shadow-2xl shadow-slate-950/30 sm:rounded-[2rem]">
+                <div className="bg-gradient-to-br from-teal-800 via-teal-700 to-cyan-700 px-6 pb-7 pt-6 text-white sm:px-8 sm:pt-8">
+                  <div className="flex items-start justify-between gap-4"><div><div className="mb-3 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-teal-50">New statement</div><h3 id="entry-dialog-title" className="text-2xl font-black tracking-tight sm:text-3xl">{entryActionTruckType === "With Crane" ? "Crane Entry" : "No Crane Entry"}</h3><p className="mt-2 max-w-sm text-sm font-medium leading-6 text-teal-50/90">Start a statement for this truck type and add delivery rows.</p></div><button type="button" onClick={() => setEntryActionTruckType("")} aria-label="Close" className="rounded-xl p-2 text-white/80 transition hover:bg-white/15 hover:text-white"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="m18 6-12 12M6 6l12 12"/></svg></button></div>
                 </div>
-                <div className="grid gap-3">
-                  <Button type="button" onClick={() => createEntryStatement(entryActionTruckType).catch((err) => flash(err.message, "error"))}>
-                    Create Statement
-                  </Button>
-                  <Button type="button" variant="quiet" onClick={() => setEntryActionTruckType("")}>
-                    Cancel
-                  </Button>
-                </div>
+                <div className="p-5 sm:p-7"><button type="button" onClick={() => createEntryStatement(entryActionTruckType).catch((err) => flash(err.message, "error"))} className="group flex w-full items-center gap-4 rounded-2xl border border-teal-100 bg-teal-50/70 p-4 text-left transition hover:border-teal-300 hover:bg-teal-50 hover:shadow-lg hover:shadow-teal-900/10 sm:p-5"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-700 text-white shadow-md shadow-teal-900/20"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg></span><span className="min-w-0 flex-1"><span className="block text-base font-black text-slate-900">Create statement</span><span className="mt-0.5 block text-sm font-medium text-slate-500">Choose a month and statement date to continue.</span></span><svg className="shrink-0 text-teal-700 transition group-hover:translate-x-1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button type="button" onClick={() => setEntryActionTruckType("")} className="mt-3 w-full rounded-xl px-4 py-3 text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">Cancel</button></div>
               </div>
             </div>
           )}
@@ -739,16 +729,18 @@ export function DataEntryPage() {
                               <div className="flex flex-col items-center gap-1">
                                 <div className="flex items-center justify-center gap-1.5">
                                   <button type="button" onClick={() => openDrivePdf(statement)} title="View PDF" aria-label={`View PDF for Statement ${statement.statementNumber}`}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-teal-200 bg-teal-50 text-teal-700 transition hover:bg-teal-100">
+                                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-2.5 text-xs font-black text-teal-800 transition hover:border-teal-400 hover:bg-teal-100">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    View
                                   </button>
                                   <button type="button" disabled={removingDriveLinkId === statement.id} onClick={() => removeDriveLink(statement)} title="Remove link" aria-label={`Remove PDF link from Statement ${statement.statementNumber}`}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-wait disabled:opacity-60">
+                                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-2.5 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60">
                                     {removingDriveLinkId === statement.id ? (
                                       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-200 border-t-red-600" />
                                     ) : (
                                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 15 6-6"/><path d="m5 19 3.5-3.5"/><path d="m15.5 8.5 3.5-3.5"/><path d="m3 3 18 18"/></svg>
                                     )}
+                                    Remove
                                   </button>
                                 </div>
                                 <span className="max-w-[160px] truncate text-[11px] font-bold text-slate-500" title={statement.drivePdfOriginalName || `${statement.statementNumber}.pdf`}>
@@ -759,16 +751,18 @@ export function DataEntryPage() {
                               <div className="flex flex-col items-center gap-1">
                                 <div className="flex items-center justify-center gap-1.5">
                                   <button type="button" onClick={() => handlePdfView(statement)} title="View uploaded PDF" aria-label={`View uploaded PDF for Statement ${statement.statementNumber}`}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-teal-200 bg-teal-50 text-teal-700 transition hover:bg-teal-100">
+                                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-2.5 text-xs font-black text-teal-800 transition hover:border-teal-400 hover:bg-teal-100">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    View
                                   </button>
                                   <button type="button" disabled={removingUploadedPdfId === statement.id} onClick={() => removeUploadedPdf(statement)} title="Remove uploaded PDF" aria-label={`Remove uploaded PDF from Statement ${statement.statementNumber}`}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-wait disabled:opacity-60">
+                                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-2.5 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60">
                                     {removingUploadedPdfId === statement.id ? (
                                       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-200 border-t-red-600" />
                                     ) : (
                                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="m9 13 6 6m0-6-6 6"/></svg>
                                     )}
+                                    Remove
                                   </button>
                                 </div>
                                 <span className="max-w-[160px] truncate text-[11px] font-bold text-slate-500" title={statement.scannedPdfOriginalName || "Scanned PDF"}>
@@ -777,8 +771,9 @@ export function DataEntryPage() {
                               </div>
                             ) : (
                               <button type="button" onClick={() => startDriveLink(statement)} title="Add Google Drive link" aria-label={`Add Google Drive link to Statement ${statement.statementNumber}`}
-                                className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-teal-600 hover:bg-teal-50 hover:text-teal-700">
+                                className="mx-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-dashed border-teal-300 bg-white px-3 text-xs font-black text-teal-800 transition hover:border-teal-600 hover:bg-teal-50">
                                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/><path d="M19 16v6m-3-3h6"/></svg>
+                                Add link
                               </button>
                             )}
                           </td>

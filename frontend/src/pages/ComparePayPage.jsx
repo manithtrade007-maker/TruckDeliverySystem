@@ -1,23 +1,21 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { PageHead, MonthPicker, Panel } from "../components/ui.jsx";
 import { money, roundMoney, monthName, truckTypeLabel } from "../lib/format.js";
 
 export function ComparePayPage() {
   const { reconMonth, setReconMonth, reconEdits, setReconEdits, reconciliation, earningsHistory, saveReported } = useApp();
+  const [rowFilter, setRowFilter] = useState("all");
   return (
         <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead
             title="Compare Pay"
-            meta="Compare the system's driver payment to the driver's own reported total."
+            meta="Enter each driver's reported total and review any differences."
             action={(
               <MonthPicker label="Compare Month" value={reconMonth} onChange={(event) => setReconMonth(event.target.value)} />
             )}
           />
           <Panel>
-            <p className="mb-4 text-xs font-bold text-slate-500">
-              Difference = System − Driver's own. A <span className="text-red-600">positive</span> value means the driver under-counted (money missing from his own total). Enter each driver's reported total; it saves automatically.
-            </p>
             {(() => {
               const TOL = 0.01;
               const rows = reconciliation;
@@ -38,23 +36,18 @@ export function ComparePayPage() {
               const mismatchCount = computed.filter((r) => r.diff != null && Math.abs(r.diff) >= TOL).length;
               const totalOff = roundMoney(computed.reduce((s, r) => s + (r.diff != null ? Math.abs(r.diff) : 0), 0));
               const truckTypeCounts = computed.reduce((counts, row) => ({ ...counts, [row.truckType]: (counts[row.truckType] || 0) + 1 }), {});
+              const visibleRows = computed.filter((r) => rowFilter === "all" || (rowFilter === "off" ? r.diff != null && Math.abs(r.diff) >= TOL : r.diff == null));
               const fmtDiff = (v) => `${v > 0 ? "+" : v < 0 ? "−" : ""}$ ${money(Math.abs(v))}`;
               return (
                 <>
-                <div className="mb-4 grid gap-3 grid-cols-1 sm:grid-cols-3">
-                  <div className={`rounded-2xl border p-4 ${mismatchCount > 0 ? "border-red-200 bg-red-50/60" : "border-teal-200 bg-teal-50/60"}`}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Trucks Off</div>
-                    <div className={`text-2xl font-black tabular-nums ${mismatchCount > 0 ? "text-red-700" : "text-teal-800"}`}>{mismatchCount}<span className="text-sm font-bold text-slate-400"> / {checkedCount} checked</span></div>
+                <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                    <span className="font-bold text-slate-600"><strong className={mismatchCount ? "text-red-700" : "text-teal-700"}>{mismatchCount}</strong> off <span className="text-slate-400">/ {checkedCount} checked</span></span>
+                    <span className="font-bold text-slate-600">Absolute gap <strong className={totalOff >= TOL ? "text-red-700" : "text-slate-800"}>$ {money(totalOff)}</strong></span>
+                    <span className="font-bold text-slate-600">Net <strong className="text-slate-900">{fmtDiff(totalDiff)}</strong></span>
                   </div>
-                  <div className={`rounded-2xl border p-4 ${totalOff >= TOL ? "border-red-200 bg-red-50/60" : "border-slate-100 bg-slate-50/60"}`}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Discrepancy</div>
-                    <div className={`text-2xl font-black tabular-nums ${totalOff >= TOL ? "text-red-700" : "text-slate-800"}`}>$ {money(totalOff)}</div>
-                    <div className="text-[11px] font-medium text-slate-400 mt-0.5">sum of all errors, ignoring +/−</div>
-                  </div>
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Net Difference</div>
-                    <div className={`text-2xl font-black tabular-nums ${Math.abs(totalDiff) < TOL ? "text-slate-800" : totalDiff > 0 ? "text-red-700" : "text-amber-600"}`}>{fmtDiff(totalDiff)}</div>
-                    <div className="text-[11px] font-medium text-slate-400 mt-0.5">over-counts cancel under-counts</div>
+                  <div className="flex shrink-0 rounded-xl bg-white p-1 shadow-sm ring-1 ring-slate-200">
+                    {[['all', 'All'], ['off', 'Needs review'], ['missing', 'Not entered']].map(([key, label]) => <button key={key} type="button" onClick={() => setRowFilter(key)} className={`rounded-lg px-3 py-2 text-xs font-black transition ${rowFilter === key ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"}`}>{label}</button>)}
                   </div>
                 </div>
                 <div className="overflow-auto rounded-xl border border-slate-200">
@@ -69,9 +62,9 @@ export function ComparePayPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {computed.map((r, index) => {
+                      {visibleRows.length === 0 ? <tr><td colSpan="5" className="px-4 py-8 text-center text-sm font-semibold text-slate-400">No rows match this filter.</td></tr> : visibleRows.map((r, index) => {
                         const match = r.diff != null && Math.abs(r.diff) < TOL;
-                        const startsGroup = index === 0 || computed[index - 1].truckType !== r.truckType;
+                        const startsGroup = index === 0 || visibleRows[index - 1].truckType !== r.truckType;
                         const isCrane = r.truckType === "With Crane";
                         return (
                           <Fragment key={r.truckNo}>
@@ -131,12 +124,12 @@ export function ComparePayPage() {
           </Panel>
 
           <Panel>
-            <div className="mb-1 flex items-center justify-between">
-              <h3 className="text-lg font-black tracking-tight">Monthly Earnings</h3>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">All months</span>
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+              <div><div className="text-[10px] font-black uppercase tracking-[0.16em] text-teal-700">History</div><h3 className="text-lg font-black tracking-tight">Monthly Earnings</h3></div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">All months · {earningsHistory.length}</span>
             </div>
             <p className="mb-4 text-xs font-bold text-slate-500">
-              How much you earned from driver under-counts each month. <span className="text-teal-700">Kept</span> = money drivers left on the table; <span className="text-amber-600">Overpaid</span> = over-counts; <span className="font-black">Net</span> = your true gain.
+              Kept minus overpaid, summarized across completed comparisons.
             </p>
             {earningsHistory.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-semibold text-slate-400">No driver figures entered yet. Fill in the sheet above for any month to start tracking earnings.</div>
@@ -146,22 +139,10 @@ export function ComparePayPage() {
               const totalNet = roundMoney(earningsHistory.reduce((s, m) => s + m.net, 0));
               return (
                 <>
-                <div className="mb-4 grid gap-3 grid-cols-1 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-4">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Kept</div>
-                    <div className="text-2xl font-black tabular-nums text-teal-800">$ {money(totalKept)}</div>
-                    <div className="text-[11px] font-medium text-slate-400 mt-0.5">from driver under-counts</div>
-                  </div>
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Overpaid</div>
-                    <div className="text-2xl font-black tabular-nums text-amber-700">$ {money(totalOverpaid)}</div>
-                    <div className="text-[11px] font-medium text-slate-400 mt-0.5">from driver over-counts</div>
-                  </div>
-                  <div className={`rounded-2xl border p-4 ${totalNet >= 0 ? "border-teal-200 bg-teal-50/60" : "border-red-200 bg-red-50/60"}`}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Net Earned</div>
-                    <div className={`text-2xl font-black tabular-nums ${totalNet >= 0 ? "text-teal-800" : "text-red-700"}`}>{totalNet < 0 ? "− " : ""}$ {money(Math.abs(totalNet))}</div>
-                    <div className="text-[11px] font-medium text-slate-400 mt-0.5">kept minus overpaid, all months</div>
-                  </div>
+                <div className="mb-4 flex flex-wrap items-center gap-x-7 gap-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+                  <div><div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Kept</div><div className="text-lg font-black tabular-nums text-teal-800">$ {money(totalKept)}</div></div>
+                  <div><div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Overpaid</div><div className="text-lg font-black tabular-nums text-amber-700">$ {money(totalOverpaid)}</div></div>
+                  <div><div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Net earned</div><div className={`text-lg font-black tabular-nums ${totalNet >= 0 ? "text-teal-800" : "text-red-700"}`}>{totalNet < 0 ? "− " : ""}$ {money(Math.abs(totalNet))}</div></div>
                 </div>
                 <div className="overflow-auto rounded-xl border border-slate-200">
                   <table className="w-full min-w-[640px] border-collapse bg-white text-sm">
