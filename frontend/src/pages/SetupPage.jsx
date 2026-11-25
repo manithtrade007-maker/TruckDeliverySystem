@@ -51,50 +51,36 @@ export function SetupPage() {
   }
   return (
         <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
-          <PageHead title="Setup" meta="Manage trucks, company price, and driver price separately." />
+          <PageHead title="Setup" meta="Choose one area to manage. Your changes save to the system as you make them." />
 
-          {/* System overview */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { label: "Total Trucks", value: data.trucks.length, sub: `${data.trucks.filter((t) => t.active !== false).length} active`, tone: "border-teal-200 bg-teal-50 text-teal-950 text-teal-700" },
-              { label: "Crane Locations", value: activeCompanyPriceCounts.withCrane, sub: "active prices", tone: "border-sky-200 bg-sky-50 text-sky-950 text-sky-600" },
-              { label: "No-Crane Locations", value: activeCompanyPriceCounts.withoutCrane, sub: "active prices", tone: "border-amber-200 bg-amber-50 text-amber-950 text-amber-600" },
-              { label: "Staff Users", value: staffUsers.length, sub: "can do data entry", tone: "border-slate-200 bg-white text-slate-900 text-slate-500" },
-            ].map(({ label, value, sub, tone }) => {
-              const [border, bg, textVal, textSub] = tone.split(" ");
-              return (
-                <div key={label} className={`rounded-2xl border p-4 shadow-sm ${border} ${bg}`}>
-                  <div className="text-[10px] font-black uppercase tracking-wider opacity-50">{label}</div>
-                  <div className={`mt-1 text-2xl font-black ${textVal}`}>{value}</div>
-                  <div className={`mt-0.5 text-xs font-bold ${textSub}`}>{sub}</div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Tab strip with icons */}
           <Panel>
-            <div className="grid gap-1 rounded-2xl bg-slate-100 p-1 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+              <div><h2 className="text-sm font-black text-slate-900">Setup sections</h2><p className="mt-0.5 text-xs font-semibold text-slate-500">Select what you want to change.</p></div>
+              <div className="text-xs font-bold text-slate-500">{data.trucks.filter((t) => t.active !== false).length} active trucks <span className="mx-1 text-slate-300">·</span> {staffUsers.length} staff users</div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               {[
-                ["trucks", "Truck Master", <><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></>],
-                ["company", "Company Price", <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>],
-                ["driver", "Driver Price", <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="16" y1="11" x2="22" y2="11"/><line x1="19" y1="8" x2="19" y2="14"/></>],
-                ["bulk", "Bulk Update", <><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>],
-                ["users", "Users", <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>],
-                ["backup", "Backup & Recovery", <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>],
-              ].map(([key, label, iconPaths]) => (
+                ["trucks", "Trucks", "Add trucks and update driver details."],
+                ["company", "Company prices", "Manage customer prices by route."],
+                ["driver", "Driver prices", "Manage driver pay by route."],
+                ["bulk", "Bulk price update", "Change several route prices at once."],
+                ["users", "Staff access", "Add staff accounts and passwords."],
+                ...(isAdmin ? [["backup", "Backup & recovery", "Create, download, or restore a backup."]] : []),
+              ].map(([key, label, description]) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setSetupSection(key)}
-                  className={`flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-black transition ${setupSection === key ? "bg-teal-700 text-white shadow-sm" : "bg-white text-slate-600 hover:text-slate-950"}`}
+                  className={`flex min-h-[76px] items-start gap-3 rounded-2xl border p-3 text-left transition ${setupSection === key ? "border-teal-600 bg-teal-50 ring-2 ring-teal-100" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"}`}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                    {iconPaths}
-                  </svg>
-                  <span className="truncate">{label}</span>
+                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${setupSection === key ? "border-teal-600 bg-teal-600 text-white" : "border-slate-300 bg-white text-transparent"}`}><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="m3 8 3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+                  <span><span className={`block text-sm font-black ${setupSection === key ? "text-teal-950" : "text-slate-800"}`}>{label}</span><span className="mt-1 block text-xs font-semibold leading-4 text-slate-500">{description}</span></span>
                 </button>
               ))}
+            </div>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">You are managing</span>
+              <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-black text-teal-800">{{trucks:"Trucks",company:"Company prices",driver:"Driver prices",bulk:"Bulk price update",users:"Staff access",backup:"Backup & recovery", "active-prices":"Active prices"}[setupSection] || "Setup"}</span>
             </div>
           </Panel>
 

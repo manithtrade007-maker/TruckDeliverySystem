@@ -1,11 +1,17 @@
 import { Fragment, useState } from "react";
 import { useApp } from "../AppContext.js";
 import { PageHead, MonthPicker, Panel } from "../components/ui.jsx";
-import { money, roundMoney, monthName, truckTypeLabel } from "../lib/format.js";
+import { money, roundMoney, monthName, truckTypeLabel, currentMonth } from "../lib/format.js";
 
 export function ComparePayPage() {
   const { reconMonth, setReconMonth, reconEdits, setReconEdits, reconciliation, earningsHistory, saveReported } = useApp();
   const [rowFilter, setRowFilter] = useState("all");
+  const thisMonth = currentMonth();
+  const thisMonthHistory = earningsHistory.find((month) => month.month === thisMonth);
+  const bestMonth = earningsHistory.reduce((best, month) => !best || month.net > best.net ? month : best, null);
+  const overall = earningsHistory.reduce((summary, month) => ({ kept: summary.kept + month.kept, overpaid: summary.overpaid + month.overpaid, net: summary.net + month.net }), { kept: 0, overpaid: 0, net: 0 });
+  const chartMonths = [...earningsHistory].sort((a, b) => a.month.localeCompare(b.month));
+  const maxChartValue = Math.max(1, ...chartMonths.map((month) => Math.abs(month.net)));
   return (
         <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
           <PageHead
@@ -15,6 +21,36 @@ export function ComparePayPage() {
               <MonthPicker label="Compare Month" value={reconMonth} onChange={(event) => setReconMonth(event.target.value)} />
             )}
           />
+          <section aria-label="Earnings highlights" className="grid gap-3 md:grid-cols-3">
+            <article className="relative overflow-hidden rounded-2xl border border-teal-200 bg-white p-5 shadow-sm">
+              <div className="absolute inset-x-0 top-0 h-1 bg-teal-600" />
+              <div className="text-xs font-black uppercase tracking-wider text-teal-800">Overall summary</div>
+              <div className="mt-3 text-3xl font-black tabular-nums tracking-tight text-slate-950">$ {money(roundMoney(overall.net))}</div>
+              <div className="mt-1 text-sm font-semibold text-slate-500">Net earned across {earningsHistory.length} recorded months</div>
+              <div className="mt-4 flex gap-4 border-t border-slate-100 pt-3 text-xs"><span className="text-slate-500">Kept <strong className="text-teal-800">$ {money(roundMoney(overall.kept))}</strong></span><span className="text-slate-500">Overpaid <strong className="text-amber-700">$ {money(roundMoney(overall.overpaid))}</strong></span></div>
+            </article>
+            <article className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
+              <div className="absolute inset-x-0 top-0 h-1 bg-amber-500" />
+              <div className="text-xs font-black uppercase tracking-wider text-amber-800">Most profitable month</div>
+              {bestMonth ? <><div className="mt-3 text-xl font-black text-slate-950">{monthName(bestMonth.month)}</div><div className="mt-1 text-3xl font-black tabular-nums tracking-tight text-teal-800">$ {money(bestMonth.net)}</div><div className="mt-1 text-sm font-semibold text-slate-500">Net · {bestMonth.checked} driver entries checked</div></> : <div className="mt-4 text-sm font-semibold text-slate-400">No earnings history yet</div>}
+            </article>
+            <article className="relative overflow-hidden rounded-2xl border border-sky-200 bg-white p-5 shadow-sm">
+              <div className="absolute inset-x-0 top-0 h-1 bg-sky-500" />
+              <div className="text-xs font-black uppercase tracking-wider text-sky-800">This month · {monthName(thisMonth)}</div>
+              {thisMonthHistory ? <><div className={`mt-3 text-3xl font-black tabular-nums tracking-tight ${thisMonthHistory.net >= 0 ? "text-teal-800" : "text-red-700"}`}>{thisMonthHistory.net < 0 ? "− " : ""}$ {money(Math.abs(thisMonthHistory.net))}</div><div className="mt-1 text-sm font-semibold text-slate-500">Net earned so far</div><div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-sky-500 transition-all" style={{ width: `${thisMonthHistory.checked ? Math.min(100, thisMonthHistory.checked / Math.max(thisMonthHistory.checked, thisMonthHistory.mismatches) * 100) : 0}%` }} /></div><div className="mt-1 text-xs font-semibold text-slate-500">{thisMonthHistory.checked} driver entries recorded · {thisMonthHistory.mismatches} with differences</div></> : <><div className="mt-3 text-3xl font-black text-slate-300">—</div><div className="mt-1 text-sm font-semibold text-slate-500">No driver totals recorded yet</div></>}
+            </article>
+          </section>
+          {chartMonths.length > 0 && <Panel className="!p-5 sm:!p-6">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-2"><div><div className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Earnings trend</div><h3 className="mt-1 text-lg font-black">Monthly net earnings</h3></div><div className="text-xs font-semibold text-slate-500">Positive and negative months</div></div>
+            <div className="flex h-44 items-end gap-2 overflow-x-auto border-b border-slate-200 pb-2 sm:gap-3" role="img" aria-label="Bar chart showing monthly net earnings">
+              {chartMonths.map((month) => <div key={month.month} className="group flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2" title={`${monthName(month.month)}: ${month.net < 0 ? "-" : ""}$${money(Math.abs(month.net))}`}>
+                <span className="whitespace-nowrap text-[10px] font-bold tabular-nums text-slate-500">${money(Math.abs(month.net))}</span>
+                <div className="flex h-28 w-full items-end justify-center"><div className={`min-h-1 w-5/6 max-w-12 rounded-t-md transition-opacity group-hover:opacity-80 ${month.net >= 0 ? "bg-teal-500" : "bg-rose-500"}`} style={{ height: `${Math.max(4, Math.abs(month.net) / maxChartValue * 100)}%` }} /></div>
+                <span className="whitespace-nowrap text-[10px] font-bold text-slate-500">{new Date(Number(month.month.slice(0, 4)), Number(month.month.slice(5, 7)) - 1, 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" })}</span>
+              </div>)}
+            </div>
+            <div className="mt-3 flex gap-4 text-[11px] font-bold text-slate-500"><span><i className="mr-1.5 inline-block h-2 w-2 rounded-full bg-teal-500"/>Positive net</span><span><i className="mr-1.5 inline-block h-2 w-2 rounded-full bg-rose-500"/>Negative net</span></div>
+          </Panel>}
           <Panel>
             {(() => {
               const TOL = 0.01;
