@@ -665,6 +665,7 @@ export function DataEntryPage() {
                   <thead className="bg-slate-900 text-white">
                     <tr>
                       <th className="px-3 py-2.5 text-left font-black">Statement</th>
+                      <th className="hidden lg:table-cell px-3 py-2.5 text-center font-black">Created</th>
                       <th className="hidden sm:table-cell px-3 py-2.5 text-center font-black">Type</th>
                       <th className="px-3 py-2.5 text-center font-black">Status</th>
                       <th className="hidden sm:table-cell px-3 py-2.5 text-center font-black">Rows</th>
@@ -691,6 +692,9 @@ export function DataEntryPage() {
                         <tr key={statement.id} className={`border-b border-slate-100 transition ${isActive ? "bg-teal-50" : "odd:bg-white even:bg-slate-50/60 hover:bg-slate-100"}`}>
                           <td className="px-3 py-2.5 font-black text-slate-800">
                             {statement.statementNumber}
+                          </td>
+                          <td className="hidden lg:table-cell px-3 py-2.5 text-center whitespace-nowrap text-xs font-semibold tabular-nums text-slate-500" title={statement.createdAt ? formatCambodiaDateTime(statement.createdAt) : "Creation date unavailable"}>
+                            {statement.createdAt ? formatCambodiaDateTime(statement.createdAt) : "—"}
                           </td>
                           <td className="hidden sm:table-cell px-3 py-2.5 text-center">
                             {!statement.isManual && (
@@ -734,11 +738,11 @@ export function DataEntryPage() {
                                     Open PDF
                                   </button>
                                   <button type="button" disabled={removingDriveLinkId === statement.id} onClick={() => removeDriveLink(statement)} title="Remove PDF link" aria-label={`Remove PDF link from Statement ${statement.statementNumber}`}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-transparent text-slate-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-wait disabled:opacity-60">
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-wait disabled:opacity-60">
                                     {removingDriveLinkId === statement.id ? (
-                                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-200 border-t-red-600" />
+                                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-rose-600" />
                                     ) : (
-                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+                                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10 13.5 4-4"/><path d="M7.5 16a4.5 4.5 0 0 1 0-6.4l2.1-2.1a4.5 4.5 0 0 1 6.4 0"/><path d="M16.5 8a4.5 4.5 0 0 1 0 6.4l-2.1 2.1a4.5 4.5 0 0 1-6.4 0"/><path d="m3 3 18 18"/></svg>
                                     )}
                                   </button>
                                 </div>
@@ -755,11 +759,11 @@ export function DataEntryPage() {
                                     Open PDF
                                   </button>
                                   <button type="button" disabled={removingUploadedPdfId === statement.id} onClick={() => removeUploadedPdf(statement)} title="Remove uploaded PDF" aria-label={`Remove uploaded PDF from Statement ${statement.statementNumber}`}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-transparent text-slate-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-wait disabled:opacity-60">
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-wait disabled:opacity-60">
                                     {removingUploadedPdfId === statement.id ? (
-                                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-200 border-t-red-600" />
+                                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-rose-600" />
                                     ) : (
-                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="m9 13 6 6m0-6-6 6"/></svg>
+                                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10 13.5 4-4"/><path d="M7.5 16a4.5 4.5 0 0 1 0-6.4l2.1-2.1a4.5 4.5 0 0 1 6.4 0"/><path d="M16.5 8a4.5 4.5 0 0 1 0 6.4l-2.1 2.1a4.5 4.5 0 0 1-6.4 0"/><path d="m3 3 18 18"/></svg>
                                     )}
                                   </button>
                                 </div>
@@ -780,12 +784,19 @@ export function DataEntryPage() {
                               <button type="button" onClick={() => viewStatement(statement)}
                                 className="hidden sm:block rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">View</button>
                               {isAdmin && (statement.rowCount > 0 || statement.isManual) && (
-                                <>
-                                  <button type="button" onClick={() => exportStatementFile(statement, "xls")}
-                                    className="hidden sm:block rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">Excel</button>
-                                  <button type="button" onClick={() => exportStatementFile(statement, "pdf")}
-                                    className="hidden sm:block rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-teal-600 hover:text-teal-700 transition">PDF</button>
-                                </>
+                                <select
+                                  aria-label={`Export Statement ${statement.statementNumber}`}
+                                  value=""
+                                  onChange={(event) => {
+                                    if (event.target.value) exportStatementFile(statement, event.target.value);
+                                    event.target.value = "";
+                                  }}
+                                  className="min-h-8 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                                >
+                                  <option value="" disabled>Export ▾</option>
+                                  <option value="xls">Excel (.xlsx)</option>
+                                  <option value="pdf">PDF</option>
+                                </select>
                               )}
                               <button type="button" onClick={() => openStatement(statement)}
                                 className="rounded-lg border border-teal-700 bg-teal-700 px-2.5 py-1 text-xs font-bold text-white hover:bg-teal-800 transition">Edit</button>

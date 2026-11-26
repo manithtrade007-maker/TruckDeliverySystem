@@ -42,8 +42,8 @@ export function ComparePayPage() {
           </section>
           {chartMonths.length > 0 && <Panel className="!p-5 sm:!p-6">
             <div className="mb-5 flex flex-wrap items-end justify-between gap-2"><div><div className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Earnings trend</div><h3 className="mt-1 text-lg font-black">Monthly net earnings</h3></div><div className="text-xs font-semibold text-slate-500">Positive and negative months</div></div>
-            <div className="flex h-44 items-end gap-2 overflow-x-auto border-b border-slate-200 pb-2 sm:gap-3" role="img" aria-label="Bar chart showing monthly net earnings">
-              {chartMonths.map((month) => <div key={month.month} className="group flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2" title={`${monthName(month.month)}: ${month.net < 0 ? "-" : ""}$${money(Math.abs(month.net))}`}>
+            <div className="flex h-44 items-end justify-start gap-3 overflow-x-auto border-b border-slate-200 pb-2 sm:gap-4" role="img" aria-label="Bar chart showing monthly net earnings">
+              {chartMonths.map((month) => <div key={month.month} className="group flex h-full w-20 shrink-0 flex-col items-center justify-end gap-2 sm:w-24" title={`${monthName(month.month)}: ${month.net < 0 ? "-" : ""}$${money(Math.abs(month.net))}`}>
                 <span className="whitespace-nowrap text-[10px] font-bold tabular-nums text-slate-500">${money(Math.abs(month.net))}</span>
                 <div className="flex h-28 w-full items-end justify-center"><div className={`min-h-1 w-5/6 max-w-12 rounded-t-md transition-opacity group-hover:opacity-80 ${month.net >= 0 ? "bg-teal-500" : "bg-rose-500"}`} style={{ height: `${Math.max(4, Math.abs(month.net) / maxChartValue * 100)}%` }} /></div>
                 <span className="whitespace-nowrap text-[10px] font-bold text-slate-500">{new Date(Number(month.month.slice(0, 4)), Number(month.month.slice(5, 7)) - 1, 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" })}</span>
