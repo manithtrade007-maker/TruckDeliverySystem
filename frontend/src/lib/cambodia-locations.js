@@ -27,5 +27,5 @@ const rows = [
   ["D.Santuk (K.Thom)",104.90,12.86],["D.Stueng Sen (K.Thom)",104.89,12.71],["D.Staung (K.Thom)",104.47,12.54],
 ];
 
-export const cambodiaLocationCoordinates = new Map(rows.map(([name, longitude, latitude]) => [name.toLocaleLowerCase(), { longitude, latitude }]));
+export const cambodiaLocationCoordinates = new Map(rows.map(([name, longitude, latitude]) => [name.normalize("NFC").trim().replace(/\s+/gu, " ").toLocaleLowerCase(), { longitude, latitude }]));
 
