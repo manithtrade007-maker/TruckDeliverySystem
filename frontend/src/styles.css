@@ -60,10 +60,8 @@ select:disabled,
 
 .map-marker { cursor: pointer; outline: none; }
 .map-marker:focus-visible circle:nth-child(2) { stroke: #0f172a; stroke-width: 3px; }
-.map-country-label { fill: #526b61; font-size: 24px; font-weight: 800; letter-spacing: 4px; opacity: .72; }
-.map-water-label { fill: #5795aa; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
-.map-city-label { fill: #0f766e; font-size: 12px; font-weight: 700; }
-.map-neighbor-label { fill: #91a39a; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+.map-location-label-bg { fill: #fff; stroke: #c5d8d0; stroke-width: .8; opacity: .96; }
+.map-location-label { fill: #164e43; font-size: 8px; font-weight: 700; pointer-events: none; }
 
 ::-webkit-scrollbar {
   height: 10px;
