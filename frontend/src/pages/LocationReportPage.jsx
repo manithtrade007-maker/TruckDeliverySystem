@@ -160,7 +160,7 @@ export function LocationReportPage({ selected, setSelected }) {
           {[['map','Map'],['table','Table']].map(([value,label]) => <button key={value} type="button" aria-pressed={locationPresentation === value} onClick={() => setLocationPresentation(value)} className={`min-h-9 rounded-md px-3 py-1.5 text-sm font-bold ${locationPresentation === value ? "bg-white text-teal-800 shadow-sm" : "text-slate-600 hover:bg-white/70"}`}>{label}</button>)}
         </div>}
         {view === "locations" && locationPresentation === "map" && <section className="overflow-hidden rounded-xl border border-slate-200 bg-white" aria-label="Delivery locations by province">
-          <div className="border-b border-slate-100 px-4 py-3"><h2 className="font-bold text-slate-900">Cambodia delivery map</h2><p className="text-xs text-slate-500">Province codes are always shown. Red dots mark provinces with deliveries in this report.</p></div>
+          <div className="border-b border-slate-100 px-4 py-3"><h2 className="font-bold text-slate-900">Cambodia delivery map</h2></div>
           <div className="grid items-start lg:grid-cols-[minmax(400px,560px)_minmax(0,1fr)]">
             <div className="flex justify-center border-b border-slate-100 p-3 lg:border-b-0 lg:border-r"><CambodiaMap cities={CITIES} deliveredIds={deliveredProvinceIds} color="#0f766e" selected={selectedProvince || undefined} onSelect={city => { setSelectedProvince(current => current === city.id ? null : city.id); setShowUnassigned(false); }} /></div>
             <aside className="min-w-0" aria-label="Delivered locations list">
