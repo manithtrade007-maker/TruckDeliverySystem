@@ -95,7 +95,7 @@ export function PaymentsPage() {
                       <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 px-4 py-3"><h3 id={`received-year-${year}`} className="font-black text-slate-900">{year}</h3><p className="text-xs font-bold text-slate-500">{records.length} payment months · {yearStatementCount} statements · <span className="text-slate-800">$ {money(yearTotal)}</span></p></div>
                       <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm">
                         <thead className="bg-slate-900 text-xs text-white"><tr><th scope="col" className="px-4 py-3">Payment month</th><th scope="col" className="px-4 py-3">Received</th><th scope="col" className="px-4 py-3 text-right">Statements</th><th scope="col" className="px-4 py-3 text-right">Amount</th></tr></thead>
-                        <tbody className="divide-y divide-slate-100">{records.map((rec) => <tr key={rec.month} className="even:bg-slate-50"><td className="px-4 py-3 font-bold text-slate-800">{monthName(rec.month)}</td><td className="px-4 py-3"><span className="inline-flex items-center gap-2 font-semibold text-emerald-800"><span className="h-2 w-2 rounded-full bg-emerald-600" />{rec.receivedAt ? <time dateTime={rec.receivedAt}>{formatCambodiaDateTime(rec.receivedAt)} Cambodia</time> : <span className="text-slate-500">Date not recorded</span>}</span></td><td className="px-4 py-3 text-right tabular-nums text-slate-600">{rec.count}</td><td className="px-4 py-3 text-right font-black tabular-nums text-slate-900">$ {money(rec.total)}</td></tr>)}</tbody>
+                        <tbody className="divide-y divide-slate-100">{records.map((rec) => <tr key={rec.month} className="even:bg-slate-50"><td className="px-4 py-3 font-bold text-slate-800">{monthName(rec.month)}</td><td className="px-4 py-3"><span className="inline-flex items-center gap-2 font-semibold text-emerald-800"><span className="h-2 w-2 rounded-full bg-emerald-600" />{rec.receivedAt ? <time dateTime={rec.receivedAt}>{formatCambodiaDateTime(rec.receivedAt)} Cambodia</time> : "Received"}</span></td><td className="px-4 py-3 text-right tabular-nums text-slate-600">{rec.count}</td><td className="px-4 py-3 text-right font-black tabular-nums text-slate-900">$ {money(rec.total)}</td></tr>)}</tbody>
                       </table></div>
                     </section>;
                   })}
@@ -208,8 +208,8 @@ export function PaymentsPage() {
 
               {/* File 3 — Outstanding */}
               <Panel>
-                <h3 className="mb-3 text-base font-black tracking-tight">Outstanding — Not Received Yet</h3>
-                <p className="mb-3 text-xs font-bold text-slate-500">All assigned statements the company has not paid yet.</p>
+                <h3 className="mb-3 text-base font-black tracking-tight">Awaiting Company Payment</h3>
+                <p className="mb-3 text-xs font-bold text-slate-500">Statements assigned for payment that have not yet been marked received.</p>
                 {outstanding.length === 0 ? (
                   <p className="text-sm font-bold text-emerald-600 text-center py-6">All clear — no outstanding payments.</p>
                 ) : (
