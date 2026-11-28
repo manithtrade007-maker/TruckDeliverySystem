@@ -62,12 +62,11 @@ export function InvoiceSearchPage() {
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-full sm:max-w-md">
           <Field label="Invoice number">
-            <Input type="search" value={query} onChange={event => { setQuery(event.target.value); setPageNumber(1); }} placeholder="e.g. 8001074244" aria-describedby="invoice-search-help" />
+            <Input type="search" value={query} onChange={event => { setQuery(event.target.value); setPageNumber(1); }} placeholder="e.g. 8001074244" />
           </Field>
         </div>
         <Button variant="secondary" onClick={() => { setQuery(""); setPageNumber(1); }} disabled={!query}>Clear</Button>
       </div>
-      <p id="invoice-search-help" className="mt-3 text-sm text-slate-500">Enter a full or partial invoice number, or select a month above to narrow the list.</p>
       <p role="status" className="my-4 text-sm font-bold text-slate-600">
         {!search && !selectedMonth ? "Enter an invoice number or select a month to view invoices." : matches.length ? `${matches.length} ${search ? "matching " : ""}${matches.length === 1 ? "invoice" : "invoices"} in ${selectedMonth ? monthName(selectedMonth) : selectedYear}.` : `No invoices found${search ? ` for “${query.trim()}”` : ""} in ${selectedMonth || selectedYear}.`}
       </p>

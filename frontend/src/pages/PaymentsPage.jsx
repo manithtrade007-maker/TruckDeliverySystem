@@ -1,6 +1,6 @@
 import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, MonthPicker, PageHead } from "../components/ui.jsx";
-import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, monthName, groupPriceHistory } from "../lib/format.js";
+import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateTime, formatCambodiaDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
 export function PaymentsPage() {
@@ -54,15 +54,17 @@ export function PaymentsPage() {
           </tr>
         );
 
-        // Received history: payment months marked as received, sorted oldest first
-        // so the cards read left to right in calendar order (1, 2, 3, ...).
+        // Received history is grouped by year for a readable multi-year ledger.
         const receivedHistory = allPaymentMonths
           .filter((pm) => pm.received)
           .map((pm) => {
             const pmStatements = allStatements.filter((s) => s.paymentMonth === pm.month);
-            return { month: pm.month, total: sumAmount(pmStatements), count: pmStatements.length };
+            return { month: pm.month, receivedAt: pm.receivedAt || null, total: sumAmount(pmStatements), count: pmStatements.length };
           })
-          .sort((a, b) => a.month.localeCompare(b.month));
+          .sort((a, b) => b.month.localeCompare(a.month));
+        const receivedYears = [...new Set(receivedHistory.map((rec) => rec.month.slice(0, 4)))].sort().reverse();
+        const receivedTotal = receivedHistory.reduce((sum, rec) => sum + rec.total, 0);
+        const receivedStatementCount = receivedHistory.reduce((sum, rec) => sum + rec.count, 0);
 
         return (
           <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-20 lg:pb-4">
@@ -77,20 +79,25 @@ export function PaymentsPage() {
             {/* Received payments history */}
             {receivedHistory.length > 0 && (
               <Panel>
-                <p className="mb-3 text-xs font-black uppercase tracking-wide text-slate-500">Money Received from Company</p>
-                <div className="flex flex-wrap gap-3">
-                  {receivedHistory.map((rec) => {
-                    const [yr, mo] = rec.month.split("-");
-                    return (
-                      <div key={rec.month} className="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 min-w-[200px]">
-                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-black">✓</div>
-                        <div className="flex-1">
-                          <div className="text-xs font-black uppercase tracking-wide text-emerald-700">Paid on 05/{mo}/{yr.slice(2)}</div>
-                          <div className="text-lg font-black text-emerald-900">$ {money(rec.total)}</div>
-                          <div className="text-xs font-bold text-emerald-600">{rec.count} statement{rec.count !== 1 ? "s" : ""}</div>
-                        </div>
-                      </div>
-                    );
+                <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                  <div><h2 className="text-lg font-black tracking-tight">Money Received from Company</h2><p className="mt-1 text-sm text-slate-500">Received payment history, grouped by year.</p></div>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2"><div className="text-[10px] font-black uppercase tracking-wide text-emerald-700">Total received</div><div className="text-lg font-black tabular-nums text-emerald-950">$ {money(receivedTotal)}</div></div>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2"><div className="text-[10px] font-black uppercase tracking-wide text-slate-500">Payment months</div><div className="text-lg font-black tabular-nums text-slate-900">{receivedHistory.length} <span className="text-xs font-bold">· {receivedStatementCount} statements</span></div></div>
+                  </div>
+                </div>
+                <div className="grid gap-5">
+                  {receivedYears.map((year) => {
+                    const records = receivedHistory.filter((rec) => rec.month.startsWith(`${year}-`));
+                    const yearTotal = records.reduce((sum, rec) => sum + rec.total, 0);
+                    const yearStatementCount = records.reduce((sum, rec) => sum + rec.count, 0);
+                    return <section key={year} aria-labelledby={`received-year-${year}`} className="overflow-hidden rounded-xl border border-slate-200">
+                      <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 px-4 py-3"><h3 id={`received-year-${year}`} className="font-black text-slate-900">{year}</h3><p className="text-xs font-bold text-slate-500">{records.length} payment months · {yearStatementCount} statements · <span className="text-slate-800">$ {money(yearTotal)}</span></p></div>
+                      <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm">
+                        <thead className="bg-slate-900 text-xs text-white"><tr><th scope="col" className="px-4 py-3">Payment month</th><th scope="col" className="px-4 py-3">Received</th><th scope="col" className="px-4 py-3 text-right">Statements</th><th scope="col" className="px-4 py-3 text-right">Amount</th></tr></thead>
+                        <tbody className="divide-y divide-slate-100">{records.map((rec) => <tr key={rec.month} className="even:bg-slate-50"><td className="px-4 py-3 font-bold text-slate-800">{monthName(rec.month)}</td><td className="px-4 py-3"><span className="inline-flex items-center gap-2 font-semibold text-emerald-800"><span className="h-2 w-2 rounded-full bg-emerald-600" />{rec.receivedAt ? <time dateTime={rec.receivedAt}>{formatCambodiaDateTime(rec.receivedAt)} Cambodia</time> : <span className="text-slate-500">Date not recorded</span>}</span></td><td className="px-4 py-3 text-right tabular-nums text-slate-600">{rec.count}</td><td className="px-4 py-3 text-right font-black tabular-nums text-slate-900">$ {money(rec.total)}</td></tr>)}</tbody>
+                      </table></div>
+                    </section>;
                   })}
                 </div>
               </Panel>

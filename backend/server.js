@@ -469,7 +469,8 @@ function createSchema(database) {
     CREATE UNIQUE INDEX IF NOT EXISTS statements_month_number_idx ON statements(month, statementNumber);
     CREATE TABLE IF NOT EXISTS payment_months (
       month TEXT PRIMARY KEY,
-      received INTEGER NOT NULL DEFAULT 0
+      received INTEGER NOT NULL DEFAULT 0,
+      receivedAt TEXT
     );
     CREATE TABLE IF NOT EXISTS deliveries (
       id TEXT PRIMARY KEY,
@@ -590,8 +591,8 @@ function writeDataToDb(data) {
     const insertReported = database.prepare("INSERT INTO driver_reported_payments (truckNo, month, amount) VALUES (?, ?, ?)");
     for (const r of (normalized.driverReportedPayments || [])) insertReported.run(r.truckNo, r.month, toNumber(r.amount));
 
-    const insertPaymentMonth = database.prepare("INSERT INTO payment_months (month, received) VALUES (?, ?)");
-    for (const pm of (normalized.paymentMonths || [])) insertPaymentMonth.run(pm.month, pm.received ? 1 : 0);
+    const insertPaymentMonth = database.prepare("INSERT INTO payment_months (month, received, receivedAt) VALUES (?, ?, ?)");
+    for (const pm of (normalized.paymentMonths || [])) insertPaymentMonth.run(pm.month, pm.received ? 1 : 0, pm.receivedAt || null);
 
     const insertMonthlySend = database.prepare(`
       INSERT INTO monthly_bundle_sends (month, status, method, attempts, fileName, fileCount, sentAt, nextAttemptAt, error, updatedAt)
@@ -638,6 +639,7 @@ async function ensureDataStore() {
   try { database.exec("ALTER TABLE statements ADD COLUMN drivePdfUrl TEXT"); } catch (_) {}
   try { database.exec("ALTER TABLE statements ADD COLUMN drivePdfOriginalName TEXT"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS payment_months (month TEXT PRIMARY KEY, received INTEGER NOT NULL DEFAULT 0)"); } catch (_) {}
+  try { database.exec("ALTER TABLE payment_months ADD COLUMN receivedAt TEXT"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS monthly_bundle_sends (month TEXT PRIMARY KEY, status TEXT NOT NULL, method TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, fileName TEXT, fileCount INTEGER NOT NULL DEFAULT 0, sentAt TEXT, nextAttemptAt TEXT, error TEXT, updatedAt TEXT NOT NULL)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS recovery_backups (id TEXT PRIMARY KEY, status TEXT NOT NULL, reason TEXT NOT NULL, fingerprint TEXT, fileName TEXT, fileSize INTEGER NOT NULL DEFAULT 0, createdAt TEXT NOT NULL, sentAt TEXT, verifiedAt TEXT, attempts INTEGER NOT NULL DEFAULT 0, nextAttemptAt TEXT, error TEXT)"); } catch (_) {}
   try { database.exec("CREATE TABLE IF NOT EXISTS recovery_state (key TEXT PRIMARY KEY, value TEXT)"); } catch (_) {}
@@ -674,7 +676,7 @@ export async function readData() {
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
     truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
     driverReportedPayments: database.prepare("SELECT truckNo, month, amount FROM driver_reported_payments").all(),
-    paymentMonths: database.prepare("SELECT month, received FROM payment_months").all().map((r) => ({ ...r, received: Boolean(r.received) })),
+    paymentMonths: database.prepare("SELECT month, received, receivedAt FROM payment_months").all().map((r) => ({ ...r, received: Boolean(r.received) })),
     monthlyBundleSends: database.prepare("SELECT month, status, method, attempts, fileName, fileCount, sentAt, nextAttemptAt, error, updatedAt FROM monthly_bundle_sends ORDER BY month DESC").all(),
     recoveryBackups: database.prepare("SELECT id, status, reason, fingerprint, fileName, fileSize, createdAt, sentAt, verifiedAt, attempts, nextAttemptAt, error FROM recovery_backups ORDER BY createdAt DESC LIMIT 100").all()
   });
@@ -1959,8 +1961,10 @@ async function api(req, res, url, role = "admin") {
     await updateData((data) => {
       data.paymentMonths ||= [];
       const pm = data.paymentMonths.find((item) => item.month === month);
-      if (pm) pm.received = !pm.received;
-      else data.paymentMonths.push({ month, received: true });
+      if (pm) {
+        pm.received = !pm.received;
+        pm.receivedAt = pm.received ? new Date().toISOString() : null;
+      } else data.paymentMonths.push({ month, received: true, receivedAt: new Date().toISOString() });
     });
     return sendJson(res, 200, { ok: true });
   }
