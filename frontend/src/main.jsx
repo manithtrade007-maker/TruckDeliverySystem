@@ -20,7 +20,8 @@ import "./styles.css";
 function App() {
   const [loggedIn, setLoggedIn] = useState(Boolean(getToken()));
   const [userRole, setUserRole] = useState(getRole);
-  const isAdmin = userRole === "admin";
+  const isAdmin = userRole === "admin" || userRole === "owner";
+  const isOwner = userRole === "owner";
   const [page, setPage] = useState("dashboard");
   const desktopNavRef = useRef(null);
   const desktopNavItemRefs = useRef({});
@@ -741,8 +742,10 @@ function App() {
       const fromLocation = current.fromLocation || next.settings.defaultFromLocation || "";
       return { ...current, fromLocation, fromProvinceId: current.fromProvinceId || getWarehouseProvinceId(fromLocation) || "" };
     });
-    loadBackups().catch(() => {});
-    checkTelegramStatus().catch(() => {});
+    if (isOwner) {
+      loadBackups().catch(() => {});
+      checkTelegramStatus().catch(() => {});
+    }
   }
 
   async function loadBackups() {
@@ -759,7 +762,7 @@ function App() {
 
   useEffect(() => {
     if (loggedIn) loadData().catch((err) => flash(err.message, "error"));
-  }, [loggedIn]);
+  }, [loggedIn, isOwner]);
 
   useEffect(() => {
     if (page === "setup") loadStaffUsers();
@@ -1273,6 +1276,14 @@ function App() {
     try { setStaffUsers(await api("/api/users")); } catch {}
   }
 
+  async function setStaffUserRole(id, role) {
+    try {
+      await api(`/api/users/${id}/role`, { method: "PUT", body: JSON.stringify({ role }) });
+      await loadStaffUsers();
+      flash("User role updated. They need to sign in again.");
+    } catch (err) { flash(err.message, "error"); }
+  }
+
   async function createStaffUser(e) {
     e.preventDefault();
     try {
@@ -1574,8 +1585,8 @@ function App() {
     deleteNonstandardFormatPrices, deletePrice, deletePricesByDate, deleteStaffUser, deleteStatement, deleteTruck, deliveryForm, deliveryFormDirty, deliveryFormReady, deliveryFormRef, diagnoseDriverPrices, diagnoseEmptyPrices,
     downloadBackup, driverPaymentSections, driverPriceForm, driverPriceGroups, duplicateInvoice, duplicateInvoiceRow, duplicateInvoiceStatement, earningsHistory, editDelivery, editPasswordId, editPasswordValue, editingSavedRow,
     emptyPriceResult, entryActionTruckType, entryTruckType, expandStatementEdit, exportSalary, exportStatement, exportStatementFile, filteredCompanyPrices, filteredDriverPrices, filteredStatements, filters, finishStatement,
-    fixLocationNames, flash, fromLocations, getDeduction, getNextStatementNumber, goToEmptyPrice, invoiceInputRef, isAdmin, isDraft, isEditingDelivery, isEditingTruck, loadBackups,
-    loadData, loadStaffUsers, locations, loggedIn, logout, matchesSetupLocationSearch, missingPrice, monthlyRows, monthlyTotals, navItems, newStatement, newUserForm,
+    fixLocationNames, flash, fromLocations, getDeduction, getNextStatementNumber, goToEmptyPrice, invoiceInputRef, isAdmin, isOwner, isDraft, isEditingDelivery, isEditingTruck, loadBackups,
+    loadData, loadStaffUsers, setStaffUserRole, locations, loggedIn, logout, matchesSetupLocationSearch, missingPrice, monthlyRows, monthlyTotals, navItems, newStatement, newUserForm,
     normalizeLocationSpacing, notice, openStatement, page, paymentsViewMonth, priceCompareDate, priceCompareDates, priceCompareProvince, priceCompareProvinces, priceCompareRows, priceForm, priceLookupReady,
     pricePeriods, pricePeriodsMonth, qtyTonError, qtyTonValid, recalculateAllPrices, reconEdits, reconMonth, reconciliation, reopenStatement, reportMonth, reportTruckNo, reportYear, resetDeliveryForm,
     restoreBackup, saveDeduction, saveDelivery, saveDriverPrice, savePrice, saveReported, saveSettings, saveStaffPassword, saveStatement, saveTruck, selectedDriverPaymentSection,
@@ -1627,7 +1638,7 @@ function App() {
           </nav>
           <div className="flex items-center gap-2">
             <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-500 lg:inline">
-              {isAdmin ? "Admin" : "Staff"}
+              {userRole === "owner" ? "Owner" : isAdmin ? "Admin" : "Staff"}
             </span>
             <button
               type="button" onClick={logout} title="Sign out" aria-label="Sign out"

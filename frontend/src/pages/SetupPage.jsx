@@ -13,18 +13,18 @@ const recoveryReasonLabel = (reason) => ({
 }[reason] || "Automatic backup");
 
 export function SetupPage() {
-  const { activeCompanyPriceCounts, activeCompanyPriceRows, applyBulkPriceUpdate, bulkExistingDates, bulkPriceForm, bulkPriceRows, companyPriceGroups, createManualBackup, createStaffUser, data, deletePrice, deletePricesByDate, deleteStaffUser, deleteTruck, downloadBackup, driverPriceForm, driverPriceGroups, editPasswordId, editPasswordValue, isAdmin, isEditingTruck, locations, newUserForm, priceCompareDates, priceForm, restoreBackup, saveDriverPrice, savePrice, saveSettings, saveStaffPassword, saveTruck, setBulkLocationFilter, setBulkPriceForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setNewUserForm, setPriceForm, setSettingsForm, setSetupLocationSearch, setSetupSection, setTruckForm, settingsForm, setupLocationSearch, setupSection, staffUsers, truckForm } = useApp();
+  const { activeCompanyPriceCounts, activeCompanyPriceRows, applyBulkPriceUpdate, bulkExistingDates, bulkPriceForm, bulkPriceRows, companyPriceGroups, createManualBackup, createStaffUser, data, deletePrice, deletePricesByDate, deleteStaffUser, deleteTruck, downloadBackup, driverPriceForm, driverPriceGroups, editPasswordId, editPasswordValue, isAdmin, isOwner, isEditingTruck, locations, newUserForm, priceCompareDates, priceForm, restoreBackup, saveDriverPrice, savePrice, saveSettings, saveStaffPassword, saveTruck, setBulkLocationFilter, setBulkPriceForm, setDriverPriceForm, setEditPasswordId, setEditPasswordValue, setNewUserForm, setPriceForm, setSettingsForm, setSetupLocationSearch, setSetupSection, setStaffUserRole, setTruckForm, settingsForm, setupLocationSearch, setupSection, staffUsers, truckForm } = useApp();
   const [recoveryStatus, setRecoveryStatus] = useState(null);
   const [creatingBackup, setCreatingBackup] = useState(false);
   const [retryingTelegram, setRetryingTelegram] = useState(false);
   const [retryTelegramError, setRetryTelegramError] = useState("");
   const loadRecoveryStatus = () => api("/api/recovery/status").then(setRecoveryStatus).catch(() => setRecoveryStatus(null));
   useEffect(() => {
-    if (!isAdmin) return undefined;
+    if (!isOwner) return undefined;
     loadRecoveryStatus();
     const timer = setInterval(loadRecoveryStatus, 60000);
     return () => clearInterval(timer);
-  }, [isAdmin]);
+  }, [isOwner]);
   async function handleCreateBackup() {
     setCreatingBackup(true);
     try {
@@ -52,7 +52,7 @@ export function SetupPage() {
   const setupGroups = [
     { key: "fleet", label: "Fleet", description: "Truck details", sections: [["trucks", "Trucks", "Add trucks and update driver details."]] },
     { key: "pricing", label: "Pricing", description: "Routes and pay rates", sections: [["company", "Company prices", "Customer prices by route."], ["driver", "Driver prices", "Driver pay by route."], ["bulk", "Bulk price update", "Change several route prices at once."], ["active-prices", "Active prices", "Review current prices by route."]] },
-    { key: "admin", label: "Administration", description: "People and data safety", sections: [["users", "Staff access", "Add staff accounts and passwords."], ...(isAdmin ? [["backup", "Backup & recovery", "Create, download, or restore a backup."]] : [])] },
+    { key: "admin", label: "Administration", description: "People and data safety", sections: [["users", "Users & roles", "Manage access and passwords."], ...(isOwner ? [["backup", "Backup & recovery", "Create, download, or restore a backup."]] : [])] },
   ];
   const currentSetupGroup = setupGroups.find((group) => group.sections.some(([key]) => key === setupSection)) || setupGroups[0];
   return (
@@ -83,7 +83,7 @@ export function SetupPage() {
             </div>
           </Panel>
 
-          {setupSection === "backup" && isAdmin && (
+          {setupSection === "backup" && isOwner && (
             <Panel>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -680,8 +680,8 @@ export function SetupPage() {
           {setupSection === "users" && (
             <>
               <Panel>
-                <h2 className="mb-4 text-lg font-bold">User Management</h2>
-                <p className="mb-4 text-sm font-bold text-slate-500">Staff users can do data entry but cannot access Payments, Prices, Setup, or export reports.</p>
+                <div className="mb-5 flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-black">Users &amp; roles</h2><p className="mt-1 text-sm text-slate-500">Give each person the access they need. Owner controls critical recovery actions.</p></div><span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black">{staffUsers.length} accounts</span></div>
+                <div className="mb-5 grid gap-3 md:grid-cols-3">{[["Owner", "Full access, role oversight, and backup recovery", "border-violet-200 bg-violet-50 text-violet-950"], ["Admin", "Daily setup, prices, payments, and staff access", "border-teal-200 bg-teal-50 text-teal-950"], ["Staff", "Data entry and everyday delivery work", "border-slate-200 bg-slate-50 text-slate-900"]].map(([title, desc, style]) => <div key={title} className={`rounded-xl border p-3 ${style}`}><div className="text-sm font-black">{title}</div><p className="mt-1 text-xs leading-relaxed opacity-80">{desc}</p></div>)}</div>
                 <form onSubmit={createStaffUser} className="mb-6 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-slate-500">Add New User</p>
                   <div className="grid gap-3 sm:grid-cols-3">
@@ -690,7 +690,8 @@ export function SetupPage() {
                     <Field label="Role">
                       <select value={newUserForm.role} onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm font-bold outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                         <option value="staff">Staff</option>
-                        <option value="admin">Admin</option>
+                        <option value="admin" disabled={!isOwner}>Admin{!isOwner ? " (owner only)" : ""}</option>
+                        <option value="owner" disabled={!isOwner}>Owner{!isOwner ? " (owner only)" : ""}</option>
                       </select>
                     </Field>
                   </div>
@@ -714,11 +715,11 @@ export function SetupPage() {
                           <tr key={u.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50">
                             <td className="px-4 py-3 font-black">{u.username}</td>
                             <td className="px-4 py-3">
-                              <span className={`rounded-full px-2 py-0.5 text-xs font-black ${u.role === "admin" ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600"}`}>{u.role}</span>
+                              {u.protected ? <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-black uppercase text-violet-800">Owner</span> : isOwner ? <select aria-label={`Role for ${u.username}`} value={u.role} onChange={e => setStaffUserRole(u.id, e.target.value)} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold"><option value="staff">Staff</option><option value="admin">Admin</option><option value="owner">Owner</option></select> : <span className={`rounded-full px-2.5 py-1 text-xs font-black uppercase ${u.role === "owner" ? "bg-violet-100 text-violet-800" : u.role === "admin" ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600"}`}>{u.role}</span>}{u.protected && <span className="ml-2 text-xs font-semibold text-slate-400">Server login</span>}
                             </td>
-                            <td className="px-4 py-3 text-slate-500 text-xs">{u.createdAt?.slice(0, 10)}</td>
+                            <td className="px-4 py-3 text-slate-500 text-xs">{u.createdAt?.slice(0, 10) || "Configured"}</td>
                             <td className="px-4 py-3 text-right">
-                              {editPasswordId === u.id ? (
+                              {u.protected ? <span className="text-xs text-slate-500">Managed in server credentials</span> : editPasswordId === u.id ? (
                                 <div className="flex items-center gap-2 justify-end">
                                   <input type="password" value={editPasswordValue} onChange={(e) => setEditPasswordValue(e.target.value)} placeholder="New password" className="h-8 rounded-lg border border-slate-200 px-2 text-sm outline-none focus:border-teal-500 w-36" />
                                   <Button type="button" onClick={() => saveStaffPassword(u.id)}>Save</Button>
@@ -726,8 +727,8 @@ export function SetupPage() {
                                 </div>
                               ) : (
                                 <div className="flex gap-2 justify-end">
-                                  <Button type="button" variant="secondary" onClick={() => { setEditPasswordId(u.id); setEditPasswordValue(""); }}>Change Password</Button>
-                                  <Button type="button" variant="danger" onClick={() => deleteStaffUser(u.id)}>Delete</Button>
+                                  {u.role !== "admin" && u.role !== "owner" || isOwner ? <Button type="button" variant="secondary" onClick={() => { setEditPasswordId(u.id); setEditPasswordValue(""); }}>Change Password</Button> : <span className="self-center text-xs text-slate-400">Owner only</span>}
+                                  {u.role === "owner" ? <span className="self-center text-xs text-slate-400">Change role to delete</span> : u.role !== "admin" || isOwner ? <Button type="button" variant="danger" onClick={() => deleteStaffUser(u.id)}>Delete</Button> : <span className="self-center text-xs text-slate-400">Owner only</span>}
                                 </div>
                               )}
                             </td>
@@ -739,7 +740,7 @@ export function SetupPage() {
                 )}
               </Panel>
 
-              {isAdmin && (
+              {isOwner && (
                 <div className="grid gap-4">
                   <Panel>
                     <h2 className="mb-3 text-lg font-bold">Settings</h2>

@@ -43,9 +43,9 @@ function verifyPassword(password, stored) {
   });
 }
 
-function createSession(role) {
+function createSession(role, userId = null) {
   const token = randomBytes(32).toString("hex");
-  sessions.set(token, { role, expiresAt: Date.now() + SESSION_TTL_MS });
+  sessions.set(token, { role, userId, expiresAt: Date.now() + SESSION_TTL_MS });
   return token;
 }
 
@@ -58,7 +58,7 @@ function getSessionRole(token) {
 }
 
 function getAuthorizedRole(req) {
-  if (!isAuthEnabled()) return "admin";
+  if (!isAuthEnabled()) return "owner";
   const header = req.headers.authorization || "";
   if (!header.startsWith("Bearer ")) return null;
   return getSessionRole(header.slice(7));
@@ -103,4 +103,8 @@ function deleteSession(token) {
   sessions.delete(token);
 }
 
-export { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession };
+function deleteUserSessions(userId) {
+  for (const [token, session] of sessions) if (session.userId === userId) sessions.delete(token);
+}
+
+export { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, deleteUserSessions };

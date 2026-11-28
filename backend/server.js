@@ -13,7 +13,7 @@ import {
   PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT, PDF_PAGE_MARGIN
 } from "./lib/exports.js";
 import { sendJson, sendText, readBody, parseQuery } from "./lib/http.js";
-import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, appUsername, appPassword } from "./lib/auth.js";
+import { isAuthEnabled, safeEqual, hashPassword, verifyPassword, createSession, getSessionRole, getAuthorizedRole, getClientIp, isRateLimited, recordFailedLogin, isAuthorized, requestAuth, clearLoginAttempts, deleteSession, deleteUserSessions, appUsername, appPassword } from "./lib/auth.js";
 import { normalizeText, normalizeCode, normalizeLocationName, fromLocationMatchKey, locationMatchKey, locationBaseKey, toNumber, roundMoney, monthFromDate, effectiveDateOf, findEffectivePrice, priceRouteKey, applyEffectivePriceToDelivery, validateQtyTon } from "./lib/calc.js";
 import { buildDriveFolderPreview, listGoogleDriveFolderPdfs } from "./lib/google-drive.js";
 import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
@@ -1416,7 +1416,13 @@ async function api(req, res, url, role = "admin") {
   const query = parseQuery(url);
   const db = getDb();
   function requireAdmin() {
-    if (role !== "admin") throw Object.assign(new Error("Admin access required."), { status: 403 });
+    if (role !== "admin" && role !== "owner") throw Object.assign(new Error("Admin access required."), { status: 403 });
+  }
+  function requireOwner() {
+    if (role !== "owner") throw Object.assign(new Error("Owner access required."), { status: 403 });
+  }
+  if (role === "staff" && (url.pathname.startsWith("/api/users") || url.pathname.startsWith("/api/recovery/") || url.pathname.startsWith("/api/backup/"))) {
+    throw Object.assign(new Error("Admin access required."), { status: 403 });
   }
 
   const destructivePostPaths = new Set([
@@ -1424,7 +1430,7 @@ async function api(req, res, url, role = "admin") {
     "/api/prices/delete-by-date"
   ]);
   const staffDeletePath = url.pathname.startsWith("/api/statements/") || url.pathname.startsWith("/api/deliveries/");
-  const needsSafetyRecovery = (role === "admin" || staffDeletePath) &&
+  const needsSafetyRecovery = ((role === "admin" || role === "owner") || staffDeletePath) &&
     (req.method === "DELETE" || (req.method === "POST" && destructivePostPaths.has(url.pathname)));
   if (needsSafetyRecovery) {
     await runRecoveryBackup({ reason: "before-delete", force: url.pathname.startsWith("/api/users/") });
@@ -1433,7 +1439,8 @@ async function api(req, res, url, role = "admin") {
   // Users management (admin only)
   if (req.method === "GET" && url.pathname === "/api/users") {
     requireAdmin();
-    const users = db.prepare("SELECT id, username, role, createdAt FROM users ORDER BY createdAt").all();
+    const users = db.prepare("SELECT id, username, role, createdAt FROM users ORDER BY createdAt").all().map(user => ({ ...user, protected: false }));
+    if (isAuthEnabled()) users.unshift({ id: "owner-config", username: appUsername, role: "owner", createdAt: null, protected: true });
     return sendJson(res, 200, users);
   }
   if (req.method === "POST" && url.pathname === "/api/users") {
@@ -1441,7 +1448,8 @@ async function api(req, res, url, role = "admin") {
     const body = await readBody(req);
     const username = normalizeText(body.username);
     const password = String(body.password || "").trim();
-    const userRole = body.role === "admin" ? "admin" : "staff";
+    const userRole = ["owner", "admin"].includes(body.role) ? body.role : "staff";
+    if (userRole !== "staff") requireOwner();
     if (!username) throw new Error("Username is required.");
     if (password.length < 6) throw new Error("Password must be at least 6 characters.");
     if (db.prepare("SELECT id FROM users WHERE username = ?").get(username)) throw new Error("Username already exists.");
@@ -1454,17 +1462,41 @@ async function api(req, res, url, role = "admin") {
   if (req.method === "PUT" && url.pathname.startsWith("/api/users/") && url.pathname.endsWith("/password")) {
     requireAdmin();
     const id = decodeURIComponent(url.pathname.split("/")[3]);
+    if (id === "owner-config") requireOwner();
+    const target = db.prepare("SELECT role FROM users WHERE id = ?").get(id);
+    if (id !== "owner-config" && !target) throw Object.assign(new Error("User not found."), { status: 404 });
+    if (target?.role === "admin") requireOwner();
     const body = await readBody(req);
     const password = String(body.password || "").trim();
     if (password.length < 6) throw new Error("Password must be at least 6 characters.");
-    db.prepare("UPDATE users SET passwordHash = ? WHERE id = ?").run(await hashPassword(password), id);
+    const result = db.prepare("UPDATE users SET passwordHash = ? WHERE id = ?").run(await hashPassword(password), id);
+    if (!result.changes) throw Object.assign(new Error("User not found."), { status: 404 });
+    deleteUserSessions(id);
     scheduleRecoveryAfterChange();
     return sendJson(res, 200, { ok: true });
+  }
+  if (req.method === "PUT" && url.pathname.startsWith("/api/users/") && url.pathname.endsWith("/role")) {
+    requireOwner();
+    const id = decodeURIComponent(url.pathname.split("/")[3]);
+    const body = await readBody(req);
+    const userRole = ["owner", "admin", "staff"].includes(body.role) ? body.role : "";
+    if (!userRole) throw new Error("Choose owner, admin, or staff.");
+    const result = db.prepare("UPDATE users SET role = ? WHERE id = ?").run(userRole, id);
+    if (!result.changes) throw Object.assign(new Error("User not found."), { status: 404 });
+    deleteUserSessions(id);
+    scheduleRecoveryAfterChange();
+    return sendJson(res, 200, { ok: true, role: userRole });
   }
   if (req.method === "DELETE" && url.pathname.startsWith("/api/users/")) {
     requireAdmin();
     const id = decodeURIComponent(url.pathname.split("/").pop());
+    if (id === "owner-config") throw Object.assign(new Error("The owner login is managed through server credentials and cannot be deleted here."), { status: 400 });
+    const target = db.prepare("SELECT role FROM users WHERE id = ?").get(id);
+    if (!target) throw Object.assign(new Error("User not found."), { status: 404 });
+    if (target.role === "owner") throw Object.assign(new Error("Owner accounts cannot be deleted. Change the role first."), { status: 400 });
+    if (target.role === "admin") requireOwner();
     db.prepare("DELETE FROM users WHERE id = ?").run(id);
+    deleteUserSessions(id);
     scheduleRecoveryAfterChange();
     return sendJson(res, 200, { ok: true });
   }
@@ -1475,7 +1507,7 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "GET" && url.pathname === "/api/backup/download") {
-    requireAdmin();
+    requireOwner();
     const fileName = `truck-delivery-backup-${timestampForFile()}.json`;
     res.writeHead(200, {
       "Content-Type": "application/json; charset=utf-8",
@@ -1485,7 +1517,7 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "GET" && url.pathname === "/api/recovery/status") {
-    requireAdmin();
+    requireOwner();
     const runs = data.recoveryBackups || [];
     const lastVerified = runs.find((item) => verifiedRecoveryStatuses.has(item.status)) || null;
     const latest = runs[0] || null;
@@ -1509,13 +1541,13 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "POST" && url.pathname === "/api/recovery/create") {
-    requireAdmin();
+    requireOwner();
     const result = await runRecoveryBackup({ reason: "manual", force: true });
     return sendJson(res, 200, result);
   }
 
   if (req.method === "POST" && url.pathname === "/api/recovery/retry-telegram") {
-    requireAdmin();
+    requireOwner();
     if (!getTelegramConfig()) throw Object.assign(new Error("Telegram is not configured."), { status: 400 });
     const current = await readData();
     const record = (current.recoveryBackups || []).find((item) =>
@@ -1526,7 +1558,7 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "GET" && url.pathname === "/api/recovery/download") {
-    requireAdmin();
+    requireOwner();
     const requested = path.basename(normalizeText(query.file));
     const available = (await readdir(recoveryBackupDir).catch(() => [])).filter((name) => name.endsWith(".zip")).sort().reverse();
     const fileName = requested || available[0];
@@ -1538,14 +1570,14 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "PUT" && url.pathname === "/api/recovery/restore") {
-    requireAdmin();
+    requireOwner();
     if ((req.headers["content-type"] || "").split(";")[0] !== "application/zip") throw new Error("Please select a recovery ZIP file.");
     const result = await restoreRecoveryArchive(await readRawRequest(req));
     return sendJson(res, 200, { ok: true, createdAt: result.manifest.createdAt, users: result.users });
   }
 
   if (req.method === "POST" && url.pathname === "/api/backup/create") {
-    requireAdmin();
+    requireOwner();
     const result = await updateData(async (data) => {
       addActivity(data, "Created manual data backup.", "backup");
       const fileName = await createBackup(data, "manual");
@@ -1556,7 +1588,7 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "POST" && url.pathname === "/api/backup/send-telegram") {
-    requireAdmin();
+    requireOwner();
     const cfg = getTelegramConfig();
     if (!cfg) return sendJson(res, 400, { error: "Telegram is not configured. Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to environment variables." });
     await sendBackupToTelegram(data, "Manual Send");
@@ -1564,7 +1596,7 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "GET" && url.pathname === "/api/telegram/status") {
-    requireAdmin();
+    requireOwner();
     return sendJson(res, 200, { configured: Boolean(getTelegramConfig()) });
   }
 
@@ -1595,6 +1627,7 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "GET" && url.pathname === "/api/backup/list") {
+    requireOwner();
     const files = (await readdir(backupDir).catch(() => []))
       .filter((file) => file.endsWith(".json"))
       .sort((a, b) => b.localeCompare(a));
@@ -1602,7 +1635,7 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "POST" && url.pathname === "/api/backup/restore") {
-    requireAdmin();
+    requireOwner();
     const restored = await readBody(req);
     validateRestoreData(restored);
     await updateData(async (data) => {
@@ -2652,19 +2685,19 @@ const server = createServer(async (req, res) => {
         return res.end(JSON.stringify({ error: "Too many failed attempts. Try again in 15 minutes." }));
       }
       if (!isAuthEnabled()) {
-        return sendJson(res, 200, { token: "no-auth", role: "admin" });
+        return sendJson(res, 200, { token: "no-auth", role: "owner" });
       }
       // Check admin (env vars)
       if (safeEqual(body.username || "", appUsername) && safeEqual(body.password || "", appPassword)) {
         clearLoginAttempts(ip);
-        return sendJson(res, 200, { token: createSession("admin"), role: "admin" });
+        return sendJson(res, 200, { token: createSession("owner"), role: "owner" });
       }
       // Check staff users in database
       const db = getDb();
       const dbUser = db.prepare("SELECT id, passwordHash, role FROM users WHERE username = ?").get(String(body.username || ""));
       if (dbUser && await verifyPassword(body.password || "", dbUser.passwordHash)) {
         clearLoginAttempts(ip);
-        return sendJson(res, 200, { token: createSession(dbUser.role), role: dbUser.role });
+        return sendJson(res, 200, { token: createSession(dbUser.role, dbUser.id), role: dbUser.role });
       }
       recordFailedLogin(ip);
       res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });

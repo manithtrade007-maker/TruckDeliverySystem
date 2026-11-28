@@ -5,12 +5,12 @@ import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMone
 import { getToken, getRole, setToken, setRole, api, downloadFile } from "../lib/api.js";
 
 export function DashboardPage() {
-  const { activeTruckCount, activityPage, availableYears, dashOutstanding, data, flash, isAdmin, monthlyTotals, page, reportMonth, reportYear, setActivityPage, setPage, setReportMonth, setReportTruckNo, setReportYear, statementCounts, statementSummaries, truckPerformance, yearSummary } = useApp();
+  const { activeTruckCount, activityPage, availableYears, dashOutstanding, data, flash, isAdmin, isOwner, monthlyTotals, page, reportMonth, reportYear, setActivityPage, setPage, setReportMonth, setReportTruckNo, setReportYear, statementCounts, statementSummaries, truckPerformance, yearSummary } = useApp();
   const [automation, setAutomation] = useState(null);
   const [recovery, setRecovery] = useState(null);
   const loadAutomation = () => api("/api/monthly-automation/status").then(setAutomation).catch(() => setAutomation(null));
   const loadRecovery = () => api("/api/recovery/status").then(setRecovery).catch(() => setRecovery(null));
-  useEffect(() => { if (isAdmin) { loadAutomation(); loadRecovery(); } }, [isAdmin]);
+  useEffect(() => { if (isAdmin) loadAutomation(); if (isOwner) loadRecovery(); }, [isAdmin, isOwner]);
   const automationMonth = (value) => value ? new Date(`${value}-01T00:00:00`).toLocaleString("default", { month: "long", year: "numeric" }) : "—";
   return (
         <main className="app-content mx-auto grid max-w-[1500px] gap-5 p-4 pb-20 lg:pb-4">

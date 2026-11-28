@@ -121,7 +121,13 @@ export function LocationReportPage({ selected, setSelected }) {
   const periodControls = <>
     <label className="grid gap-1 text-xs font-bold text-slate-600">Period<select className={field} value={period} onChange={event => setPeriod(event.target.value)}><option value="month">Specific month</option><option value="all">All months</option><option value="year">Specific year</option></select></label>
     {period === "year" && <label className="grid gap-1 text-xs font-bold text-slate-600">Year<select className={field} value={reportYear} onChange={event => setReportYear(event.target.value)}>{[...new Set([reportYear, ...data.deliveries.map(row => String(row.deliveryDate || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y))])].sort().reverse().map(y => <option key={y}>{y}</option>)}</select></label>}
-    {period === "month" && <label className="grid gap-1 text-xs font-bold text-slate-600">Month<input className={field} type="month" value={reportMonth} onChange={event => setReportMonth(event.target.value)} /></label>}
+    {period === "month" && <label className="grid gap-1 text-xs font-bold text-slate-600">Month<input className={field} type="month" value={reportMonth} onChange={event => {
+      const nextMonth = event.target.value;
+      if (/^\d{4}-(0[1-9]|1[0-2])$/.test(nextMonth)) {
+        setReportMonth(nextMonth);
+        setChartYear(nextMonth.slice(0, 4));
+      }
+    }} /></label>}
     <label className="grid gap-1 text-xs font-bold text-slate-600">Truck type<select className={field} value={truckType} onChange={event => setTruckType(event.target.value)}><option value="">All trucks</option><option value="With Crane">Crane</option><option value="Without Crane">No Crane</option></select></label>
   </>;
   return <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
