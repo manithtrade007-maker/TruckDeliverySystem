@@ -35,9 +35,10 @@ export const CITIES = [
   { id: "tboung-khmum", code: "TM", name: "Tboung Khmum", km: "ត្បូងឃ្មុំ", lat: 11.902, lon: 105.649 },
 ];
 
-export default function CambodiaMap({ cities = CITIES, from, to, selected, onSelect, color = "#2563eb" }) {
+export default function CambodiaMap({ cities = CITIES, from, to, selected, onSelect, deliveredIds = [], color = "#2563eb" }) {
   const [hover, setHover] = useState(null);
   const get = (id) => cities.find((c) => c.id === id);
+  const delivered = deliveredIds instanceof Set ? deliveredIds : new Set(deliveredIds);
   const a = from && get(from), b = to && get(to);
   let route = null;
   if (a && b) {
@@ -72,16 +73,18 @@ export default function CambodiaMap({ cities = CITIES, from, to, selected, onSel
         )}
         {cities.map((c, i) => {
           const [x, y] = proj(c.lat, c.lon);
+          const hasDelivery = delivered.has(c.id);
           const active = c.id === selected || c.id === from || c.id === to;
           const hot = active || hover === c.id;
+          const labelDx = c.id === "phnom-penh" ? -7 : c.id === "kandal" ? 7 : 0;
           return (
             <g key={c.id} transform={`translate(${x} ${y})`} style={{ cursor: "pointer" }}
                onClick={() => onSelect && onSelect(c)} onMouseEnter={() => setHover(c.id)} onMouseLeave={() => setHover(null)}>
               {active && <circle className="kh-pulse" fill="none" stroke="#ef4444" strokeWidth="2" />}
               <g className="kh-pin" style={{ animationDelay: `${1.5 + i * 0.08}s` }}>
-                <circle r={hot ? 6 : 4} fill={active ? "#ef4444" : "#fff"} stroke={active ? "#fff" : color} strokeWidth="2" />
+                <circle r={hot ? 5 : 3.5} fill={hasDelivery || active ? "#dc2626" : "#fff"} stroke={hasDelivery || active ? "#fff" : color} strokeWidth="1.5" />
                 <title>{`${c.name} · ${c.km}`}</title>
-                <text y="-8" textAnchor="middle" fontSize="7" fontWeight="700" fill={hot ? "#b91c1c" : "#334155"} stroke="#fff" strokeWidth="2.5" paintOrder="stroke">{c.code}</text>
+                <text x={labelDx} y="-7" textAnchor="middle" fontSize="7" fontWeight="700" fill={hot ? "#b91c1c" : "#334155"} stroke="#fff" strokeWidth="2.5" paintOrder="stroke">{c.code}</text>
               </g>
             </g>
           );
