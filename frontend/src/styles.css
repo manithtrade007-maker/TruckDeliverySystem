@@ -58,26 +58,6 @@ select:disabled,
   cursor: not-allowed;
 }
 
-.map-marker { cursor: pointer; outline: none; }
-.map-marker:focus-visible circle:nth-child(2) { stroke: #0f172a; stroke-width: 3px; }
-.map-location-label-bg { fill: #fff; stroke: #c5d8d0; stroke-width: .8; opacity: .96; }
-.map-location-label { fill: #164e43; font-size: 8px; font-weight: 700; pointer-events: none; }
-
-.delivery-map-marker-wrap { background: transparent; border: 0; }
-.delivery-map-marker { display: grid; width: var(--marker-size); height: var(--marker-size); place-items: center; border: 2px solid #fff; border-radius: 999px; background: #0f766e; color: white; box-shadow: 0 2px 8px rgb(15 23 42 / .32); font-size: 12px; font-weight: 800; transition: transform .15s ease, background-color .15s ease; }
-.delivery-map-marker:hover { transform: scale(1.12); }
-.delivery-map-marker.is-active { background: #f97316; box-shadow: 0 0 0 5px rgb(249 115 22 / .2), 0 2px 10px rgb(15 23 42 / .35); }
-.delivery-map-pin-dot { width: 8px; height: 8px; border: 2px solid #fff; border-radius: 50%; background: #5eead4; }
-.delivery-map .leaflet-control-zoom { overflow: hidden; border: 1px solid rgb(148 163 184 / .65) !important; border-radius: 12px !important; box-shadow: 0 4px 14px rgb(15 23 42 / .15) !important; }
-.delivery-map .leaflet-control-zoom a { color: #0f766e !important; }
-.delivery-map .leaflet-control-attribution { display: none; }
-.delivery-map-popup { min-width: 175px; color: #0f172a; font: inherit; }
-.delivery-map-popup > strong { display: block; margin-bottom: 8px; font-size: 14px; }
-.delivery-map-popup-stats { display: flex; flex-wrap: wrap; gap: 7px 12px; color: #475569; font-size: 12px; }
-.delivery-map-location-list { display: grid; max-height: 220px; gap: 4px; overflow-y: auto; }
-.delivery-map-list-item { display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-radius: 7px; background: #f8fafc; padding: 5px 8px; color: #0f766e; text-align: left; font-size: 12px; cursor: pointer; }
-.delivery-map-list-item:hover { background: #ccfbf1; }
-
 ::-webkit-scrollbar {
   height: 10px;
   width: 10px;

@@ -20,6 +20,7 @@ import { buildMonthlyBundle } from "./lib/monthly-bundle.js";
 import { resolveGarageFee } from "./lib/garage-fees.js";
 import { cambodiaDateParts, nextMonthlyBundleSchedule, retryDelayMs, scheduledBundleMonth, scheduledCashBalanceMonth } from "./lib/monthly-automation.js";
 import { buildRecoveryArchive, inspectRecoveryArchive, recoveryChangeDue } from "./lib/recovery-backup.js";
+import { getWarehouseProvinceId, inferProvinceId, isProvinceId } from "../shared/provinces.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -568,12 +569,16 @@ function writeDataToDb(data) {
       insertStatement.run(statement.id, statement.month, Number(statement.statementNumber), statement.statementDate, statement.truckType, statement.status || "Draft", statement.paymentMonth || null, statement.isManual ? 1 : 0, toNumber(statement.manualAmount), statement.scannedPdfOriginalName || null, statement.drivePdfUrl || null, statement.drivePdfOriginalName || null, statement.createdAt || "", statement.updatedAt || "");
     }
 
-    const insertDelivery = database.prepare(`
-      INSERT INTO deliveries (id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    const availableDeliveryColumns = new Set(database.prepare("PRAGMA table_info(deliveries)").all().map(column => column.name));
+    const deliveryColumns = ["id", "statementId", "deliveryDate", "invoiceNo", "truckNo", "truckType", "driverName", "fromLocation", "toLocation", "distanceKm", "qtyTon", "companyUnitPrice", "companyTotalAmount", "truckSalaryUnitPrice", "truckSalaryAmount", "status", "highlighted", "createdAt", "updatedAt"];
+    if (availableDeliveryColumns.has("fromProvinceId")) deliveryColumns.push("fromProvinceId");
+    if (availableDeliveryColumns.has("toProvinceId")) deliveryColumns.push("toProvinceId");
+    const insertDelivery = database.prepare(`INSERT INTO deliveries (${deliveryColumns.join(", ")}) VALUES (${deliveryColumns.map(() => "?").join(", ")})`);
     for (const delivery of normalized.deliveries) {
-      insertDelivery.run(delivery.id, delivery.statementId, delivery.deliveryDate, delivery.invoiceNo, delivery.truckNo, delivery.truckType, delivery.driverName || "", delivery.fromLocation, delivery.toLocation, toNumber(delivery.distanceKm), toNumber(delivery.qtyTon), toNumber(delivery.companyUnitPrice), toNumber(delivery.companyTotalAmount), toNumber(delivery.truckSalaryUnitPrice), toNumber(delivery.truckSalaryAmount), delivery.status || "Draft", delivery.highlighted ? 1 : 0, delivery.createdAt || "", delivery.updatedAt || "");
+      const values = [delivery.id, delivery.statementId, delivery.deliveryDate, delivery.invoiceNo, delivery.truckNo, delivery.truckType, delivery.driverName || "", delivery.fromLocation, delivery.toLocation, toNumber(delivery.distanceKm), toNumber(delivery.qtyTon), toNumber(delivery.companyUnitPrice), toNumber(delivery.companyTotalAmount), toNumber(delivery.truckSalaryUnitPrice), toNumber(delivery.truckSalaryAmount), delivery.status || "Draft", delivery.highlighted ? 1 : 0, delivery.createdAt || "", delivery.updatedAt || ""];
+      if (availableDeliveryColumns.has("fromProvinceId")) values.push(delivery.fromProvinceId || null);
+      if (availableDeliveryColumns.has("toProvinceId")) values.push(delivery.toProvinceId || null);
+      insertDelivery.run(...values);
     }
 
     const insertActivity = database.prepare("INSERT INTO activity (id, message, type, createdAt) VALUES (?, ?, ?, ?)");
@@ -657,12 +662,15 @@ export async function readData() {
   for (const row of database.prepare("SELECT key, value FROM settings").all()) {
     settings[row.key] = JSON.parse(row.value);
   }
+  const deliveryColumns = new Set(database.prepare("PRAGMA table_info(deliveries)").all().map(column => column.name));
+  const fromProvinceColumn = deliveryColumns.has("fromProvinceId") ? "fromProvinceId" : "NULL AS fromProvinceId";
+  const toProvinceColumn = deliveryColumns.has("toProvinceId") ? "toProvinceId" : "NULL AS toProvinceId";
   return normalizeDataShape({
     settings,
     trucks: database.prepare("SELECT truckNo, truckType, driverName, phone, active FROM trucks ORDER BY truckNo").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     prices: database.prepare("SELECT id, fromLocation, toLocation, truckType, distanceKm, companyUnitPrice, truckSalaryUnitPrice, effectiveDate, active FROM prices ORDER BY truckType, toLocation, effectiveDate").all().map((row) => ({ ...row, active: Boolean(row.active) })),
     statements: database.prepare("SELECT id, month, statementNumber, statementDate, truckType, status, paymentMonth, isManual, manualAmount, scannedPdfOriginalName, drivePdfUrl, drivePdfOriginalName, createdAt, updatedAt FROM statements ORDER BY month, statementNumber").all().map((r) => ({ ...r, isManual: Boolean(r.isManual) })),
-    deliveries: database.prepare("SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt").all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
+    deliveries: database.prepare(`SELECT id, statementId, deliveryDate, invoiceNo, truckNo, truckType, driverName, fromLocation, toLocation, ${fromProvinceColumn}, ${toProvinceColumn}, distanceKm, qtyTon, companyUnitPrice, companyTotalAmount, truckSalaryUnitPrice, truckSalaryAmount, status, highlighted, createdAt, updatedAt FROM deliveries ORDER BY createdAt`).all().map((row) => ({ ...row, highlighted: Boolean(row.highlighted) })),
     activity: database.prepare("SELECT id, message, type, createdAt FROM activity ORDER BY createdAt DESC LIMIT 50").all(),
     truckDeductions: database.prepare("SELECT truckNo, month, loanDeduction, garageFee FROM truck_deductions").all(),
     driverReportedPayments: database.prepare("SELECT truckNo, month, amount FROM driver_reported_payments").all(),
@@ -1294,6 +1302,16 @@ function enrichDelivery(data, input) {
   const qtyTon = qtyValidation.qtyTon;
   const fromLocation = normalizeText(input.fromLocation || data.settings.defaultFromLocation);
   const priceFromLocation = normalizeText(data.settings.defaultFromLocation) || fromLocation;
+  const existing = data.deliveries.find((item) => item.id === input.id);
+  const fromProvinceId = input.fromProvinceId === undefined
+    ? existing?.fromProvinceId || getWarehouseProvinceId(fromLocation)
+    : input.fromProvinceId === "" || input.fromProvinceId === null ? null : input.fromProvinceId;
+  const toProvinceId = input.toProvinceId === undefined
+    ? existing?.toProvinceId || inferProvinceId(toLocation)
+    : input.toProvinceId === "" || input.toProvinceId === null ? null : input.toProvinceId;
+
+  if (fromProvinceId !== null && !isProvinceId(fromProvinceId)) throw new Error("Unknown pickup province id.");
+  if (toProvinceId !== null && !isProvinceId(toProvinceId)) throw new Error("Unknown destination province id.");
   const statement = data.statements.find((item) => item.id === statementId);
   const truck = data.trucks.find((item) => item.truckNo === truckNo && item.active !== false);
 
@@ -1334,7 +1352,6 @@ function enrichDelivery(data, input) {
   const companyUnitPrice = toNumber(price.companyUnitPrice);
   const truckSalaryUnitPrice = toNumber(price.truckSalaryUnitPrice);
 
-  const existing = data.deliveries.find((item) => item.id === input.id);
   return {
     id: input.id || crypto.randomUUID(),
     statementId,
@@ -1345,6 +1362,8 @@ function enrichDelivery(data, input) {
     driverName: truck.driverName,
     fromLocation,
     toLocation,
+    fromProvinceId: fromProvinceId || null,
+    toProvinceId: toProvinceId || null,
     distanceKm: toNumber(price.distanceKm),
     qtyTon,
     companyUnitPrice,
@@ -1451,7 +1470,8 @@ async function api(req, res, url, role = "admin") {
   }
 
   if (req.method === "GET" && url.pathname === "/api/data") {
-    return sendJson(res, 200, { ...data, statements: statementsWithCounts(data) });
+    const columns = new Set(getDb().prepare("PRAGMA table_info(deliveries)").all().map(column => column.name));
+    return sendJson(res, 200, { ...data, statements: statementsWithCounts(data), provinceFieldsAvailable: columns.has("fromProvinceId") && columns.has("toProvinceId") });
   }
 
   if (req.method === "GET" && url.pathname === "/api/backup/download") {
@@ -2371,6 +2391,11 @@ async function api(req, res, url, role = "admin") {
 
   if (req.method === "POST" && url.pathname === "/api/deliveries") {
     const body = await readBody(req);
+    const provinceFieldsRequested = body.fromProvinceId != null && body.fromProvinceId !== "" || body.toProvinceId != null && body.toProvinceId !== "";
+    const provinceColumns = new Set(getDb().prepare("PRAGMA table_info(deliveries)").all().map(column => column.name));
+    if (provinceFieldsRequested && !(provinceColumns.has("fromProvinceId") && provinceColumns.has("toProvinceId"))) {
+      throw Object.assign(new Error("Run the delivery province migration before saving province selections."), { status: 409 });
+    }
     const delivery = await updateData((data) => {
       const delivery = enrichDelivery(data, body);
       const index = data.deliveries.findIndex((item) => item.id === delivery.id);

@@ -5,6 +5,7 @@ import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, PageHead } fr
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, fromLocationMatchKey, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, compareTrucksCraneFirst, formatDate, formatDateTime, monthName, groupPriceHistory } from "./lib/format.js";
 import { getToken, getRole, setToken, setRole, api, downloadFile, uploadRecovery } from "./lib/api.js";
 import { fixedGarageFee } from "../../backend/lib/garage-fees.js";
+import { getWarehouseProvinceId } from "../../shared/provinces.js";
 import { LoginPage } from "./components/LoginPage.jsx";
 import { AppCtx } from "./AppContext.js";
 import { ComparePayPage } from "./pages/ComparePayPage.jsx";
@@ -56,7 +57,9 @@ function App() {
     invoiceNo: "",
     truckNo: "",
     fromLocation: "",
+    fromProvinceId: "",
     toLocation: "",
+    toProvinceId: "",
     qtyTon: ""
   });
   const invoiceInputRef = useRef(null);
@@ -734,7 +737,10 @@ function App() {
       deletePassword: next.settings.deletePassword || ""
     });
     setPriceForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
-    setDeliveryForm((current) => ({ ...current, fromLocation: current.fromLocation || next.settings.defaultFromLocation || "" }));
+    setDeliveryForm((current) => {
+      const fromLocation = current.fromLocation || next.settings.defaultFromLocation || "";
+      return { ...current, fromLocation, fromProvinceId: current.fromProvinceId || getWarehouseProvinceId(fromLocation) || "" };
+    });
     loadBackups().catch(() => {});
     checkTelegramStatus().catch(() => {});
   }
@@ -990,7 +996,11 @@ function App() {
       if (!qtyTonValid) throw new Error(qtyTonError || "QTY(T) must be between 0 and 30T.");
       await api("/api/deliveries", {
         method: "POST",
-        body: JSON.stringify({ ...deliveryForm, statementId: selectedStatementId })
+        body: JSON.stringify({
+          ...deliveryForm,
+          ...(data.provinceFieldsAvailable ? {} : { fromProvinceId: undefined, toProvinceId: undefined }),
+          statementId: selectedStatementId
+        })
       });
       const wasEditing = isEditingDelivery;
       resetDeliveryForm(deliveryForm.deliveryDate);
@@ -1010,7 +1020,9 @@ function App() {
       invoiceNo: row.invoiceNo,
       truckNo: row.truckNo,
       fromLocation: row.fromLocation || data.settings.defaultFromLocation || "",
+      fromProvinceId: row.fromProvinceId || getWarehouseProvinceId(row.fromLocation || data.settings.defaultFromLocation) || "",
       toLocation: row.toLocation,
+      toProvinceId: row.toProvinceId || "",
       qtyTon: row.qtyTon
     });
     requestAnimationFrame(() => {
@@ -1020,7 +1032,8 @@ function App() {
   }
 
   function resetDeliveryForm(deliveryDate = today()) {
-    setDeliveryForm({ id: "", deliveryDate, invoiceNo: "", truckNo: "", fromLocation: data.settings.defaultFromLocation || "", toLocation: "", qtyTon: "" });
+    const fromLocation = data.settings.defaultFromLocation || "";
+    setDeliveryForm({ id: "", deliveryDate, invoiceNo: "", truckNo: "", fromLocation, fromProvinceId: getWarehouseProvinceId(fromLocation) || "", toLocation: "", toProvinceId: "", qtyTon: "" });
     setActiveField("");
   }
 

@@ -1,0 +1,177 @@
+[
+  {
+    "id": "phnom-penh",
+    "name": "Phnom Penh",
+    "km": "ភ្នំពេញ",
+    "lat": 11.5564,
+    "lon": 104.9282
+  },
+  {
+    "id": "banteay-meanchey",
+    "name": "Banteay Meanchey",
+    "km": "បន្ទាយមានជ័យ",
+    "lat": 13.5867,
+    "lon": 102.9728
+  },
+  {
+    "id": "battambang",
+    "name": "Battambang",
+    "km": "បាត់ដំបង",
+    "lat": 13.0957,
+    "lon": 103.2022
+  },
+  {
+    "id": "kampong-cham",
+    "name": "Kampong Cham",
+    "km": "កំពង់ចាម",
+    "lat": 11.9934,
+    "lon": 105.4635
+  },
+  {
+    "id": "kampong-chhnang",
+    "name": "Kampong Chhnang",
+    "km": "កំពង់ឆ្នាំង",
+    "lat": 12.25,
+    "lon": 104.6667
+  },
+  {
+    "id": "kampong-speu",
+    "name": "Kampong Speu",
+    "km": "កំពង់ស្ពឺ",
+    "lat": 11.4533,
+    "lon": 104.52
+  },
+  {
+    "id": "kampong-thom",
+    "name": "Kampong Thom",
+    "km": "កំពង់ធំ",
+    "lat": 12.7112,
+    "lon": 104.8887
+  },
+  {
+    "id": "kampot",
+    "name": "Kampot",
+    "km": "កំពត",
+    "lat": 10.6104,
+    "lon": 104.1815
+  },
+  {
+    "id": "kandal",
+    "name": "Kandal",
+    "km": "កណ្ដាល",
+    "lat": 11.4833,
+    "lon": 104.95
+  },
+  {
+    "id": "kep",
+    "name": "Kep",
+    "km": "កែប",
+    "lat": 10.4829,
+    "lon": 104.3167
+  },
+  {
+    "id": "koh-kong",
+    "name": "Koh Kong",
+    "km": "កោះកុង",
+    "lat": 11.6153,
+    "lon": 102.9846
+  },
+  {
+    "id": "kratie",
+    "name": "Kratie",
+    "km": "ក្រចេះ",
+    "lat": 12.4881,
+    "lon": 106.0188
+  },
+  {
+    "id": "mondulkiri",
+    "name": "Mondulkiri",
+    "km": "មណ្ឌលគិរី",
+    "lat": 12.4558,
+    "lon": 107.1881
+  },
+  {
+    "id": "oddar-meanchey",
+    "name": "Oddar Meanchey",
+    "km": "ឧត្តរមានជ័យ",
+    "lat": 14.1819,
+    "lon": 103.5175
+  },
+  {
+    "id": "pailin",
+    "name": "Pailin",
+    "km": "ប៉ៃលិន",
+    "lat": 12.8489,
+    "lon": 102.6093
+  },
+  {
+    "id": "preah-sihanouk",
+    "name": "Preah Sihanouk",
+    "km": "ព្រះសីហនុ",
+    "lat": 10.6275,
+    "lon": 103.5234
+  },
+  {
+    "id": "preah-vihear",
+    "name": "Preah Vihear",
+    "km": "ព្រះវិហារ",
+    "lat": 13.807,
+    "lon": 104.98
+  },
+  {
+    "id": "pursat",
+    "name": "Pursat",
+    "km": "ពោធិ៍សាត់",
+    "lat": 12.5388,
+    "lon": 103.9192
+  },
+  {
+    "id": "prey-veng",
+    "name": "Prey Veng",
+    "km": "ព្រៃវែង",
+    "lat": 11.4868,
+    "lon": 105.3253
+  },
+  {
+    "id": "ratanakiri",
+    "name": "Ratanakiri",
+    "km": "រតនគិរី",
+    "lat": 13.7394,
+    "lon": 106.9873
+  },
+  {
+    "id": "siem-reap",
+    "name": "Siem Reap",
+    "km": "សៀមរាប",
+    "lat": 13.3633,
+    "lon": 103.8564
+  },
+  {
+    "id": "stung-treng",
+    "name": "Stung Treng",
+    "km": "ស្ទឹងត្រែង",
+    "lat": 13.5259,
+    "lon": 105.9683
+  },
+  {
+    "id": "svay-rieng",
+    "name": "Svay Rieng",
+    "km": "ស្វាយរៀង",
+    "lat": 11.0878,
+    "lon": 105.7993
+  },
+  {
+    "id": "takeo",
+    "name": "Takeo",
+    "km": "តាកែវ",
+    "lat": 10.9908,
+    "lon": 104.785
+  },
+  {
+    "id": "tboung-khmum",
+    "name": "Tboung Khmum",
+    "km": "ត្បូងឃ្មុំ",
+    "lat": 11.902,
+    "lon": 105.649
+  }
+]

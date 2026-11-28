@@ -3,6 +3,7 @@ import { useApp } from "../AppContext.js";
 import { Button, Input, Select, Field, Panel, KpiCard, MetricCard, MonthPicker, PageHead } from "../components/ui.jsx";
 import { localDate, today, currentMonth, money, roundMoney, unitMoney, parseMoney, locationMatchKey, locationBaseKey, priceEffectiveDate, routeKey, CRANE_LOCATION_ORDER, NO_CRANE_LOCATION_ORDER, makeLocationSort, craneLocationSort, noCraneLocationSort, deliverySort, truckTypeLabel, formatDate, formatDateInput, formatDateTime, formatCambodiaDateTime, monthName, groupPriceHistory } from "../lib/format.js";
 import { api, downloadFile, viewPdf } from "../lib/api.js";
+import { getWarehouseProvinceId, inferProvinceId, provinces } from "../../../shared/provinces.js";
 
 function DeliveryDateInput({ value, onChange, disabled, style, onFocus, onBlur }) {
   const nativeInputRef = useRef(null);
@@ -981,11 +982,22 @@ export function DataEntryPage() {
                       onFocus={() => setActiveField("toLocation")}
                       onBlur={() => setActiveField("")}
                       value={deliveryForm.toLocation}
-                      onChange={(e) => setDeliveryForm({ ...deliveryForm, toLocation: e.target.value })}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, toLocation: e.target.value, toProvinceId: inferProvinceId(e.target.value) || "" })}
                     />
                     <datalist id="delivery-location-options">
                       {locations.map((location) => <option key={location} value={location} />)}
                     </datalist>
+                  </Field>
+                  <Field label="Destination Province">
+                    <Select
+                      disabled={!canEditRows || !data.provinceFieldsAvailable}
+                      value={deliveryForm.toProvinceId || inferProvinceId(deliveryForm.toLocation) || ""}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, toProvinceId: e.target.value })}
+                    >
+                      <option value="">Choose province</option>
+                      {provinces.map((province) => <option key={province.id} value={province.id}>{province.name} — {province.km}</option>)}
+                    </Select>
+                    {!data.provinceFieldsAvailable && <p className="mt-1 text-xs font-medium text-amber-700">Run the province migration to save province selections. Existing location and price behavior is unchanged.</p>}
                   </Field>
                   {isEditingDelivery && (
                     <Field label="From Location">
@@ -996,7 +1008,7 @@ export function DataEntryPage() {
                         onFocus={() => setActiveField("fromLocation")}
                         onBlur={() => setActiveField("")}
                         value={deliveryForm.fromLocation}
-                        onChange={(e) => setDeliveryForm({ ...deliveryForm, fromLocation: e.target.value })}
+                        onChange={(e) => setDeliveryForm({ ...deliveryForm, fromLocation: e.target.value, fromProvinceId: getWarehouseProvinceId(e.target.value) || "" })}
                       >
                         <option value="Warehouse-09">Warehouse-09</option>
                         <option value="GS01">GS01</option>
