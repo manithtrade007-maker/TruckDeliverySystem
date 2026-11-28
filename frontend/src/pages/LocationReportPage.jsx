@@ -165,11 +165,11 @@ export function LocationReportPage({ selected, setSelected }) {
             <div className="flex justify-center border-b border-slate-100 p-3 lg:border-b-0 lg:border-r"><CambodiaMap cities={CITIES} deliveredIds={deliveredProvinceIds} color="#0f766e" selected={selectedProvince || undefined} onSelect={city => { setSelectedProvince(current => current === city.id ? null : city.id); setShowUnassigned(false); }} /></div>
             <aside className="min-w-0" aria-label="Delivered locations list">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3"><div><h3 className="font-bold text-slate-900">Locations delivered</h3><p className="text-xs text-slate-500">{locationGroups.length} locations in this report</p></div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" aria-pressed={showUnassigned} onClick={() => { setShowUnassigned(current => !current); setSelectedProvince(null); }} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${showUnassigned ? "border-amber-300 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>Unmapped · {unassignedDeliveries.length} deliveries</button>
+                  {showUnassigned && <button type="button" onClick={() => setShowUnassigned(false)} className="text-xs font-bold text-teal-800 underline">Show all locations</button>}
+                </div>
                 {selectedProvinceInfo && <button type="button" onClick={() => { setSelectedProvince(null); setShowUnassigned(false); }} className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-left text-xs font-bold text-teal-900 hover:bg-teal-100">Clear filter · {selectedProvinceInfo.name} · {selectedProvinceInfo.km}</button>}
-              </div>
-              <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-2">
-                <button type="button" aria-pressed={showUnassigned} onClick={() => { setShowUnassigned(current => !current); setSelectedProvince(null); }} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${showUnassigned ? "border-amber-300 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>Unassigned · {unassignedDeliveries.length} deliveries</button>
-                {showUnassigned && <button type="button" onClick={() => setShowUnassigned(false)} className="text-xs font-bold text-teal-800 underline">Show all provinces</button>}
               </div>
               <div className="max-h-[min(65vh,680px)] divide-y divide-slate-100 overflow-y-auto">
                 {locationGroups.map(group => <button key={group.key} ref={node => { if (node) listButtons.current.set(group.key, node); else listButtons.current.delete(group.key); }} type="button" onClick={() => { listScroll.current = window.scrollY; setSelected(group.key); }} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-teal-700">
