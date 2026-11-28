@@ -5,6 +5,7 @@ import { Button } from "../components/ui.jsx";
 import { formatDate, truckTypeLabel } from "../lib/format.js";
 import { downloadFile } from "../lib/api.js";
 import { locationReport } from "../../../backend/lib/location-report.js";
+import { CambodiaLocationMap } from "../components/CambodiaLocationMap.jsx";
 
 const tons = value => value.toLocaleString(undefined, { maximumFractionDigits: 5 });
 const field = "min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-10 text-sm";
@@ -50,6 +51,7 @@ export function LocationReportPage({ selected, setSelected }) {
   const { data, reportMonth, setReportMonth, isAdmin, flash } = useApp();
   const [truckType, setTruckType] = useState("");
   const [view, setView] = useState("locations");
+  const [locationPresentation, setLocationPresentation] = useState("map");
   const [locationSearch, setLocationSearch] = useState("");
   const [period, setPeriod] = useState("month");
   const [reportYear, setReportYear] = useState(reportMonth.slice(0, 4));
@@ -125,10 +127,14 @@ export function LocationReportPage({ selected, setSelected }) {
           {exportButton}
         </div>
         <p role="status" className="text-sm text-slate-500">{groups.length} {view} · {periodLabel}{locationSearch.trim() ? ` · Location matching “${locationSearch.trim()}”` : ""}</p>
-        <ReportTable headings={[view === "locations" ? "Location" : "Truck", view === "locations" ? "Trucks" : "Locations", "Trips", "Tons"]}>
+        {view === "locations" && <div className="flex items-center justify-end gap-1 rounded-lg bg-slate-100 p-1 sm:ml-auto sm:w-fit" role="group" aria-label="Location display">
+          {[['map','Map'],['table','Table']].map(([value,label]) => <button key={value} type="button" aria-pressed={locationPresentation === value} onClick={() => setLocationPresentation(value)} className={`min-h-9 rounded-md px-3 py-1.5 text-sm font-bold ${locationPresentation === value ? "bg-white text-teal-800 shadow-sm" : "text-slate-600 hover:bg-white/70"}`}>{label}</button>)}
+        </div>}
+        {view === "locations" && locationPresentation === "map" && <CambodiaLocationMap locations={groups} onSelect={group => { listScroll.current = window.scrollY; setSelected(group.key); }} />}
+        {(view !== "locations" || locationPresentation === "table") && <ReportTable headings={[view === "locations" ? "Location" : "Truck", view === "locations" ? "Trucks" : "Locations", "Trips", "Tons"]}>
           {groups.map(group => <tr key={group.key} className="even:bg-slate-50"><td><button ref={node => { if (node) listButtons.current.set(group.key, node); else listButtons.current.delete(group.key); }} type="button" className="min-h-10 text-left font-bold text-teal-800 underline underline-offset-4" onClick={() => { listScroll.current = window.scrollY; setSelected(group.key); }}>{group.name}</button></td><td>{view === "locations" ? group.trucks : group.locations}</td><td>{group.trips}</td><td>{tons(group.tons)}</td></tr>)}
           {!groups.length && <tr><td colSpan={4} className="text-center text-slate-500">No {view} match these filters. Try another name, All months, or a different truck type.</td></tr>}
-        </ReportTable>
+        </ReportTable>}
       </section>
       {(report.missingLocations > 0 || report.missingTrucks > 0) && <p className="text-sm text-amber-800">{report.missingLocations} trips have no location; {report.missingTrucks} have no truck number. Trips and tons include these records; distinct counts exclude missing names.</p>}
     </>}
