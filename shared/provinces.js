@@ -10,7 +10,7 @@ const aliasesById = {
   "banteay-meanchey": ["banteay meanchey", "banteay meanchey province", "បន្ទាយមានជ័យ"],
   battambang: ["battambang", "បាត់ដំបង"],
   "kampong-cham": ["kampong cham", "kompong cham", "k cham", "កំពង់ចាម"],
-  "kampong-chhnang": ["kampong chhnang", "kompong chhnang", "k chhnang", "កំពង់ឆ្នាំង"],
+  "kampong-chhnang": ["kampong chhnang", "kompong chhnang", "k chhnang", "k chhnan", "កំពង់ឆ្នាំង"],
   "kampong-speu": ["kampong speu", "kompong speu", "k speu", "កំពង់ស្ពឺ"],
   "kampong-thom": ["kampong thom", "kompong thom", "k thom", "កំពង់ធំ"],
   kampot: ["kampot", "កំពត"],

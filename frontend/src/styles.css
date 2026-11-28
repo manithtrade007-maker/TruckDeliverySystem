@@ -68,6 +68,12 @@ select:disabled,
   border-radius: 999px;
 }
 
+.delivery-map-red-pins .kh-pin > circle {
+  fill: #dc2626 !important;
+  stroke: #fff !important;
+  stroke-width: 1.7px !important;
+}
+
 /* Shared viewport geometry for Safari and installed home-screen windows. */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);

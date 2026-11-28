@@ -5,7 +5,7 @@ import { Button } from "../components/ui.jsx";
 import { formatDate, truckTypeLabel } from "../lib/format.js";
 import { downloadFile } from "../lib/api.js";
 import { locationReport } from "../../../backend/lib/location-report.js";
-import CambodiaMap from "../components/CambodiaMap.jsx";
+import CambodiaMap, { CITIES } from "../components/CambodiaMap.jsx";
 import { getProvince, getProvinceId, getWarehouseProvinceId } from "../../../shared/provinces.js";
 
 const tons = value => value.toLocaleString(undefined, { maximumFractionDigits: 5 });
@@ -73,6 +73,8 @@ export function LocationReportPage({ selected, setSelected }) {
   const groups = report?.[view] || [];
   const selectedProvinceInfo = getProvince(selectedProvince);
   const unassignedDeliveries = (report?.rows || []).filter(row => !getProvinceId(row));
+  const deliveredProvinceIds = new Set((report?.rows || []).map(getProvinceId).filter(Boolean));
+  const deliveredProvinceCities = CITIES.filter(city => deliveredProvinceIds.has(city.id));
   const unassignedLocationGroups = groups.filter(group => group.rows.some(row => !getProvinceId(row)));
   const missingDestinationRows = (report?.rows || []).filter(row => !String(row.toLocation || "").trim());
   const missingDestinationGroup = missingDestinationRows.length ? {
@@ -159,9 +161,9 @@ export function LocationReportPage({ selected, setSelected }) {
           {[['map','Map'],['table','Table']].map(([value,label]) => <button key={value} type="button" aria-pressed={locationPresentation === value} onClick={() => setLocationPresentation(value)} className={`min-h-9 rounded-md px-3 py-1.5 text-sm font-bold ${locationPresentation === value ? "bg-white text-teal-800 shadow-sm" : "text-slate-600 hover:bg-white/70"}`}>{label}</button>)}
         </div>}
         {view === "locations" && locationPresentation === "map" && <section className="overflow-hidden rounded-xl border border-slate-200 bg-white" aria-label="Delivery locations by province">
-          <div className="border-b border-slate-100 px-4 py-3"><h2 className="font-bold text-slate-900">Delivered locations by province</h2><p className="text-xs text-slate-500">Select a province pin to filter the location list.</p></div>
+          <div className="border-b border-slate-100 px-4 py-3"><h2 className="font-bold text-slate-900">Delivered locations by province</h2><p className="text-xs text-slate-500">Red pins mark provinces with deliveries. Select a pin to filter the location list.</p></div>
           <div className="grid items-start lg:grid-cols-[minmax(400px,560px)_minmax(0,1fr)]">
-            <div className="flex justify-center border-b border-slate-100 p-3 lg:border-b-0 lg:border-r"><CambodiaMap color="#0f766e" selected={selectedProvince || undefined} onSelect={city => { setSelectedProvince(current => current === city.id ? null : city.id); setShowUnassigned(false); }} /></div>
+            <div className="delivery-map-red-pins flex justify-center border-b border-slate-100 p-3 lg:border-b-0 lg:border-r"><CambodiaMap cities={deliveredProvinceCities} color="#0f766e" selected={selectedProvince || undefined} onSelect={city => { setSelectedProvince(current => current === city.id ? null : city.id); setShowUnassigned(false); }} /></div>
             <aside className="min-w-0" aria-label="Delivered locations list">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3"><div><h3 className="font-bold text-slate-900">Locations delivered</h3><p className="text-xs text-slate-500">{locationGroups.length} locations in this report</p></div>
                 {selectedProvinceInfo && <button type="button" onClick={() => { setSelectedProvince(null); setShowUnassigned(false); }} className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-left text-xs font-bold text-teal-900 hover:bg-teal-100">Clear filter · {selectedProvinceInfo.name} · {selectedProvinceInfo.km}</button>}

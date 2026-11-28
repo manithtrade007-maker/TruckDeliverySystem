@@ -8,31 +8,31 @@ const proj = (lat, lon) => [(lon - LON0) * S, (LAT1 - lat) * S];
 
 // 25 first-level divisions: Phnom Penh (capital) + 24 provinces. Coordinates = provincial capital town.
 export const CITIES = [
-  { id: "phnom-penh", name: "Phnom Penh", km: "ភ្នំពេញ", lat: 11.5564, lon: 104.9282 },
-  { id: "banteay-meanchey", name: "Banteay Meanchey", km: "បន្ទាយមានជ័យ", lat: 13.5867, lon: 102.9728 },
-  { id: "battambang", name: "Battambang", km: "បាត់ដំបង", lat: 13.0957, lon: 103.2022 },
-  { id: "kampong-cham", name: "Kampong Cham", km: "កំពង់ចាម", lat: 11.9934, lon: 105.4635 },
-  { id: "kampong-chhnang", name: "Kampong Chhnang", km: "កំពង់ឆ្នាំង", lat: 12.25, lon: 104.6667 },
-  { id: "kampong-speu", name: "Kampong Speu", km: "កំពង់ស្ពឺ", lat: 11.4533, lon: 104.52 },
-  { id: "kampong-thom", name: "Kampong Thom", km: "កំពង់ធំ", lat: 12.7112, lon: 104.8887 },
-  { id: "kampot", name: "Kampot", km: "កំពត", lat: 10.6104, lon: 104.1815 },
-  { id: "kandal", name: "Kandal", km: "កណ្ដាល", lat: 11.4833, lon: 104.95 },
-  { id: "kep", name: "Kep", km: "កែប", lat: 10.4829, lon: 104.3167 },
-  { id: "koh-kong", name: "Koh Kong", km: "កោះកុង", lat: 11.6153, lon: 102.9846 },
-  { id: "kratie", name: "Kratie", km: "ក្រចេះ", lat: 12.4881, lon: 106.0188 },
-  { id: "mondulkiri", name: "Mondulkiri", km: "មណ្ឌលគិរី", lat: 12.4558, lon: 107.1881 },
-  { id: "oddar-meanchey", name: "Oddar Meanchey", km: "ឧត្តរមានជ័យ", lat: 14.1819, lon: 103.5175 },
-  { id: "pailin", name: "Pailin", km: "ប៉ៃលិន", lat: 12.8489, lon: 102.6093 },
-  { id: "preah-sihanouk", name: "Preah Sihanouk", km: "ព្រះសីហនុ", lat: 10.6275, lon: 103.5234 },
-  { id: "preah-vihear", name: "Preah Vihear", km: "ព្រះវិហារ", lat: 13.807, lon: 104.98 },
-  { id: "pursat", name: "Pursat", km: "ពោធិ៍សាត់", lat: 12.5388, lon: 103.9192 },
-  { id: "prey-veng", name: "Prey Veng", km: "ព្រៃវែង", lat: 11.4868, lon: 105.3253 },
-  { id: "ratanakiri", name: "Ratanakiri", km: "រតនគិរី", lat: 13.7394, lon: 106.9873 },
-  { id: "siem-reap", name: "Siem Reap", km: "សៀមរាប", lat: 13.3633, lon: 103.8564 },
-  { id: "stung-treng", name: "Stung Treng", km: "ស្ទឹងត្រែង", lat: 13.5259, lon: 105.9683 },
-  { id: "svay-rieng", name: "Svay Rieng", km: "ស្វាយរៀង", lat: 11.0878, lon: 105.7993 },
-  { id: "takeo", name: "Takeo", km: "តាកែវ", lat: 10.9908, lon: 104.785 },
-  { id: "tboung-khmum", name: "Tboung Khmum", km: "ត្បូងឃ្មុំ", lat: 11.902, lon: 105.649 },
+  { id: "phnom-penh", code: "PP", name: "Phnom Penh", km: "ភ្នំពេញ", lat: 11.5564, lon: 104.9282 },
+  { id: "banteay-meanchey", code: "BM", name: "Banteay Meanchey", km: "បន្ទាយមានជ័យ", lat: 13.5867, lon: 102.9728 },
+  { id: "battambang", code: "BB", name: "Battambang", km: "បាត់ដំបង", lat: 13.0957, lon: 103.2022 },
+  { id: "kampong-cham", code: "KC", name: "Kampong Cham", km: "កំពង់ចាម", lat: 11.9934, lon: 105.4635 },
+  { id: "kampong-chhnang", code: "KN", name: "Kampong Chhnang", km: "កំពង់ឆ្នាំង", lat: 12.25, lon: 104.6667 },
+  { id: "kampong-speu", code: "KS", name: "Kampong Speu", km: "កំពង់ស្ពឺ", lat: 11.4533, lon: 104.52 },
+  { id: "kampong-thom", code: "KT", name: "Kampong Thom", km: "កំពង់ធំ", lat: 12.7112, lon: 104.8887 },
+  { id: "kampot", code: "KP", name: "Kampot", km: "កំពត", lat: 10.6104, lon: 104.1815 },
+  { id: "kandal", code: "KD", name: "Kandal", km: "កណ្ដាល", lat: 11.4833, lon: 104.95 },
+  { id: "kep", code: "KE", name: "Kep", km: "កែប", lat: 10.4829, lon: 104.3167 },
+  { id: "koh-kong", code: "KK", name: "Koh Kong", km: "កោះកុង", lat: 11.6153, lon: 102.9846 },
+  { id: "kratie", code: "KR", name: "Kratie", km: "ក្រចេះ", lat: 12.4881, lon: 106.0188 },
+  { id: "mondulkiri", code: "MK", name: "Mondulkiri", km: "មណ្ឌលគិរី", lat: 12.4558, lon: 107.1881 },
+  { id: "oddar-meanchey", code: "OM", name: "Oddar Meanchey", km: "ឧត្តរមានជ័យ", lat: 14.1819, lon: 103.5175 },
+  { id: "pailin", code: "PL", name: "Pailin", km: "ប៉ៃលិន", lat: 12.8489, lon: 102.6093 },
+  { id: "preah-sihanouk", code: "PS", name: "Preah Sihanouk", km: "ព្រះសីហនុ", lat: 10.6275, lon: 103.5234 },
+  { id: "preah-vihear", code: "PV", name: "Preah Vihear", km: "ព្រះវិហារ", lat: 13.807, lon: 104.98 },
+  { id: "pursat", code: "PU", name: "Pursat", km: "ពោធិ៍សាត់", lat: 12.5388, lon: 103.9192 },
+  { id: "prey-veng", code: "PY", name: "Prey Veng", km: "ព្រៃវែង", lat: 11.4868, lon: 105.3253 },
+  { id: "ratanakiri", code: "RK", name: "Ratanakiri", km: "រតនគិរី", lat: 13.7394, lon: 106.9873 },
+  { id: "siem-reap", code: "SR", name: "Siem Reap", km: "សៀមរាប", lat: 13.3633, lon: 103.8564 },
+  { id: "stung-treng", code: "ST", name: "Stung Treng", km: "ស្ទឹងត្រែង", lat: 13.5259, lon: 105.9683 },
+  { id: "svay-rieng", code: "SV", name: "Svay Rieng", km: "ស្វាយរៀង", lat: 11.0878, lon: 105.7993 },
+  { id: "takeo", code: "TK", name: "Takeo", km: "តាកែវ", lat: 10.9908, lon: 104.785 },
+  { id: "tboung-khmum", code: "TM", name: "Tboung Khmum", km: "ត្បូងឃ្មុំ", lat: 11.902, lon: 105.649 },
 ];
 
 export default function CambodiaMap({ cities = CITIES, from, to, selected, onSelect, color = "#2563eb" }) {
@@ -80,9 +80,8 @@ export default function CambodiaMap({ cities = CITIES, from, to, selected, onSel
               {active && <circle className="kh-pulse" fill="none" stroke="#ef4444" strokeWidth="2" />}
               <g className="kh-pin" style={{ animationDelay: `${1.5 + i * 0.08}s` }}>
                 <circle r={hot ? 6 : 4} fill={active ? "#ef4444" : "#fff"} stroke={active ? "#fff" : color} strokeWidth="2" />
-                {(hot || c.id === "phnom-penh") && (
-                  <text y="-10" textAnchor="middle" fontSize="10" fontWeight="600" fill="#111" stroke="#fff" strokeWidth="3" paintOrder="stroke">{c.name}</text>
-                )}
+                <title>{`${c.name} · ${c.km}`}</title>
+                <text y="-8" textAnchor="middle" fontSize="7" fontWeight="700" fill={hot ? "#b91c1c" : "#334155"} stroke="#fff" strokeWidth="2.5" paintOrder="stroke">{c.code}</text>
               </g>
             </g>
           );
