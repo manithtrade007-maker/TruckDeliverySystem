@@ -59,7 +59,7 @@ export function LocationReportPage({ selected, setSelected }) {
   const [period, setPeriod] = useState("month");
   const [reportYear, setReportYear] = useState(reportMonth.slice(0, 4));
   const [chartYear, setChartYear] = useState(reportMonth.slice(0, 4));
-  const [chartScope, setChartScope] = useState("all");
+  const [chartScope, setChartScope] = useState("report");
   const [exporting, setExporting] = useState(false);
   const detailHeading = useRef(null);
   const previousSelection = useRef(null);
@@ -92,7 +92,7 @@ export function LocationReportPage({ selected, setSelected }) {
   }).concat(!selectedProvince && missingDestinationGroup ? [missingDestinationGroup] : []) : groups;
   const detail = groups.find(group => group.key === selected) || (selected === missingDestinationGroup?.key ? missingDestinationGroup : null);
   const chartRows = chartScope === "report" ? (selected ? detail?.rows || [] : report?.rows || []) : history.rows;
-  const overview = <ActivityOverview rows={chartRows} year={chartYear} setYear={setChartYear} scope={chartScope} setScope={setChartScope} reportPeriod={period} reportMonth={reportMonth} reportYear={reportYear} hideShare={Boolean(selected && view === "locations")} onPeriod={(mode, key) => { if (mode === "month") { setReportMonth(key); setPeriod("month"); } else { setReportYear(key); setPeriod("year"); } }} />;
+  const overview = <ActivityOverview rows={chartRows} year={chartYear} setYear={setChartYear} scope={chartScope} setScope={setChartScope} reportPeriod={period} reportMonth={reportMonth} reportYear={reportYear} hideShare={Boolean(selected && view === "locations")} onPeriod={(mode, key) => { setChartScope("report"); if (mode === "month") { setReportMonth(key); setChartYear(key.slice(0, 4)); setPeriod("month"); } else { setReportYear(key); setChartYear(key); setPeriod("year"); } }} />;
   const detailReport = useMemo(() => detail ? locationReport(detail.rows, month) : null, [detail, month]);
   const routeDelivery = view === "locations" ? detail?.rows?.[0] : null;
   const routeFromProvince = getProvince(routeDelivery?.fromProvinceId)?.id || getWarehouseProvinceId(routeDelivery?.fromLocation);
@@ -119,16 +119,17 @@ export function LocationReportPage({ selected, setSelected }) {
   }
   const exportButton = isAdmin && <Button type="button" variant="secondary" disabled={exporting || !report?.trips} onClick={exportExcel}>{exporting ? "Exporting…" : "Export Excel"}</Button>;
   const periodControls = <>
-    <label className="grid gap-1 text-xs font-bold text-slate-600">Period<select className={field} value={period} onChange={event => setPeriod(event.target.value)}><option value="month">Specific month</option><option value="all">All months</option><option value="year">Specific year</option></select></label>
-    {period === "year" && <label className="grid gap-1 text-xs font-bold text-slate-600">Year<select className={field} value={reportYear} onChange={event => setReportYear(event.target.value)}>{[...new Set([reportYear, ...data.deliveries.map(row => String(row.deliveryDate || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y))])].sort().reverse().map(y => <option key={y}>{y}</option>)}</select></label>}
+    <label className="grid gap-1 text-xs font-bold text-slate-600">Period<select className={field} value={period} onChange={event => { setPeriod(event.target.value); setChartScope("report"); }}>{/* Activity overview follows this date range. */}<option value="month">Specific month</option><option value="all">All months</option><option value="year">Specific year</option></select></label>
+    {period === "year" && <label className="grid gap-1 text-xs font-bold text-slate-600">Year<select className={field} value={reportYear} onChange={event => { setReportYear(event.target.value); setChartYear(event.target.value); setChartScope("report"); }}>{[...new Set([reportYear, ...data.deliveries.map(row => String(row.deliveryDate || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y))])].sort().reverse().map(y => <option key={y}>{y}</option>)}</select></label>}
     {period === "month" && <label className="grid gap-1 text-xs font-bold text-slate-600">Month<input className={field} type="month" value={reportMonth} onChange={event => {
       const nextMonth = event.target.value;
       if (/^\d{4}-(0[1-9]|1[0-2])$/.test(nextMonth)) {
         setReportMonth(nextMonth);
         setChartYear(nextMonth.slice(0, 4));
+        setChartScope("report");
       }
     }} /></label>}
-    <label className="grid gap-1 text-xs font-bold text-slate-600">Truck type<select className={field} value={truckType} onChange={event => setTruckType(event.target.value)}><option value="">All trucks</option><option value="With Crane">Crane</option><option value="Without Crane">No Crane</option></select></label>
+    <label className="grid gap-1 text-xs font-bold text-slate-600">Truck type<select className={field} value={truckType} onChange={event => { setTruckType(event.target.value); setChartScope("report"); }}><option value="">All trucks</option><option value="With Crane">Crane</option><option value="Without Crane">No Crane</option></select></label>
   </>;
   return <main className="app-content mx-auto grid max-w-[1500px] gap-4 p-4 pb-24 lg:pb-4">
     <header className="flex flex-wrap items-center justify-between gap-3">
@@ -139,7 +140,7 @@ export function LocationReportPage({ selected, setSelected }) {
       {selected && exportButton}
     </header>
     <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3">
-      {!selected && <label className="grid min-w-48 flex-1 gap-1 text-xs font-bold text-slate-600">Location<input type="search" className={field} placeholder="Search location…" value={locationSearch} onChange={event => setLocationSearch(event.target.value)} /></label>}
+      {!selected && <label className="grid min-w-48 flex-1 gap-1 text-xs font-bold text-slate-600">Location<input type="search" className={field} placeholder="Search location…" value={locationSearch} onChange={event => { setLocationSearch(event.target.value); setChartScope("report"); }} /></label>}
       {periodControls}
       {!selected && locationSearch && <Button type="button" variant="quiet" onClick={() => setLocationSearch("")}>Clear search</Button>}
     </div>
